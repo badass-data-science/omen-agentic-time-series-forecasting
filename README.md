@@ -15,7 +15,10 @@ package.
   grounded in real error metrics and residual diagnostics.
 - **Layer 3 — `ts-deploy`**: retrain the chosen model on the full series
   and produce a real forecast beyond the end of the data, with prediction
-  intervals where available.
+  intervals where available (now including gradient-boosted trees, via
+  quantile regression), an automated plausibility check against the
+  series' own history, and an optional weighted ensemble across multiple
+  candidates.
 - **Layer 4 — `ts-monitor`**: once real observations exist, check whether
   the deployed forecast is still tracking reality, detect data drift, and
   recommend whether to retrain.
@@ -378,10 +381,60 @@ Before actually publishing, you'll want to:
 - **`ts-forecaster`'s gradient-boosted-trees backtest is one-step-ahead**
   (uses true lagged values), while ETS/SARIMA get scored on a genuine
   multi-step forecast -- not directly comparable without accounting for that.
+- **`ts-deploy__forecast_naive` now has an analytic prediction interval
+  too** -- previously the only `forecast_*` tool with zero interval
+  capability, ever. Built from this same naive method's own in-sample
+  residual standard deviation (one-step differences for flat naive,
+  seasonal differences for seasonal naive) and widening with
+  `sqrt(elapsed steps/cycles)` -- the standard textbook interval for a
+  random-walk-style forecast (Hyndman & Athanasopoulos), not simulation-
+  based. Falls back to point-forecast-only (see `interval_note`) if
+  there's fewer than 2 residuals to estimate a standard deviation from
+  (i.e. a 2-row series or shorter for flat naive). As a side effect,
+  `forecast_ensemble` combinations that include `"naive"` can now get a
+  combined interval too, where before they never could.
 - **`ts-deploy`'s gradient-boosted-trees forecast is recursive** (each
   prediction feeds back in as a lag for the next step), so errors can
   compound over a long horizon -- a risk that didn't apply to Layer 2's
-  evaluation of the same model type.
+  evaluation of the same model type. **It now also has a prediction
+  interval**, via two extra `GradientBoostingRegressor` models trained
+  with `loss="quantile"` alongside the point model -- an approximate
+  interval that does NOT itself grow with the recursive compounding risk
+  above, unlike SARIMA's analytic interval or ETS's simulated one
+  (`interval_note`/`caveat` both say so explicitly). Recursive lag
+  features always follow the POINT model's own trajectory, never the
+  quantile models' -- one consistent path instead of three diverging
+  ones. Independently-fit quantile models can cross (`lower > upper`);
+  guarded against with an elementwise min/max before returning.
+- **Every `ts-deploy__forecast_*` tool (including `forecast_ensemble`)
+  returns a `plausibility_check` field** that automates part of the
+  "does this look plausible" eyeball check `ts-deploy/SKILL.md` Step 3
+  otherwise leaves entirely to the agent. It compares the forecast's
+  implied endpoint change against the empirical distribution of
+  horizon-length changes the series has actually made historically
+  (`endpoint_change_z_score`, `endpoint_change_percentile_rank`,
+  `is_extreme_relative_to_history`), and separately flags
+  `goes_below_historical_min`/`goes_above_historical_max`. This is NOT a
+  hypothesis test and not a verdict -- there's no null distribution being
+  tested, only "has the series done something like this before"; a
+  genuine regime change can legitimately produce a flagged forecast
+  that's still correct. `null` fields when there's not enough history
+  (`n <= horizon`) to compute the comparison at all.
+- **`ts-deploy__forecast_ensemble` combines two or more candidates into
+  one weighted forecast** -- the tool for "what do I actually deploy" when
+  Layer 2 leaves more than one reasonable candidate, filling the gap the
+  `ts-forecaster` blog post flagged as a Next Step (combining candidates
+  is this layer's job, evaluating them individually is Layer 2's).
+  `weights` default to equal, needn't be pre-normalized (raw inverse-MAE
+  values from a Layer 2 comparison work directly), and the combined point
+  forecast is a straightforward weighted average at each date. The
+  combined interval, reported only when EVERY included model contributes
+  one of its own, is a weighted average of interval BOUNDS -- an honest
+  but naive combination that doesn't account for correlation between the
+  component models' errors, unlike a properly derived ensemble interval;
+  `interval_note` says so. Including `"gbt"` carries its recursive-
+  compounding caveat into the combined result too (diluted by weight, not
+  eliminated).
 - **`ts-monitor`'s drift detector can't distinguish trend/seasonality from
   a genuine regime change** -- confirmed directly: running it on this
   project's synthetic data (which has a real upward trend) flags

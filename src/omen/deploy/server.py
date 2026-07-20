@@ -21,6 +21,7 @@ from .forecast_tools import (
     forecast_ets as _forecast_ets,
     forecast_sarima as _forecast_sarima,
     forecast_gradient_boosted_trees as _forecast_gradient_boosted_trees,
+    forecast_ensemble as _forecast_ensemble,
 )
 
 mcp = FastMCP("ts-deploy")
@@ -32,25 +33,35 @@ def forecast_naive(
     horizon: int = 30,
     seasonal_period: int = 7,
     method: str = "seasonal_naive",
+    confidence_level: float = 0.95,
     date_col: str = "date",
     value_col: str = "value",
 ) -> dict:
     """Extend the series with a trivial baseline forecast beyond the last
     observed date -- either flat ("naive": repeat the last value) or
-    seasonal ("seasonal_naive": repeat the last full seasonal cycle). No
-    prediction interval; useful as a sanity-check floor alongside a real
-    model's forecast.
+    seasonal ("seasonal_naive": repeat the last full seasonal cycle).
+    Useful as a sanity-check floor alongside a real model's forecast.
+
+    Includes an analytic prediction interval built from this same naive
+    method's own in-sample residual standard deviation (one-step
+    differences for flat naive, seasonal differences for seasonal naive),
+    widening with the horizon -- the standard textbook interval for a
+    random-walk-style forecast (Hyndman & Athanasopoulos), not
+    simulation-based. Falls back to point-forecast-only (see
+    `interval_note`) if there's not enough history to estimate a residual
+    standard deviation.
 
     Args:
         csv_path: Path to a CSV with a date column and a value column.
         horizon: Number of future steps to forecast.
         seasonal_period: Seasonal cycle length, used only if method is seasonal_naive.
         method: "seasonal_naive" or "naive".
+        confidence_level: Width of the prediction interval, e.g. 0.95 for 95%.
         date_col: Name of the date column in the CSV.
         value_col: Name of the value column in the CSV.
     """
     df = load_series(csv_path, date_col, value_col)
-    return _forecast_naive(df, horizon=horizon, seasonal_period=seasonal_period, method=method)
+    return _forecast_naive(df, horizon=horizon, seasonal_period=seasonal_period, method=method, confidence_level=confidence_level)
 
 
 @mcp.tool()
@@ -130,14 +141,21 @@ def forecast_gradient_boosted_trees(
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
+    confidence_level: float = 0.95,
     date_col: str = "date",
     value_col: str = "value",
 ) -> dict:
     """Retrain gradient-boosted trees on lag + calendar features using the
     FULL series, then forecast `horizon` steps ahead RECURSIVELY -- each
-    predicted value feeds back in as a lag feature for later steps. No
-    native prediction interval. This compounding-error risk is real and
-    grows with horizon length; the tool result flags it explicitly.
+    predicted value feeds back in as a lag feature for later steps. This
+    compounding-error risk is real and grows with horizon length; the
+    tool result flags it explicitly in `caveat`.
+
+    A prediction interval IS available here (unlike before): two extra
+    quantile-regression models are fit alongside the point model. It's
+    approximate -- see `interval_note` and `caveat` -- since it doesn't
+    itself grow with the recursive compounding risk the way a proper
+    multi-step interval would.
 
     Args:
         csv_path: Path to a CSV with a date column and a value column.
@@ -146,12 +164,66 @@ def forecast_gradient_boosted_trees(
         n_estimators: Number of boosting stages.
         max_depth: Max depth per tree.
         learning_rate: Shrinkage rate applied to each tree's contribution.
+        confidence_level: Width of the quantile-regression prediction interval, e.g. 0.95 for 95%.
         date_col: Name of the date column in the CSV.
         value_col: Name of the value column in the CSV.
     """
     df = load_series(csv_path, date_col, value_col)
     return _forecast_gradient_boosted_trees(
-        df, horizon=horizon, lags=lags, n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate
+        df,
+        horizon=horizon,
+        lags=lags,
+        n_estimators=n_estimators,
+        max_depth=max_depth,
+        learning_rate=learning_rate,
+        confidence_level=confidence_level,
+    )
+
+
+@mcp.tool()
+def forecast_ensemble(
+    csv_path: str,
+    model_types: list,
+    horizon: int = 30,
+    weights: Optional[list] = None,
+    model_params: Optional[dict] = None,
+    confidence_level: float = 0.95,
+    date_col: str = "date",
+    value_col: str = "value",
+) -> dict:
+    """Combine two or more of this layer's own forecasts (naive/ets/sarima/gbt)
+    into a single weighted forecast -- the tool for "what should I actually
+    deploy" when more than one backtest-validated candidate looks reasonable,
+    rather than being forced to pick exactly one.
+
+    weights defaults to equal weighting across model_types; if supplied, must
+    match model_types in length, be non-negative, and needn't be
+    pre-normalized (e.g. pass raw inverse-MAE values straight from a Layer 2
+    backtest_metrics comparison -- they get normalized internally). The
+    combined point forecast is a weighted average at each future date. The
+    combined interval (when every component contributes one) is a weighted
+    average of interval BOUNDS -- an honest but naive combination, not a
+    statistically rigorous ensemble interval; see interval_note.
+
+    Args:
+        csv_path: Path to a CSV with a date column and a value column.
+        model_types: List of 2+ model types to combine, from "naive", "ets", "sarima", "gbt".
+        horizon: Number of future steps to forecast.
+        weights: Optional weight per model_type entry (same order, same length). Equal if omitted.
+        model_params: Optional per-model_type kwargs override, e.g.
+            {"sarima": {"order": [1,1,1], "seasonal_order": [1,1,1,7]}}.
+        confidence_level: Width of each component's own prediction interval, e.g. 0.95 for 95%.
+        date_col: Name of the date column in the CSV.
+        value_col: Name of the value column in the CSV.
+    """
+    df = load_series(csv_path, date_col, value_col)
+    return _forecast_ensemble(
+        df,
+        model_types=model_types,
+        horizon=horizon,
+        weights=weights,
+        model_params=model_params,
+        confidence_level=confidence_level,
     )
 
 

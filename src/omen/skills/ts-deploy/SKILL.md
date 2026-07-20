@@ -19,7 +19,11 @@ silently default to arbitrary parameters as if they were validated.
 ## Available tools
 
 - `ts-deploy__forecast_naive` — flat or seasonal-naive baseline extended
-  forward. No interval. Useful as a sanity floor alongside the real forecast.
+  forward. Useful as a sanity floor alongside the real forecast. Includes
+  an analytic prediction interval built from this same method's own
+  in-sample residual standard deviation, widening with the horizon
+  (falls back to point-only if there isn't enough history to estimate
+  one -- check `interval_note`).
 - `ts-deploy__forecast_ets` — Holt-Winters, retrained on the full series.
   Prediction interval from simulated future paths (falls back to
   point-only if simulation fails for the given settings -- check the
@@ -28,13 +32,23 @@ silently default to arbitrary parameters as if they were validated.
   Analytic confidence interval from the state-space model.
 - `ts-deploy__forecast_gradient_boosted_trees` — retrained on the full
   series, then forecasts RECURSIVELY (each prediction feeds back in as a
-  lag feature for the next step). No native interval. The tool result's
-  `caveat` field explicitly warns that errors can compound as the horizon
-  grows -- this is a real risk, not boilerplate, and you must carry it into
-  your own report rather than letting it sit unread in the tool output.
+  lag feature for the next step). The tool result's `caveat` field
+  explicitly warns that errors can compound as the horizon grows -- this
+  is a real risk, not boilerplate, and you must carry it into your own
+  report rather than letting it sit unread in the tool output. It now
+  DOES have a prediction interval (via quantile regression), but that
+  interval is approximate and doesn't itself account for the compounding
+  risk -- `interval_note` and `caveat` both say so; don't present it with
+  the same confidence as SARIMA's analytic interval.
+- `ts-deploy__forecast_ensemble` — combines two or more of the above into
+  one weighted forecast. Use this when more than one candidate backtested
+  reasonably well in Layer 2 and you don't want to force a single winner.
+  See "Combining candidates" below.
 
-All tools take `csv_path`, `horizon` (how many steps into the future to
-forecast), and optional `date_col`/`value_col`.
+All single-model tools take `csv_path`, `horizon` (how many steps into the
+future to forecast), and optional `date_col`/`value_col`. Every one of
+them (including `forecast_ensemble`) also returns a `plausibility_check`
+field -- see Step 3.
 
 ## Step 1 — Confirm what you're deploying
 
@@ -56,15 +70,53 @@ user has explicitly said they don't want it.
 Before writing anything up, check:
 - Does the forecast's trajectory look plausible given the series' recent
   history, or does it do something obviously wrong (explode, go negative
-  when the series never has, flatten out when it shouldn't)? If so, say so
-  rather than reporting a forecast you can see is broken.
+  when the series never has, flatten out when it shouldn't)? Every
+  forecast tool now automates part of this eyeball check for you via its
+  `plausibility_check` field: it compares the forecast's implied change
+  against the empirical distribution of changes the series has actually
+  made historically, and flags `is_extreme_relative_to_history` plus
+  whether the forecast leaves the historical min/max range entirely. This
+  is NOT a verdict -- a genuine regime change can legitimately produce an
+  "extreme" forecast that's still correct -- but treat a flagged result as
+  a prompt to look closer and say something about it, not something to
+  silently pass through.
 - Is there a prediction interval? If `interval_note` says point-forecast-only
-  (common for naive and GBT, sometimes ETS), that needs to be stated
-  clearly in the report, not just implied by its absence.
+  (possible for naive when there's too little history, sometimes ETS),
+  that needs to be stated clearly in the report, not just implied by its
+  absence. GBT now reports an interval too, but `interval_note` explicitly
+  flags it as approximate -- don't present it with SARIMA's level of
+  confidence. Naive's interval is a genuine analytic textbook formula
+  (residual-std-based, growing with the horizon), reasonable to present
+  with the same confidence as SARIMA's, just usually much wider since it
+  isn't informed by any actual model of the series' structure.
 - If you used `forecast_gradient_boosted_trees`, is the `horizon` long
   enough that the compounding-error caveat actually matters here? A 5-step
   horizon is lower-risk than a 90-step one -- calibrate how much you
   emphasize the caveat to the actual horizon requested.
+
+## Combining candidates with `forecast_ensemble`
+
+If Layer 2 left you with more than one reasonable candidate (e.g. SARIMA
+and ETS both backtested acceptably, with no statistically significant
+difference between them per `diebold_mariano_test`), you don't have to
+force a single winner here. Call `forecast_ensemble` with `model_types`
+set to the candidates you want combined:
+
+- Default weighting is equal across the listed models. If you have a
+  principled reason to weight one candidate more (e.g. its Layer 2
+  `backtest_metrics.mae` was meaningfully lower), pass `weights` -- raw
+  inverse-error values are fine, they get normalized internally, you
+  don't need to pre-compute proportions yourself.
+- Read `interval_note`: a combined interval is only reported if every
+  included model contributed one of its own, and even then it's a naive
+  weighted average of bounds, not a rigorously derived ensemble interval
+  -- say so if you report it.
+- If you include `"gbt"`, the recursive-compounding caveat still applies
+  and shows up in the result's own `caveat` field -- it doesn't go away
+  just because other models are blended in, only gets diluted by weight.
+- This is not a substitute for Layer 2's own comparison -- only combine
+  candidates that already backtested reasonably on their own merits, not
+  as a way to average away a candidate you'd otherwise have rejected.
 
 ## Step 4 — Write the deliverable
 
