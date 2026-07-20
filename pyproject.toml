@@ -1,0 +1,64 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "omen"
+version = "0.1.0"
+description = "Omen: agentic time series analysis, backtesting, deployment, and monitoring tools, exposed as FastMCP servers"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Your Name", email = "you@example.com" },
+]
+keywords = ["omen", "time-series", "forecasting", "mcp", "agents", "openclaw", "fastmcp"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "fastmcp>=2.0",
+    "pandas>=2.0",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+analyst = ["statsmodels>=0.14", "scipy>=1.11"]
+forecaster = ["statsmodels>=0.14", "scikit-learn>=1.4"]
+deploy = ["statsmodels>=0.14", "scikit-learn>=1.4"]
+monitor = ["scipy>=1.11"]
+retrain = []
+all = ["statsmodels>=0.14", "scikit-learn>=1.4", "scipy>=1.11"]
+dev = ["pytest>=8.0"]
+
+[project.urls]
+Homepage = "https://github.com/badass-data-science/Data-Science/tree/agentic-time-series-tools/Forecasting/omen"
+Repository = "https://github.com/badass-data-science/Data-Science"
+
+# Console scripts: after `pip install`, these run each layer's MCP server
+# directly, so OpenClaw (or any MCP client) can point its config at the
+# installed command instead of an absolute path to a .py file. Script
+# NAMES stay ts-analyst-server etc. (the five layers' own established
+# branding) even though the package/project itself is now "omen" --
+# see AGENTS.md for why these weren't renamed together.
+[project.scripts]
+ts-analyst-server = "omen.analyst.server:main"
+ts-forecaster-server = "omen.forecaster.server:main"
+ts-deploy-server = "omen.deploy.server:main"
+ts-monitor-server = "omen.monitor.server:main"
+ts-retrain-server = "omen.retrain.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/omen"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

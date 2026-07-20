@@ -1,0 +1,91 @@
+// openclaw.config.snippet.jsonc
+//
+// Merge into ~/.openclaw/openclaw.json.
+//
+// Unlike earlier drafts of this project, this version points at the
+// CONSOLE SCRIPTS installed by `pip install -e .` (or `pip install omen`
+// once published), not absolute paths to .py files --
+// that's the main advantage of packaging this properly. As long as the
+// console scripts are on PATH (true automatically inside whatever venv
+// you installed into, or after activating it), OpenClaw can launch them
+// by name from anywhere.
+//
+// Prerequisites:
+//   pip install -e ".[all]"        # installs every layer's dependencies
+//   export OLLAMA_API_KEY="<your-ollama-cloud-api-key>"
+
+{
+  "mcp": {
+    "servers": {
+      "ts-analyst": {
+        "command": "ts-analyst-server",
+        "args": [],
+        "transport": "stdio"
+      },
+      "ts-forecaster": {
+        "command": "ts-forecaster-server",
+        "args": [],
+        "transport": "stdio"
+      },
+      "ts-deploy": {
+        "command": "ts-deploy-server",
+        "args": [],
+        "transport": "stdio"
+      },
+      "ts-monitor": {
+        "command": "ts-monitor-server",
+        "args": [],
+        "transport": "stdio"
+      },
+      "ts-retrain": {
+        "command": "ts-retrain-server",
+        "args": [],
+        "transport": "stdio"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "ollama-cloud/glm-5.2:cloud"
+      }
+    }
+  }
+}
+
+// Notes:
+// - If OpenClaw runs in a different environment than the one you `pip
+//   install`ed into (e.g. it launches subprocesses without inheriting
+//   your venv's PATH), use the absolute path to the installed script
+//   instead, e.g. "command": "/path/to/venv/bin/ts-analyst-server".
+// - After saving:
+//     openclaw mcp status --verbose
+//     openclaw mcp doctor --probe
+//     openclaw mcp tools ts-analyst
+//     openclaw mcp tools ts-forecaster
+//     openclaw mcp tools ts-deploy
+//     openclaw mcp tools ts-monitor
+//     openclaw mcp tools ts-retrain
+// - Install the bundled skills into your OpenClaw workspace:
+//     cp -r "$(python -c 'import omen as t; print(t.skills_dir())')"/* \
+//         ~/.openclaw/workspace/skills/
+// - Confirm the exact hosted GLM-5.2 id first with:
+//     openclaw models list --provider ollama-cloud
+//
+// ts-retrain / execute_redeploy notes:
+// - ts-retrain__execute_redeploy is the only tool in the whole toolkit
+//   that actually changes a deployment (retrains a model and overwrites
+//   deployment_manifest.json). It refuses to run unless called with
+//   confirmed=True -- there's no config flag in THIS file that changes
+//   that; confirmation is reached either by a human approving in
+//   conversation (default) or by an explicitly authorized autonomous
+//   mode described in the ts-retrain SKILL.md's own instructions. Don't
+//   go looking here for an "autonomous_mode": true switch -- it doesn't
+//   exist at the MCP-config layer by design, since the authorization
+//   judgment is meant to happen per-series in-conversation, not globally
+//   for every server this config wires up.
+// - execute_redeploy needs the `deploy` extra installed (statsmodels +
+//   scikit-learn) regardless of which model_type you retrain with, since
+//   it imports omen.deploy.forecast_tools as a whole
+//   module -- `pip install -e ".[all]"` (per Prerequisites above) already
+//   covers this; a narrower `pip install -e ".[retrain]"` alone will not.
