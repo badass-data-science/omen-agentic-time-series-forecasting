@@ -28,8 +28,12 @@ package.
 - **Layer 5 — `ts-retrain`**: when `ts-monitor` says `retrain_now`,
   re-run Layers 1-2 on the updated series and deterministically decide
   whether the freshly backtested candidate beats what's currently
-  deployed by enough to be worth redeploying. Never redeploys on its
-  own -- it stops for human confirmation.
+  deployed by enough to be worth redeploying (now confidence-interval-
+  aware on both sides of that comparison, not just bare point estimates).
+  Never redeploys without an explicit `confirmed=True` -- by default that
+  means stopping for human confirmation, and the optional autonomous-mode
+  alternative is now backed by a real, code-checked authorization record
+  rather than only a prose contract.
 
 ## Project layout
 
@@ -612,9 +616,11 @@ Before actually publishing, you'll want to:
 - **`execute_redeploy` requires the `deploy` extra installed** (it
   delegates to `omen.deploy.forecast_tools`), regardless of
   which `model_type` is requested, since it imports that module as a
-  whole. `ts-retrain`'s diagnostic tools (`load_deployment_manifest`,
-  `compare_candidate_to_deployed`, `record_deployment`) have no such
-  requirement.
+  whole. `ts-retrain`'s diagnostic and record-keeping tools
+  (`load_deployment_manifest`, `compare_candidate_to_deployed`,
+  `record_deployment`, `authorize_autonomous_mode`, `revoke_autonomous_mode`,
+  `check_autonomous_mode`) have no such requirement -- all plain
+  `json`/`os`/`datetime`, nothing beyond core.
 
 ## Next steps
 

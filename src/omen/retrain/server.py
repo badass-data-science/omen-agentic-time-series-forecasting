@@ -48,6 +48,10 @@ def record_deployment(
     manifest for this series; it always reflects the single
     currently-deployed model, not a history.
 
+    Returns `written_to`: the exact path the manifest was written to --
+    useful for confirming where state actually lives, especially if you
+    passed a non-default `manifest_path`.
+
     Args:
         csv_path: Path to the series CSV this model was deployed against.
         model: Model name/type, e.g. "SARIMA", "ETS (Holt-Winters)".
@@ -94,7 +98,10 @@ def compare_candidate_to_deployed(
     is intentionally rule-based, not left to model judgment -- same reason
     ts-monitor__recommend_retraining is deterministic. Requires a relative
     improvement of at least improvement_threshold_pct before recommending
-    a swap, to avoid churn from noise-level differences.
+    a swap, to avoid churn from noise-level differences. Also echoes back
+    `candidate_value`/`deployed_value` -- the exact metric values compared
+    (rounded), handy for citing in a report without re-reading your own
+    inputs.
 
     If candidate_metrics also has a bootstrap CI for metric_name (i.e.
     `{metric_name}_ci_lower`/`{metric_name}_ci_upper` -- present on any
@@ -225,11 +232,12 @@ def authorize_autonomous_mode(
     already been made elsewhere. Overwrites any existing record for this
     series; reflects the CURRENT authorization state, not a history.
 
-    Returns `record`: the full authorization record as written
-    (`csv_path`, `authorized`, `authorized_at`, `authorized_by`, `note`) --
-    the same shape `check_autonomous_mode` returns back later when
-    `authorized` is true, so you can cite exactly who authorized this and
-    when in a later report instead of just knowing that it happened.
+    Returns `written_to` (the exact path the record was written to) and
+    `record`: the full authorization record as written (`csv_path`,
+    `authorized`, `authorized_at`, `authorized_by`, `note`) -- the same
+    shape `check_autonomous_mode` returns back later when `authorized` is
+    true, so you can cite exactly who authorized this and when in a later
+    report instead of just knowing that it happened.
 
     Args:
         csv_path: Path to the series CSV this authorization applies to.
