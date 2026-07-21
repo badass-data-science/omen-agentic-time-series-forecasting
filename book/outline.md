@@ -26,8 +26,8 @@ data, and you can't honestly monitor a model until you've deployed one.
 Two datasets recur across multiple chapters as a light narrative
 through-line, the same way the companion blog posts return to "the Secret
 Lab™" repeatedly: **Secret Lab™ Mojito Inventory** (introduced in Chapter 3,
-finally deployed for real in Chapter 14) and **Ransom Demand Revenue**
-(introduced in Chapter 8, stress-tested throughout Part III). Every chapter
+finally deployed for real in Chapter 14) and **Death-Ray Revenue**
+(introduced in Chapter 4, stress-tested throughout Part III). Every chapter
 also gets its own purpose-built example chosen specifically because its
 shape teaches that chapter's concept honestly — a series with no seasonality
 doesn't belong in the seasonality chapter no matter how funny the premise is.
@@ -241,11 +241,12 @@ tests; effect sizes for a hypothesis test, not just its p-value.
   number, and its confidence interval as "how precisely do we actually
   know that."
 
-**The villainous example:** **Ransom Demand Amounts** (weekly ransom asked,
-trending steadily upward as our heroine's reputation grows — this is the
-book's first deliberately *non-stationary* series, introduced here and
-reused through Part III as the flagship "let's build a real model for
-this" example).
+**The villainous example:** **Death-Ray Revenue** (weekly income from
+renting out the Secret Lab™'s death ray to other operations, trending
+steadily upward as our heroine's reputation — and rental prices — grow.
+This is the book's first deliberately *non-stationary* series, introduced
+here and reused through Part III as the flagship "let's build a real model
+for this" example).
 
 **Gotchas & rationale:**
 - A series can clear `p < 0.05` on ADF while reverting to its mean so
@@ -262,8 +263,8 @@ this" example).
   the boundary" from "wildly past it."
 
 **Sample prompts:**
-- "Is the ransom demand series stationary? If ADF and KPSS disagree, what
-  should I do about it?"
+- "Is the death-ray revenue series stationary? If ADF and KPSS disagree,
+  what should I do about it?"
 - "What's the mean-reversion half-life here, and how confident should I be
   in that number specifically?"
 
@@ -422,8 +423,9 @@ metrics with different failure modes.
   a 30-point holdout's error estimate has real sampling uncertainty of its
   own.
 
-**The villainous example:** **Ransom Demand Revenue** (weekly total ransom
-collected, introduced in Chapter 4, now getting its first real backtest).
+**The villainous example:** **Death-Ray Revenue** (weekly total rental
+income collected, introduced in Chapter 4, now getting its first real
+backtest).
 
 **Gotchas & rationale:**
 - A model that "beats naive" by a numerically tiny margin (say 4.8% MAPE
@@ -432,11 +434,11 @@ collected, introduced in Chapter 4, now getting its first real backtest).
   Chapter 12 pays off with a formal test.
 - MAPE's near-zero exclusion is reported explicitly as a count, not
   silently — a series with several genuinely zero weeks (a slow month for
-  extortion) will have some points quietly excluded from the MAPE
-  calculation, and the tool says exactly how many.
+  death-ray bookings) will have some points quietly excluded from the
+  MAPE calculation, and the tool says exactly how many.
 
 **Sample prompts:**
-- "Fit naive and seasonal-naive baselines on the ransom revenue series.
+- "Fit naive and seasonal-naive baselines on the death-ray revenue series.
   Which one wins, and by how much?"
 - "How wide is the confidence interval on that baseline's own MAPE?"
 
@@ -460,7 +462,7 @@ model leave structure on the table."
   a *low* p-value means for residuals specifically (the model missed
   something), as opposed to a low p-value on the original series.
 
-**The villainous example:** Continues **Ransom Demand Revenue**.
+**The villainous example:** Continues **Death-Ray Revenue**.
 
 **Gotchas & rationale:**
 - ETS's prediction interval is *simulated* (many future paths, then
@@ -474,7 +476,7 @@ model leave structure on the table."
   monitoring to notice weeks later.
 
 **Sample prompts:**
-- "Fit ETS on the ransom revenue series. Does its prediction interval
+- "Fit ETS on the death-ray revenue series. Does its prediction interval
   actually cover close to 95% of the holdout, or is it miscalibrated?"
 - "Do the residuals look like white noise, or is the model still missing
   something?"
@@ -500,7 +502,7 @@ tool, not a replacement for that reasoning.
   explain why it deliberately does *not* search `d`/`D` and does *not*
   crown a single winner automatically.
 
-**The villainous example:** Continues **Ransom Demand Revenue**.
+**The villainous example:** Continues **Death-Ray Revenue**.
 
 **Gotchas & rationale:**
 - A worked, real example where the numerically best-AICc candidate from
@@ -576,7 +578,7 @@ variance estimate rather than a naive t-test.
   selection and `n_lags=0` for two one-step-ahead backtests specifically.
 
 **The villainous example:** Pits **SARIMA vs. seasonal-naive** on the
-Ransom Demand Revenue series head-to-head — deliberately reusing a case
+Death-Ray Revenue series head-to-head — deliberately reusing a case
 where the "fancier" model does *not* actually win, so the lesson lands
 with real stakes instead of a foregone conclusion.
 
@@ -618,11 +620,12 @@ performance as its own thing to measure, separate from average accuracy.
 - Recognize when a high standard deviation across origins should worry you
   more than a mediocre average.
 
-**The villainous example:** Continues **Ransom Demand Revenue**, deliberately
+**The villainous example:** Continues **Death-Ray Revenue**, deliberately
 walking backward across a stretch that includes an unusually good month
-(a high-value hostage) and an unusually bad one (a hostage negotiation that
-fell through) — so the instability shows up honestly in the data, not as a
-contrived example.
+(a bidding war between rival factions for exclusive rental rights) and an
+unusually bad one (a widely publicized death-ray malfunction that scared
+off bookings for weeks) — so the instability shows up honestly in the
+data, not as a contrived example.
 
 **Gotchas & rationale:**
 - The real cost of this rigor is compute: `n_origins` times the cost of a
@@ -709,7 +712,7 @@ a *narrower* combined interval than either alone.
   backtested reasonably) versus when it's a way to paper over a candidate
   that should have been rejected outright.
 
-**The villainous example:** **Ransom Demand Revenue** again, this time
+**The villainous example:** **Death-Ray Revenue** again, this time
 combining SARIMA and ETS after Chapter 12 found no statistically
 significant difference between them — the natural, honest occasion for an
 ensemble, not a forced one.
@@ -725,7 +728,7 @@ ensemble, not a forced one.
   true uncertainty, not a precise one.
 
 **Sample prompts:**
-- "Combine the SARIMA and ETS forecasts for ransom revenue into one
+- "Combine the SARIMA and ETS forecasts for death-ray revenue into one
   ensemble. Is the combined interval narrower or wider than either
   model's own interval?"
 - "Why shouldn't I trust that narrower interval quite as much as it looks
@@ -856,9 +859,10 @@ difference matters for a ratio-shaped quantity).
   requires worst-case/best-case corner reasoning, not a variance-additive
   shortcut.
 
-**The villainous example:** **Ransom Demand Revenue**, revisited one
-"regime change" later — a rival supervillain has entered the ransom market,
-and our heroine needs to know whether a freshly retrained model actually
+**The villainous example:** **Death-Ray Revenue**, revisited one
+"regime change" later — a rival supervillain has started renting out a
+competing death ray at cut-rate prices, and our heroine needs to know
+whether a freshly retrained model actually
 adapts to the new competitive landscape enough to be worth redeploying.
 
 **Gotchas & rationale:**
@@ -1024,8 +1028,9 @@ book's arc from "look before leaping" through "should you even redeploy."
   pointer to `AGENTS.md` for readers who want to go build on Omen
   directly.
 - A closing status update on the running examples: the mojito stockout
-  problem from Chapter 1 is solved; the ransom market's rival supervillain
-  from Chapter 18 is still out there, which is the honest, open-ended note
+  problem from Chapter 1 is solved; the death-ray rental market's rival
+  supervillain from Chapter 18 is still out there, which is the honest,
+  open-ended note
   a book about *forecasting* — not fortune-telling — should end on.
 - A short "where the toolkit itself goes next" section, pulled honestly
   from Omen's own real, currently-open items (no CI pipeline yet, no
