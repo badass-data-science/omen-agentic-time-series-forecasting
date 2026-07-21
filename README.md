@@ -20,8 +20,11 @@ package.
   series' own history, and an optional weighted ensemble across multiple
   candidates.
 - **Layer 4 — `ts-monitor`**: once real observations exist, check whether
-  the deployed forecast is still tracking reality, detect data drift, and
-  recommend whether to retrain.
+  the deployed forecast is still tracking reality (now with a bootstrap
+  confidence interval on its error metrics), detect data drift (now with
+  an effect size, not just a bare p-value), and recommend whether to
+  retrain -- flagging when that recommendation is itself close to the
+  threshold rather than clear-cut.
 - **Layer 5 — `ts-retrain`**: when `ts-monitor` says `retrain_now`,
   re-run Layers 1-2 on the updated series and deterministically decide
   whether the freshly backtested candidate beats what's currently
@@ -465,10 +468,34 @@ Before actually publishing, you'll want to:
   project's synthetic data (which has a real upward trend) flags
   `drift_detected=True` even with no injected anomaly, purely from trend
   continuation. Read the `interpretation` field rather than treating the
-  boolean as an automatic alarm.
+  boolean as an automatic alarm. **It now reports a magnitude alongside
+  that boolean, not just a bare p-value**: `mean_shift_cohens_d` (pooled-
+  SD effect size for the mean shift) plus the raw `ttest_statistic`/
+  `ks_statistic` the two tests are actually built on -- previously
+  computed internally and silently dropped before returning, a real
+  oversight fixed alongside the effect-size addition. Confirmed on the
+  project's own trending synthetic data: the unmodified series' trend-
+  driven "drift" comes back with `mean_shift_cohens_d≈-0.42`, while
+  injecting an obvious +200 level shift on top of it pushes that to
+  `≈7.06` -- both flagged `drift_detected=True`, but only the effect size
+  tells you which one is a trend continuation and which one is a wall.
+- **`ts-monitor__compare_forecast_to_actuals`'s `backtest_style_metrics`
+  now includes a bootstrap confidence interval** (`mae_ci_lower/upper`,
+  etc., same percentile-bootstrap technique and field names as
+  `ts-forecaster`'s backtest metrics) -- a comparison drawn from just a
+  handful of elapsed forecast dates has real sampling uncertainty of its
+  own, arguably more consequential here than in a Layer 2 backtest since
+  it's about real post-deployment performance, not a held-out window.
 - **`ts-monitor__recommend_retraining` is deliberately deterministic
   rather than left to model judgment** -- "should we retrain" is the kind
-  of decision worth being reproducible given the same inputs.
+  of decision worth being reproducible given the same inputs. It can
+  now optionally accept `mape_now_ci_lower`/`mape_now_ci_upper` (from the
+  bootstrap CI above) and will report `pct_degradation_ci_lower/upper`
+  plus flag `degradation_threshold_within_ci: true` when the degradation
+  threshold itself falls inside that range -- i.e. the degraded/
+  not-degraded verdict is sensitive to sampling noise in `mape_now`, not
+  a clean call, and the tool says so in `reasoning` rather than reporting
+  a falsely confident point-estimate verdict.
 - **`ts-retrain` only ever changes the deployment through one gated tool,
   `ts-retrain__execute_redeploy`** -- it re-runs Layers 1-2, hands the
   resulting candidate to `ts-retrain__compare_candidate_to_deployed`

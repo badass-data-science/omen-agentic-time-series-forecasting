@@ -26,17 +26,29 @@ You need three things to do this properly:
 
 - `ts-monitor__compare_forecast_to_actuals` — matches the forecast against
   real values now available, returns error metrics over the elapsed
-  portion of the horizon and prediction interval coverage if applicable.
+  portion of the horizon (now WITH a bootstrap confidence interval on
+  each -- `mae_ci_lower/upper`, `rmse_ci_lower/upper`,
+  `mape_pct_ci_lower/upper` inside `backtest_style_metrics`, same
+  percentile-bootstrap technique as `ts-forecaster`'s backtest metrics)
+  and prediction interval coverage if applicable.
 - `ts-monitor__detect_data_drift` — compares a recent window of the series
   against a reference window just before it (t-test + KS test). Can flag
   false positives on a trending or seasonal series -- read the
   `interpretation` field, don't treat `drift_detected` as automatic alarm.
+  Also returns `mean_shift_cohens_d` and the raw `ttest_statistic`/
+  `ks_statistic` -- when reporting a drift flag, cite the magnitude
+  (Cohen's d, KS statistic), not just the fact that a p-value cleared 0.05.
 - `ts-monitor__recommend_retraining` — a DELIBERATELY deterministic,
   rule-based decision (not a judgment call for you to make from scratch)
   combining error degradation and drift into one of: `retrain_now`,
   `investigate`, `monitor_closely`, `no_action_needed`. Call this rather
   than eyeballing your own verdict -- the point of this tool existing is
-  that this decision should be reproducible given the same inputs.
+  that this decision should be reproducible given the same inputs. Pass
+  `mape_now_ci_lower`/`mape_now_ci_upper` (from Step 1's
+  `mape_pct_ci_lower`/`mape_pct_ci_upper`) if you have them -- when the
+  degradation threshold falls inside that CI, the result flags
+  `degradation_threshold_within_ci: true` and says so in `reasoning`,
+  meaning the verdict is sensitive to sampling noise, not clear-cut.
 
 ## Step 1 — Compare forecast to reality
 
@@ -63,6 +75,10 @@ Call `recommend_retraining`, passing:
 - `drift_detected` from Step 2
 - `interval_coverage_pct` / `nominal_confidence_pct` from Step 1's
   `interval_coverage`, if it was available
+- `mape_now_ci_lower` / `mape_now_ci_upper` from Step 1's
+  `backtest_style_metrics.mape_pct_ci_lower` / `mape_pct_ci_upper` --
+  pass these whenever you have them, it costs nothing and lets the tool
+  flag a borderline verdict for you instead of you having to notice it
 
 Do not substitute your own judgment for this tool's output -- if you think
 its recommendation seems off given what you saw in Steps 1-2, say so as a
@@ -70,12 +86,16 @@ caveat in your report, but still report what it actually returned.
 
 ## Step 4 — Write your report
 
-- **Current accuracy**: the elapsed-horizon MAPE, and how it compares to
-  the original backtest MAPE (or a note that you don't have the backtest
-  number to compare against).
+- **Current accuracy**: the elapsed-horizon MAPE and its confidence
+  interval, and how it compares to the original backtest MAPE (or a note
+  that you don't have the backtest number to compare against). If
+  `recommend_retraining` flagged `degradation_threshold_within_ci: true`,
+  say so plainly -- the verdict is close to the threshold, not a clean call.
 - **Interval calibration**: if available, whether coverage looks right.
-- **Drift status**: what the tests found, and your own read on whether a
-  `drift_detected=True` looks like trend/seasonality vs. something new.
+- **Drift status**: what the tests found -- cite the magnitude
+  (`mean_shift_cohens_d`, `ks_statistic`), not just that a p-value cleared
+  0.05 -- and your own read on whether a `drift_detected=True` looks like
+  trend/seasonality vs. something new.
 - **Recommendation**: exactly what `recommend_retraining` returned, plus
   its `reasoning` field.
 - **What to do next**: if the recommendation was `retrain_now` (or

@@ -44,16 +44,99 @@ def compute_metrics(y_true, y_pred) -> dict:
     }
 
 
+def _bootstrap_metric_ci(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    n_bootstrap: int = 1000,
+    confidence_level: float = 0.95,
+    seed: int = 42,
+) -> dict:
+    """Bootstrap confidence intervals for MAE, RMSE, and MAPE: resample
+    PAIRED (actual, forecast) points with replacement n_bootstrap times,
+    recompute each metric per resample, take percentiles. Deliberately the
+    same technique (and the same field names: mae_ci_lower/upper, etc.)
+    as ts-forecaster's model_tools.py::_bootstrap_metric_ci, duplicated
+    here rather than imported cross-layer (same precedent as
+    deploy/forecast_tools.py's _aicc/_build_lag_features) -- a monitoring
+    comparison drawn from a handful of just-elapsed forecast dates has the
+    same "modest sample, single window" uncertainty a Layer 2 backtest
+    does, arguably more consequential since it's about real post-
+    deployment performance, not a backtest.
+    """
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    n = len(y_true)
+
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, n, size=(n_bootstrap, n))
+    resampled_true = y_true[idx]
+    resampled_pred = y_pred[idx]
+    errors = resampled_true - resampled_pred
+
+    mae_samples = np.mean(np.abs(errors), axis=1)
+    rmse_samples = np.sqrt(np.mean(errors**2, axis=1))
+
+    nonzero_mask = np.abs(resampled_true) > 1e-8
+    with np.errstate(invalid="ignore", divide="ignore"):
+        pct_errors = np.where(nonzero_mask, np.abs(errors / resampled_true), np.nan)
+    mape_samples = np.nanmean(pct_errors, axis=1) * 100
+
+    alpha = 1 - confidence_level
+
+    def _percentile_ci(samples):
+        samples = samples[~np.isnan(samples)]
+        if len(samples) == 0:
+            return None, None
+        lower = round(float(np.percentile(samples, 100 * alpha / 2)), 4)
+        upper = round(float(np.percentile(samples, 100 * (1 - alpha / 2))), 4)
+        return lower, upper
+
+    mae_ci = _percentile_ci(mae_samples)
+    rmse_ci = _percentile_ci(rmse_samples)
+    mape_ci = _percentile_ci(mape_samples)
+
+    return {
+        "mae_ci_lower": mae_ci[0],
+        "mae_ci_upper": mae_ci[1],
+        "rmse_ci_lower": rmse_ci[0],
+        "rmse_ci_upper": rmse_ci[1],
+        "mape_pct_ci_lower": mape_ci[0],
+        "mape_pct_ci_upper": mape_ci[1],
+    }
+
+
+def compute_metrics_with_ci(
+    y_true,
+    y_pred,
+    n_bootstrap: int = 1000,
+    confidence_level: float = 0.95,
+    seed: int = 42,
+) -> dict:
+    """compute_metrics's point estimates (MAE, RMSE, MAPE), plus a
+    bootstrap confidence interval for each -- see _bootstrap_metric_ci.
+    Additive over compute_metrics, not a rename: every pre-existing field
+    name is unchanged, only the CI fields are new.
+    """
+    metrics = compute_metrics(y_true, y_pred)
+    ci = _bootstrap_metric_ci(y_true, y_pred, n_bootstrap=n_bootstrap, confidence_level=confidence_level, seed=seed)
+    return {**metrics, **ci, "ci_confidence_level": confidence_level, "ci_n_bootstrap": n_bootstrap}
+
+
 def compare_forecast_to_actuals(
     forecast: list,
     df: pd.DataFrame,
     confidence_level: float = 0.95,
+    n_bootstrap: int = 1000,
+    seed: int = 42,
 ) -> dict:
     """Match a previously produced forecast (the list of {date, forecast,
     lower?, upper?} dicts a ts-deploy tool returned) against real observed
     values now present in the updated series, and report:
     - error metrics over whatever portion of the horizon has actually
-      elapsed
+      elapsed, WITH a bootstrap confidence interval on each (see
+      compute_metrics_with_ci) -- a comparison drawn from just a few
+      elapsed forecast dates has real sampling uncertainty of its own,
+      same reasoning as ts-forecaster's backtest metric CIs.
     - prediction interval coverage, if the forecast included one: what
       fraction of realized actuals actually fell inside their interval,
       vs. the nominal confidence level.
@@ -87,7 +170,7 @@ def compare_forecast_to_actuals(
 
     y_true = [m["actual"] for m in matched]
     y_pred = [m["forecast"] for m in matched]
-    metrics = compute_metrics(y_true, y_pred)
+    metrics = compute_metrics_with_ci(y_true, y_pred, n_bootstrap=n_bootstrap, confidence_level=confidence_level, seed=seed)
 
     coverage_result = {"interval_available": False}
     has_intervals = all(m["lower"] is not None and m["upper"] is not None for m in matched)
@@ -141,6 +224,18 @@ def detect_data_drift(
     automatic alarm. (In practice: a steadily trending series will often
     flag as "drifted" here even when nothing anomalous has happened --
     that's expected, not a bug.)
+
+    Also reports `mean_shift_cohens_d` -- Cohen's d for the mean shift
+    (pooled-standard-deviation formula, the standard choice for reporting
+    an effect size alongside a Welch's t-test even though the test itself
+    doesn't assume equal variances), and the raw `ttest_statistic`/
+    `ks_statistic` the two tests are actually built on, which were being
+    computed internally and then silently dropped before this fix -- a
+    bare p-value doesn't distinguish a barely-significant shift from a
+    drastic one, same reasoning behind every other effect size in this
+    project. The KS statistic is already itself a natural magnitude (the
+    maximum distance between the two windows' empirical CDFs, 0 to 1) and
+    needs no further transformation.
     """
     total_needed = recent_window_size + reference_window_size
     if len(df) < total_needed:
@@ -160,6 +255,12 @@ def detect_data_drift(
     ttest_stat, ttest_pvalue = ttest_ind(reference, recent, equal_var=False)
     ks_stat, ks_pvalue = ks_2samp(reference, recent)
 
+    n1, n2 = len(reference), len(recent)
+    pooled_std = np.sqrt(
+        ((n1 - 1) * reference.var(ddof=1) + (n2 - 1) * recent.var(ddof=1)) / (n1 + n2 - 2)
+    )
+    cohens_d = float((recent.mean() - reference.mean()) / pooled_std) if pooled_std > 0 else None
+
     drift_detected = bool(ttest_pvalue < 0.05 or ks_pvalue < 0.05)
 
     return {
@@ -167,13 +268,17 @@ def detect_data_drift(
         "reference_window_size": reference_window_size,
         "mean_shift_pct": mean_shift_pct,
         "std_ratio_recent_over_reference": std_ratio,
+        "ttest_statistic": round(float(ttest_stat), 4),
         "ttest_p_value": round(float(ttest_pvalue), 4),
+        "mean_shift_cohens_d": round(cohens_d, 4) if cohens_d is not None else None,
+        "ks_statistic": round(float(ks_stat), 4),
         "ks_test_p_value": round(float(ks_pvalue), 4),
         "drift_detected": drift_detected,
         "interpretation": (
             (
-                "At least one test flags a significant distributional shift between the "
-                "reference and recent windows. Check by eye whether this lines up with a "
+                f"At least one test flags a significant distributional shift between the "
+                f"reference and recent windows (mean shift Cohen's d={round(cohens_d, 2) if cohens_d is not None else 'N/A'}, "
+                f"KS statistic={round(float(ks_stat), 3)}). Check by eye whether this lines up with a "
                 "known seasonal transition or an ongoing trend (both plausible false "
                 "positives for this test) or looks like a genuine regime change unrelated "
                 "to trend/seasonality."
@@ -190,6 +295,8 @@ def recommend_retraining(
     drift_detected: bool,
     interval_coverage_pct: float = None,
     nominal_confidence_pct: float = None,
+    mape_now_ci_lower: float = None,
+    mape_now_ci_upper: float = None,
     error_degradation_threshold_pct: float = 20.0,
     coverage_miscalibration_threshold_pct: float = 15.0,
 ) -> dict:
@@ -208,6 +315,15 @@ def recommend_retraining(
             available from compare_forecast_to_actuals.
         nominal_confidence_pct: The interval's nominal confidence level,
             if available.
+        mape_now_ci_lower: Optional bootstrap CI lower bound on mape_now
+            (compare_forecast_to_actuals's mape_pct_ci_lower). If supplied
+            alongside mape_now_ci_upper, the implied degradation range
+            gets reported too, and flagged if the threshold itself falls
+            inside it -- i.e. the degraded/not-degraded verdict is
+            sensitive to sampling noise in mape_now, not clear-cut.
+            mape_backtest is treated as a fixed constant either way (no
+            CI of its own is combined in here).
+        mape_now_ci_upper: See mape_now_ci_lower.
         error_degradation_threshold_pct: How much worse (in % relative
             terms) mape_now can be than mape_backtest before it counts as
             "degraded."
@@ -217,9 +333,21 @@ def recommend_retraining(
     if mape_backtest in (None, 0):
         pct_degradation = None
         performance_degraded = None
+        pct_degradation_ci_lower = None
+        pct_degradation_ci_upper = None
+        degradation_threshold_within_ci = None
     else:
         pct_degradation = round(100 * (mape_now - mape_backtest) / mape_backtest, 2)
         performance_degraded = pct_degradation > error_degradation_threshold_pct
+
+        pct_degradation_ci_lower = pct_degradation_ci_upper = None
+        degradation_threshold_within_ci = None
+        if mape_now_ci_lower is not None and mape_now_ci_upper is not None:
+            pct_degradation_ci_lower = round(100 * (mape_now_ci_lower - mape_backtest) / mape_backtest, 2)
+            pct_degradation_ci_upper = round(100 * (mape_now_ci_upper - mape_backtest) / mape_backtest, 2)
+            degradation_threshold_within_ci = bool(
+                pct_degradation_ci_lower <= error_degradation_threshold_pct <= pct_degradation_ci_upper
+            )
 
     interval_miscalibrated = None
     if interval_coverage_pct is not None and nominal_confidence_pct is not None:
@@ -254,10 +382,20 @@ def recommend_retraining(
         recommendation = "monitor_closely"
         reasoning += " However, prediction interval coverage is off from nominal -- worth watching even though point-forecast accuracy looks fine."
 
+    if degradation_threshold_within_ci:
+        reasoning += (
+            f" Note: mape_now's bootstrap CI ([{pct_degradation_ci_lower}%, {pct_degradation_ci_upper}%] implied "
+            f"degradation) straddles the {error_degradation_threshold_pct}% threshold -- this "
+            "degraded/not-degraded verdict is sensitive to sampling noise in mape_now, not a clear-cut case."
+        )
+
     return {
         "mape_now": mape_now,
         "mape_backtest": mape_backtest,
         "pct_degradation": pct_degradation,
+        "pct_degradation_ci_lower": pct_degradation_ci_lower,
+        "pct_degradation_ci_upper": pct_degradation_ci_upper,
+        "degradation_threshold_within_ci": degradation_threshold_within_ci,
         "performance_degraded": performance_degraded,
         "drift_detected": drift_detected,
         "interval_miscalibrated": interval_miscalibrated,

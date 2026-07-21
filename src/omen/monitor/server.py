@@ -30,6 +30,8 @@ def compare_forecast_to_actuals(
     forecast: list,
     csv_path: str,
     confidence_level: float = 0.95,
+    n_bootstrap: int = 1000,
+    seed: int = 42,
     date_col: str = "date",
     value_col: str = "value",
 ) -> dict:
@@ -38,6 +40,16 @@ def compare_forecast_to_actuals(
     whatever portion of the horizon has actually elapsed, plus prediction
     interval coverage if the forecast included one.
 
+    `backtest_style_metrics` now includes a bootstrap confidence interval
+    for MAE/RMSE/MAPE (mae_ci_lower/upper, etc., percentile method,
+    deterministic given `seed`) alongside the point estimates -- a
+    comparison drawn from just a few elapsed forecast dates has real
+    sampling uncertainty of its own, same reasoning as ts-forecaster's
+    backtest metric CIs. Pass `mape_pct_ci_lower`/`mape_pct_ci_upper` from
+    here straight through to `recommend_retraining`'s
+    `mape_now_ci_lower`/`mape_now_ci_upper` if you want the degradation
+    verdict to flag when it's sensitive to this sampling noise.
+
     Args:
         forecast: The `forecast` list from a ts-deploy tool's result
             (list of {date, forecast, lower?, upper?} dicts). Pass it
@@ -45,12 +57,15 @@ def compare_forecast_to_actuals(
         csv_path: Path to the UPDATED series CSV -- must contain real
             observations for at least some of the forecasted dates.
         confidence_level: The forecast's nominal confidence level, e.g.
-            0.95, used to judge whether interval coverage looks calibrated.
+            0.95, used both to judge interval coverage calibration AND as
+            the width of the bootstrap CI on the error metrics.
+        n_bootstrap: Bootstrap resamples for the error-metric CIs.
+        seed: Random seed for the bootstrap, for reproducibility.
         date_col: Name of the date column in the CSV.
         value_col: Name of the value column in the CSV.
     """
     df = load_series(csv_path, date_col, value_col)
-    return _compare_forecast_to_actuals(forecast, df, confidence_level=confidence_level)
+    return _compare_forecast_to_actuals(forecast, df, confidence_level=confidence_level, n_bootstrap=n_bootstrap, seed=seed)
 
 
 @mcp.tool()
@@ -67,6 +82,14 @@ def detect_data_drift(
     can't distinguish an ongoing trend or normal seasonal transition from a
     genuine regime change -- read the `interpretation` field, don't treat
     `drift_detected` as an automatic alarm.
+
+    Also returns `mean_shift_cohens_d` (pooled-SD effect size for the mean
+    shift) and the raw `ttest_statistic`/`ks_statistic` the two tests are
+    built on -- a bare p-value doesn't distinguish a barely-significant
+    shift from a drastic one, same reasoning behind every other effect
+    size in this project. `ks_statistic` (0 to 1) is itself already a
+    natural magnitude: the maximum distance between the two windows'
+    empirical CDFs.
 
     Args:
         csv_path: Path to a CSV with a date column and a value column.
@@ -87,6 +110,8 @@ def recommend_retraining(
     drift_detected: bool,
     interval_coverage_pct: Optional[float] = None,
     nominal_confidence_pct: Optional[float] = None,
+    mape_now_ci_lower: Optional[float] = None,
+    mape_now_ci_upper: Optional[float] = None,
     error_degradation_threshold_pct: float = 20.0,
     coverage_miscalibration_threshold_pct: float = 15.0,
 ) -> dict:
@@ -106,6 +131,13 @@ def recommend_retraining(
             compare_forecast_to_actuals returned one.
         nominal_confidence_pct: The interval's nominal confidence level,
             if available (e.g. 95.0).
+        mape_now_ci_lower: Optional bootstrap CI lower bound on mape_now
+            (compare_forecast_to_actuals's backtest_style_metrics.mape_pct_ci_lower).
+            If supplied alongside mape_now_ci_upper, the result reports the
+            implied degradation range and flags when the threshold itself
+            falls inside it -- i.e. the degraded/not-degraded verdict is
+            sensitive to sampling noise in mape_now, not clear-cut.
+        mape_now_ci_upper: See mape_now_ci_lower (mape_pct_ci_upper).
         error_degradation_threshold_pct: How much worse (relative %)
             mape_now can be than mape_backtest before counting as degraded.
         coverage_miscalibration_threshold_pct: How far empirical coverage
@@ -117,6 +149,8 @@ def recommend_retraining(
         drift_detected=drift_detected,
         interval_coverage_pct=interval_coverage_pct,
         nominal_confidence_pct=nominal_confidence_pct,
+        mape_now_ci_lower=mape_now_ci_lower,
+        mape_now_ci_upper=mape_now_ci_upper,
         error_degradation_threshold_pct=error_degradation_threshold_pct,
         coverage_miscalibration_threshold_pct=coverage_miscalibration_threshold_pct,
     )
