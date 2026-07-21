@@ -38,9 +38,11 @@ You need three things to do this properly:
   Also returns `residual_outliers`: `flagged_dates` (any matched-point
   residuals that look like outliers, same modified-z-score technique as
   `ts-analyst__detect_anomalies_robust_zscore`), `max_abs_modified_z_score`,
-  and `metrics_excluding_outliers`, so you can tell "the forecast missed a
-  little every day" from "the forecast was fine except one wild day"
-  before treating the aggregate error as evidence the model needs retraining.
+  `per_point` (every matched date's own residual and modified z-score, not
+  just the flagged ones), and `metrics_excluding_outliers`, so you can tell
+  "the forecast missed a little every day" from "the forecast was fine
+  except one wild day" before treating the aggregate error as evidence the
+  model needs retraining.
 - `ts-monitor__detect_data_drift` — compares a recent window of the series
   against a reference window just before it (t-test + KS test). Can flag
   false positives on a trending or seasonal series -- read the
@@ -50,12 +52,15 @@ You need three things to do this properly:
   (Cohen's d, KS statistic), not just the fact that a p-value cleared 0.05.
 - `ts-monitor__rolling_drift_check` — repeats `detect_data_drift` at
   several points walking backward through the series instead of trusting
-  one single recent/reference split. Reports `n_flagged`/`frac_flagged`
-  (how many of the checks flagged drift, and what fraction) and
-  `persistent_drift` (true once `frac_flagged` clears
-  `persistence_threshold_frac`, default 50%). Use this when
-  `detect_data_drift` flags drift and you want to know whether it's a
-  SUSTAINED shift (`persistent_drift: true`) or looks more like an
+  one single recent/reference split. Reports `checks` (a chronological
+  list of each individual window's own `recent_window_end_date`,
+  `drift_detected`, `mean_shift_cohens_d`, `ks_statistic` -- inspect this
+  if you want to know WHICH window(s) flagged, not just the aggregate),
+  `n_checks_failed`, `n_flagged`/`frac_flagged` (how many of the checks
+  flagged drift, and what fraction), and `persistent_drift` (true once
+  `frac_flagged` clears `persistence_threshold_frac`, default 50%). Use
+  this when `detect_data_drift` flags drift and you want to know whether
+  it's a SUSTAINED shift (`persistent_drift: true`) or looks more like an
   isolated blip (`frac_flagged` low) -- cheap to run (no model fitting),
   so reach for it whenever the single-window verdict alone would leave
   you guessing.

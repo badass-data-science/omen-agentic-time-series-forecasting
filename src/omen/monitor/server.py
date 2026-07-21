@@ -145,11 +145,16 @@ def rolling_drift_check(
     the real constraint is having enough historical data to walk back
     through (see the tool's error message for the exact requirement).
 
-    Returns `n_flagged`/`frac_flagged` (how many of the successful checks
-    flagged drift, and what fraction that is) and `persistent_drift`:
-    true when `frac_flagged` is at least `persistence_threshold_frac`,
-    meaning the shift shows up consistently across time rather than in
-    just one window.
+    Returns `checks`: a chronological (oldest-to-newest) list of each
+    individual check's own result (`recent_window_end_date`,
+    `drift_detected`, `mean_shift_cohens_d`, `ks_statistic`) -- inspect
+    this if you want to know WHICH specific window(s) flagged, not just
+    the aggregate. `n_checks_failed` counts any checks that couldn't run
+    (e.g. insufficient data at that point in the walk). Also returns
+    `n_flagged`/`frac_flagged` (how many of the successful checks flagged
+    drift, and what fraction that is) and `persistent_drift`: true when
+    `frac_flagged` is at least `persistence_threshold_frac`, meaning the
+    shift shows up consistently across time rather than in just one window.
 
     Args:
         csv_path: Path to a CSV with a date column and a value column.
