@@ -18,7 +18,7 @@ reproducible given the same inputs, not re-derived by an LLM each time.
 
 import numpy as np
 import pandas as pd
-from scipy.stats import ks_2samp, ttest_ind
+from scipy.stats import ks_2samp, norm as _norm, ttest_ind
 
 
 def compute_metrics(y_true, y_pred) -> dict:
@@ -122,12 +122,106 @@ def compute_metrics_with_ci(
     return {**metrics, **ci, "ci_confidence_level": confidence_level, "ci_n_bootstrap": n_bootstrap}
 
 
+def _wilson_score_interval(successes: int, n: int, confidence_level: float = 0.95):
+    """Wilson score confidence interval for a binomial proportion --
+    better-behaved than the normal approximation for small n or a
+    proportion near 0/1, both common here since interval coverage is
+    often computed from a handful of just-elapsed forecast dates. Returns
+    (lower_pct, upper_pct), or (None, None) if n == 0.
+    """
+    if n == 0:
+        return None, None
+    z = float(_norm.ppf(1 - (1 - confidence_level) / 2))
+    p_hat = successes / n
+    denom = 1 + z**2 / n
+    center = (p_hat + z**2 / (2 * n)) / denom
+    half_width = (z / denom) * np.sqrt((p_hat * (1 - p_hat) / n) + (z**2 / (4 * n**2)))
+    lower = max(0.0, center - half_width)
+    upper = min(1.0, center + half_width)
+    return round(lower * 100, 2), round(upper * 100, 2)
+
+
+def _residual_outliers(matched: list, z_threshold: float = 3.5) -> dict:
+    """Flags matched-point residuals (actual - forecast) that look like
+    outliers relative to the rest of the elapsed-horizon comparison, using
+    a modified z-score (median + MAD, Iglewicz & Hoya 1993) -- the same
+    technique and default threshold as ts-analyst's
+    detect_anomalies_robust_zscore, applied here to a single fixed set of
+    residuals rather than a rolling window (the elapsed horizon is
+    typically too short for a rolling window to make sense).
+
+    The point: an aggregate MAPE over the elapsed horizon can't tell "the
+    forecast missed by a little every day" from "the forecast was fine
+    except for one wild day (a promotion, an outage)" -- these call for
+    different responses, and only one of them is evidence the MODEL itself
+    needs retraining. metrics_excluding_outliers lets the caller see how
+    much a small number of unusual days are inflating the aggregate error.
+
+    KNOWN LIMITATION, not a bug: if half or more of the residuals are
+    EXACTLY identical (most realistically, exactly 0 -- a suspiciously
+    perfect forecast on most days), the median absolute deviation itself
+    degenerates to 0, and every point's modified z-score collapses to 0
+    regardless of how extreme any other single residual is -- the same
+    self-dilution failure mode ts-analyst's original detect_anomalies_zscore
+    had before the robust version was built, just triggered by a different
+    (rarer, but not impossible) condition. Guarded by falling back to
+    all-zero z-scores (flags nothing) rather than raising or dividing by
+    zero, but a genuine outlier CAN be masked in this specific edge case.
+    """
+    residuals = np.array([m["actual"] - m["forecast"] for m in matched], dtype=float)
+    median_resid = float(np.median(residuals))
+    mad = float(np.median(np.abs(residuals - median_resid)))
+
+    if mad > 0:
+        modified_z = 0.6745 * (residuals - median_resid) / mad
+    else:
+        modified_z = np.zeros_like(residuals)
+
+    is_outlier = np.abs(modified_z) > z_threshold
+    flagged_dates = [m["date"] for m, flagged in zip(matched, is_outlier) if flagged]
+
+    metrics_excluding_outliers = None
+    n_kept = int((~is_outlier).sum())
+    if 0 < n_kept < len(matched) and n_kept >= 2:
+        y_true_clean = [m["actual"] for m, flagged in zip(matched, is_outlier) if not flagged]
+        y_pred_clean = [m["forecast"] for m, flagged in zip(matched, is_outlier) if not flagged]
+        metrics_excluding_outliers = compute_metrics(y_true_clean, y_pred_clean)
+
+    return {
+        "z_threshold": z_threshold,
+        "flagged_dates": flagged_dates,
+        "max_abs_modified_z_score": round(float(np.max(np.abs(modified_z))), 4) if len(modified_z) else None,
+        "metrics_excluding_outliers": metrics_excluding_outliers,
+        "per_point": [
+            {"date": m["date"], "residual": round(float(r), 4), "modified_z_score": round(float(z), 4)}
+            for m, r, z in zip(matched, residuals, modified_z)
+        ],
+        "interpretation": (
+            f"{len(flagged_dates)} of {len(matched)} matched date(s) flagged as residual outliers "
+            f"(modified z-score > {z_threshold}). "
+            + (
+                (
+                    f"Excluding them, MAPE would be {metrics_excluding_outliers['mape_pct']}% instead of "
+                    "the full-set figure above -- consider whether the aggregate error is being driven by "
+                    "a small number of unusual days rather than a systematic miss before treating it as "
+                    "evidence the model itself needs retraining."
+                )
+                if metrics_excluding_outliers is not None
+                else "Not enough non-outlier points remain for a clean comparison."
+            )
+            if flagged_dates
+            else "No residual outliers flagged -- the aggregate error above isn't being driven by a small number of unusual days."
+        ),
+    }
+
+
 def compare_forecast_to_actuals(
     forecast: list,
     df: pd.DataFrame,
     confidence_level: float = 0.95,
     n_bootstrap: int = 1000,
     seed: int = 42,
+    outlier_z_threshold: float = 3.5,
 ) -> dict:
     """Match a previously produced forecast (the list of {date, forecast,
     lower?, upper?} dicts a ts-deploy tool returned) against real observed
@@ -139,7 +233,18 @@ def compare_forecast_to_actuals(
       same reasoning as ts-forecaster's backtest metric CIs.
     - prediction interval coverage, if the forecast included one: what
       fraction of realized actuals actually fell inside their interval,
-      vs. the nominal confidence level.
+      vs. the nominal confidence level, WITH a Wilson score confidence
+      interval on the coverage percentage itself (see
+      _wilson_score_interval) -- coverage is a proportion computed from
+      whatever's elapsed so far, often a small handful of dates, so the
+      point estimate alone can overstate how precisely "is this
+      calibrated" is actually known. This is supplementary to, and does
+      NOT change, `well_calibrated`'s existing threshold-based verdict
+      (kept deliberately identical to ts-forecaster's mirrored
+      backtest_interval_coverage check, see AGENTS.md).
+    - residual outliers (see _residual_outliers): whether the aggregate
+      error is being driven by a small number of unusual days rather than
+      a systematic miss.
     """
     actuals_by_date = {str(row["date"].date()): row["value"] for _, row in df.iterrows()}
 
@@ -178,20 +283,30 @@ def compare_forecast_to_actuals(
         within = sum(1 for m in matched if m["lower"] <= m["actual"] <= m["upper"])
         coverage_pct = round(100 * within / len(matched), 2)
         nominal_pct = round(confidence_level * 100, 2)
+        ci_lower, ci_upper = _wilson_score_interval(within, len(matched), confidence_level)
         coverage_result = {
             "interval_available": True,
             "empirical_coverage_pct": coverage_pct,
+            "empirical_coverage_ci_lower": ci_lower,
+            "empirical_coverage_ci_upper": ci_upper,
             "nominal_confidence_pct": nominal_pct,
             "well_calibrated": bool(abs(coverage_pct - nominal_pct) <= 15),
             "interpretation": (
-                f"{coverage_pct}% of realized actuals fell within their prediction interval, "
-                f"vs. a nominal {nominal_pct}%. "
+                f"{coverage_pct}% of realized actuals fell within their prediction interval "
+                f"(Wilson score {int(confidence_level * 100)}% CI: [{ci_lower}%, {ci_upper}%], "
+                f"n={len(matched)}), vs. a nominal {nominal_pct}%. "
                 + (
                     "Reasonably close to nominal -- interval looks calibrated."
                     if abs(coverage_pct - nominal_pct) <= 15
                     else "Notably off from nominal -- the interval is likely too narrow (if "
                     "coverage is low) or too wide (if coverage is much higher than nominal), "
                     "and shouldn't be trusted at face value."
+                )
+                + (
+                    " Note the wide CI above given the small number of matched dates so far -- "
+                    "treat the calibration verdict as provisional until more observations accumulate."
+                    if ci_lower is not None and (ci_upper - ci_lower) > 30
+                    else ""
                 )
             ),
         }
@@ -201,6 +316,7 @@ def compare_forecast_to_actuals(
         "date_range_compared": [matched[0]["date"], matched[-1]["date"]],
         "backtest_style_metrics": metrics,
         "interval_coverage": coverage_result,
+        "residual_outliers": _residual_outliers(matched, z_threshold=outlier_z_threshold),
         "matched_points": matched,
     }
 
@@ -285,6 +401,111 @@ def detect_data_drift(
             )
             if drift_detected
             else "No significant shift detected between the reference and recent windows."
+        ),
+    }
+
+
+def rolling_drift_check(
+    df: pd.DataFrame,
+    recent_window_size: int = 30,
+    reference_window_size: int = 90,
+    n_checks: int = 5,
+    step_size: int = None,
+    persistence_threshold_frac: float = 0.5,
+) -> dict:
+    """Repeats detect_data_drift at n_checks different points walking
+    backward through the series (each check's own recent/reference window
+    pair, non-overlapping by default), instead of trusting the single
+    most-recent split detect_data_drift alone provides. Addresses the same
+    "one arbitrary window" fragility ts-forecaster's rolling_origin_backtest
+    was built to fix for backtesting: a single recent-vs-reference split
+    might have caught an ordinary one-off blip rather than a sustained
+    shift, and there was previously no cheap way to tell the difference.
+
+    Unlike rolling_origin_backtest, this is CHEAP per check (a t-test and a
+    KS test on numpy arrays, no model fitting), so a larger n_checks costs
+    little -- the real constraint is just having enough historical data to
+    walk back through.
+
+    Args:
+        recent_window_size: Test window size at each check (same meaning
+            as detect_data_drift's own parameter).
+        reference_window_size: Reference window size at each check.
+        n_checks: How many non-overlapping checks to run, walking backward.
+        step_size: How far back each successive check's recent window
+            starts, relative to the previous one. Defaults to
+            recent_window_size (fully non-overlapping recent windows).
+        persistence_threshold_frac: Fraction of successful checks that must
+            flag drift before this is reported as `persistent_drift`
+            (a sustained shift) rather than an isolated flag. Explicit
+            parameter, not a hidden constant, same convention as
+            recommend_retraining's thresholds.
+    """
+    step_size = step_size or recent_window_size
+    total_needed_per_check = recent_window_size + reference_window_size
+    min_required = total_needed_per_check + step_size * (n_checks - 1)
+    n = len(df)
+    if n < min_required:
+        return {
+            "error": (
+                f"Need at least {min_required} observations for {n_checks} checks "
+                f"(recent_window_size + reference_window_size + step_size*(n_checks-1)), got {n}."
+            )
+        }
+
+    checks = []
+    for i in range(n_checks):
+        end = n - step_size * i
+        df_slice = df.iloc[:end].reset_index(drop=True)
+        result = detect_data_drift(df_slice, recent_window_size=recent_window_size, reference_window_size=reference_window_size)
+        if "error" in result:
+            checks.append({"check_index": i, "error": result["error"]})
+            continue
+        checks.append(
+            {
+                "check_index": i,
+                "recent_window_end_date": str(df_slice["date"].iloc[-1].date()),
+                "drift_detected": result["drift_detected"],
+                "mean_shift_cohens_d": result["mean_shift_cohens_d"],
+                "ks_statistic": result["ks_statistic"],
+            }
+        )
+    # Chronological order (check 0 above is the most recent; reverse so the
+    # report reads oldest-to-newest), same convention as
+    # ts-forecaster's rolling_origin_backtest.
+    checks.reverse()
+
+    successful = [c for c in checks if "error" not in c]
+    n_failed = len(checks) - len(successful)
+    if not successful:
+        return {"error": f"All {n_checks} checks failed to run.", "checks": checks}
+
+    n_flagged = sum(1 for c in successful if c["drift_detected"])
+    frac_flagged = round(n_flagged / len(successful), 4)
+    persistent_drift = bool(frac_flagged >= persistence_threshold_frac)
+
+    return {
+        "recent_window_size": recent_window_size,
+        "reference_window_size": reference_window_size,
+        "n_checks": n_checks,
+        "step_size": step_size,
+        "n_checks_failed": n_failed,
+        "checks": checks,
+        "n_flagged": n_flagged,
+        "frac_flagged": frac_flagged,
+        "persistence_threshold_frac": persistence_threshold_frac,
+        "persistent_drift": persistent_drift,
+        "interpretation": (
+            f"{n_flagged}/{len(successful)} rolling checks flagged drift"
+            + (f" ({n_failed} check(s) failed to run and were excluded)" if n_failed else "")
+            + ". "
+            + (
+                "Flagged across most checks -- looks like a SUSTAINED shift, not a one-off blip."
+                if persistent_drift
+                else "Flagged in a minority of checks (or none) -- more consistent with an isolated "
+                "blip, a seasonal transition, or noise than a sustained regime change, but still "
+                "worth a look at the individual checks below rather than dismissed outright."
+            )
         ),
     }
 

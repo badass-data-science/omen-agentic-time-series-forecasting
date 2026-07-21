@@ -479,6 +479,21 @@ Before actually publishing, you'll want to:
   injecting an obvious +200 level shift on top of it pushes that to
   `≈7.06` -- both flagged `drift_detected=True`, but only the effect size
   tells you which one is a trend continuation and which one is a wall.
+- **`ts-monitor__rolling_drift_check` addresses the same "one arbitrary
+  window" fragility `ts-forecaster__rolling_origin_backtest` fixed for
+  backtesting, applied to drift detection.** A single `detect_data_drift`
+  call only compares one recent window against one reference window --
+  it can't tell you whether a flagged shift is a sustained pattern or an
+  isolated blip. This repeats the check at `n_checks` (default 5)
+  non-overlapping points walking backward through the series and reports
+  `persistent_drift: true` when at least `persistence_threshold_frac`
+  (default 50%) of them flag drift. Unlike `rolling_origin_backtest`,
+  this is cheap per check (a t-test and KS test on numpy arrays, no model
+  fitting), so a larger `n_checks` costs little. Confirmed on the
+  project's own trending synthetic data: all 5 rolling checks flag drift
+  (`frac_flagged=1.0`), correctly identifying the ongoing trend as a
+  sustained pattern rather than a one-off blip -- consistent with
+  `detect_data_drift`'s own documented false-positive-on-trend caveat.
 - **`ts-monitor__compare_forecast_to_actuals`'s `backtest_style_metrics`
   now includes a bootstrap confidence interval** (`mae_ci_lower/upper`,
   etc., same percentile-bootstrap technique and field names as
@@ -486,6 +501,30 @@ Before actually publishing, you'll want to:
   handful of elapsed forecast dates has real sampling uncertainty of its
   own, arguably more consequential here than in a Layer 2 backtest since
   it's about real post-deployment performance, not a held-out window.
+- **`interval_coverage` now also reports a Wilson score confidence
+  interval on the coverage percentage itself** (`empirical_coverage_ci_lower/upper`)
+  -- coverage is a proportion computed from however many dates have
+  elapsed so far, often a small handful, so "100% coverage" from 10
+  points is far less reassuring than it sounds. Confirmed directly: 10/10
+  matched points inside their interval gives `empirical_coverage_pct=100.0`
+  but a Wilson CI of `[72.25%, 100.0%]` -- genuinely wide. This is
+  supplementary information only and deliberately does NOT change
+  `well_calibrated`'s existing 15-percentage-point threshold verdict,
+  which stays intentionally identical to `ts-forecaster`'s mirrored
+  `backtest_interval_coverage` check (see `AGENTS.md`).
+- **`compare_forecast_to_actuals` now flags residual outliers** among the
+  matched-point comparisons, using the same modified-z-score (MAD-based)
+  technique as `ts-analyst__detect_anomalies_robust_zscore`, and reports
+  `metrics_excluding_outliers` -- letting the caller distinguish "the
+  forecast missed by a little every day" from "the forecast was fine
+  except for one wild day (a promotion, an outage)," which call for
+  different responses when deciding whether the MODEL itself needs
+  retraining. **Known limitation, not a bug**: if half or more of the
+  residuals are exactly identical (most realistically exactly 0), the
+  MAD degenerates to 0 and every z-score collapses to 0, potentially
+  masking a genuine outlier -- the same self-dilution failure class
+  `ts-analyst`'s original (non-robust) anomaly detector had, just
+  triggered by a rarer condition.
 - **`ts-monitor__recommend_retraining` is deliberately deterministic
   rather than left to model judgment** -- "should we retrain" is the kind
   of decision worth being reproducible given the same inputs. It can

@@ -1,9 +1,12 @@
+import pandas as pd
+
 from omen.data_prep import generate_synthetic_series
 from omen.monitor.monitor_tools import (
     compute_metrics,
     compute_metrics_with_ci,
     compare_forecast_to_actuals,
     detect_data_drift,
+    rolling_drift_check,
     recommend_retraining,
 )
 
@@ -99,10 +102,97 @@ def test_compare_forecast_to_actuals_includes_bootstrap_ci_on_metrics():
     assert metrics["ci_n_bootstrap"] == 200
 
 
+def test_compare_forecast_to_actuals_wilson_ci_on_coverage():
+    df = generate_synthetic_series(n_days=100)
+    last_5 = df.iloc[-5:].reset_index(drop=True)
+
+    forecast = [
+        {
+            "date": str(row["date"].date()),
+            "forecast": float(row["value"]) * 0.95,
+            "lower": float(row["value"]) * 0.8,
+            "upper": float(row["value"]) * 1.1,
+        }
+        for _, row in last_5.iterrows()
+    ]
+
+    result = compare_forecast_to_actuals(forecast, df)
+    coverage = result["interval_coverage"]
+    assert coverage["empirical_coverage_ci_lower"] <= coverage["empirical_coverage_pct"] <= coverage["empirical_coverage_ci_upper"]
+    assert "Wilson score" in coverage["interpretation"]
+    # well_calibrated's existing threshold logic must be untouched by the new CI fields
+    assert coverage["well_calibrated"] == (abs(coverage["empirical_coverage_pct"] - coverage["nominal_confidence_pct"]) <= 15)
+
+
+def test_compare_forecast_to_actuals_flags_residual_outlier():
+    df = generate_synthetic_series(n_days=100)
+    last_10 = df.iloc[-10:].reset_index(drop=True)
+
+    forecast = []
+    for i, row in last_10.iterrows():
+        # Every day forecasts within a small, non-degenerate miss except one
+        # wild one -- NOT an exact match for the other nine (that would make
+        # every "good" residual exactly 0, degenerating the MAD to 0 too and
+        # masking the outlier, the same self-dilution class of issue
+        # ts-analyst's robust anomaly detector was built to avoid).
+        forecast_value = float(row["value"]) * 0.01 if i == last_10.index[5] else float(row["value"]) * 0.99
+        forecast.append({"date": str(row["date"].date()), "forecast": forecast_value})
+
+    result = compare_forecast_to_actuals(forecast, df)
+    outliers = result["residual_outliers"]
+    assert len(outliers["flagged_dates"]) >= 1
+    assert outliers["metrics_excluding_outliers"] is not None
+    # Excluding the one wild miss should give a much lower MAPE than the full set.
+    assert outliers["metrics_excluding_outliers"]["mape_pct"] < result["backtest_style_metrics"]["mape_pct"]
+
+
+def test_compare_forecast_to_actuals_no_outliers_when_uniformly_off():
+    df = generate_synthetic_series(n_days=100)
+    last_10 = df.iloc[-10:].reset_index(drop=True)
+
+    forecast = [
+        {"date": str(row["date"].date()), "forecast": float(row["value"]) * 0.95}
+        for _, row in last_10.iterrows()
+    ]
+
+    result = compare_forecast_to_actuals(forecast, df)
+    assert result["residual_outliers"]["flagged_dates"] == []
+    assert result["residual_outliers"]["metrics_excluding_outliers"] is None
+
+
 def test_compare_forecast_to_actuals_returns_error_when_no_dates_match():
     df = generate_synthetic_series(n_days=30)
     result = compare_forecast_to_actuals([{"date": "2099-01-01", "forecast": 1.0}], df)
     assert "error" in result
+
+
+def test_rolling_drift_check_persistent_on_trending_series():
+    df = generate_synthetic_series(n_days=300)
+    result = rolling_drift_check(df, recent_window_size=30, reference_window_size=90, n_checks=5)
+    assert result["n_checks_failed"] == 0
+    assert len(result["checks"]) == 5
+    # Checks should read chronologically (oldest first).
+    dates = [c["recent_window_end_date"] for c in result["checks"]]
+    assert dates == sorted(dates)
+    assert result["persistent_drift"] is True  # the project's own trend flags consistently
+
+
+def test_rolling_drift_check_errors_on_insufficient_data():
+    df = generate_synthetic_series(n_days=50)
+    result = rolling_drift_check(df, recent_window_size=30, reference_window_size=90, n_checks=5)
+    assert "error" in result
+
+
+def test_rolling_drift_check_respects_persistence_threshold():
+    df = generate_synthetic_series(n_days=300)
+    lenient = rolling_drift_check(df, recent_window_size=30, reference_window_size=90, n_checks=5, persistence_threshold_frac=0.99)
+    strict_but_still_reasonable = rolling_drift_check(
+        df, recent_window_size=30, reference_window_size=90, n_checks=5, persistence_threshold_frac=0.1
+    )
+    assert lenient["frac_flagged"] == strict_but_still_reasonable["frac_flagged"]  # same underlying checks
+    assert strict_but_still_reasonable["persistent_drift"] is True
+    # A near-100% bar should be harder to clear than a near-0% one for the same data.
+    assert lenient["persistent_drift"] is False or lenient["frac_flagged"] >= 0.99
 
 
 def test_recommend_retraining_decision_matrix():

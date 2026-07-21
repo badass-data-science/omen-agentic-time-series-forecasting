@@ -19,6 +19,7 @@ from omen.data_prep import load_series
 from .monitor_tools import (
     compare_forecast_to_actuals as _compare_forecast_to_actuals,
     detect_data_drift as _detect_data_drift,
+    rolling_drift_check as _rolling_drift_check,
     recommend_retraining as _recommend_retraining,
 )
 
@@ -32,6 +33,7 @@ def compare_forecast_to_actuals(
     confidence_level: float = 0.95,
     n_bootstrap: int = 1000,
     seed: int = 42,
+    outlier_z_threshold: float = 3.5,
     date_col: str = "date",
     value_col: str = "value",
 ) -> dict:
@@ -50,6 +52,21 @@ def compare_forecast_to_actuals(
     `mape_now_ci_lower`/`mape_now_ci_upper` if you want the degradation
     verdict to flag when it's sensitive to this sampling noise.
 
+    `interval_coverage` (when available) now also includes
+    `empirical_coverage_ci_lower`/`empirical_coverage_ci_upper` (a Wilson
+    score CI on the coverage percentage itself) -- supplementary
+    information only, it does NOT change `well_calibrated`'s existing
+    threshold-based verdict, but a wide CI here means the calibration
+    read is provisional given how few dates have elapsed so far.
+
+    `residual_outliers` flags matched-point residuals (actual - forecast)
+    that look like outliers via a modified z-score (same technique as
+    ts-analyst's detect_anomalies_robust_zscore), and reports
+    `metrics_excluding_outliers` so you can see whether the aggregate
+    error above is being driven by a small number of unusual days rather
+    than a systematic miss -- these call for different responses when
+    deciding whether to retrain.
+
     Args:
         forecast: The `forecast` list from a ts-deploy tool's result
             (list of {date, forecast, lower?, upper?} dicts). Pass it
@@ -61,11 +78,15 @@ def compare_forecast_to_actuals(
             the width of the bootstrap CI on the error metrics.
         n_bootstrap: Bootstrap resamples for the error-metric CIs.
         seed: Random seed for the bootstrap, for reproducibility.
+        outlier_z_threshold: Modified z-score threshold for flagging a
+            matched-point residual as an outlier.
         date_col: Name of the date column in the CSV.
         value_col: Name of the value column in the CSV.
     """
     df = load_series(csv_path, date_col, value_col)
-    return _compare_forecast_to_actuals(forecast, df, confidence_level=confidence_level, n_bootstrap=n_bootstrap, seed=seed)
+    return _compare_forecast_to_actuals(
+        forecast, df, confidence_level=confidence_level, n_bootstrap=n_bootstrap, seed=seed, outlier_z_threshold=outlier_z_threshold
+    )
 
 
 @mcp.tool()
@@ -101,6 +122,54 @@ def detect_data_drift(
     """
     df = load_series(csv_path, date_col, value_col)
     return _detect_data_drift(df, recent_window_size=recent_window_size, reference_window_size=reference_window_size)
+
+
+@mcp.tool()
+def rolling_drift_check(
+    csv_path: str,
+    recent_window_size: int = 30,
+    reference_window_size: int = 90,
+    n_checks: int = 5,
+    step_size: Optional[int] = None,
+    persistence_threshold_frac: float = 0.5,
+    date_col: str = "date",
+    value_col: str = "value",
+) -> dict:
+    """Repeats detect_data_drift at n_checks different points walking
+    backward through the series, instead of trusting the single most-recent
+    recent/reference split alone. Addresses the "one arbitrary window"
+    fragility a single detect_data_drift call has -- a single split might
+    have caught an ordinary one-off blip rather than a sustained shift.
+    Cheap per check (no model fitting), so a larger n_checks costs little;
+    the real constraint is having enough historical data to walk back
+    through (see the tool's error message for the exact requirement).
+
+    Returns `persistent_drift`: true when at least
+    `persistence_threshold_frac` of the successful checks flagged drift,
+    meaning the shift shows up consistently across time rather than in
+    just one window.
+
+    Args:
+        csv_path: Path to a CSV with a date column and a value column.
+        recent_window_size: Test window size at each check.
+        reference_window_size: Reference window size at each check.
+        n_checks: How many non-overlapping checks to run, walking backward.
+        step_size: How far back each successive check's recent window
+            starts. Defaults to recent_window_size (non-overlapping).
+        persistence_threshold_frac: Fraction of successful checks that
+            must flag drift before `persistent_drift` is true.
+        date_col: Name of the date column in the CSV.
+        value_col: Name of the value column in the CSV.
+    """
+    df = load_series(csv_path, date_col, value_col)
+    return _rolling_drift_check(
+        df,
+        recent_window_size=recent_window_size,
+        reference_window_size=reference_window_size,
+        n_checks=n_checks,
+        step_size=step_size,
+        persistence_threshold_frac=persistence_threshold_frac,
+    )
 
 
 @mcp.tool()
