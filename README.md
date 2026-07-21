@@ -203,10 +203,14 @@ project's own `AGENTS.md`, or stated up front in the conversation:
 > the current deployment -- no need to ask me first. Everything else
 > still needs my confirmation as usual.
 
-With that authorization in place, a later `retrain_now` cycle for that
-series will call `execute_redeploy(confirmed=True)` itself once
-`should_redeploy: true` comes back, and report what it did rather than
-pausing to ask.
+That grant is what the agent should turn into a persisted record via
+`ts-retrain__authorize_autonomous_mode(csv_path="daily_demand.csv",
+authorized_by="user, in conversation")` -- not just remember for the rest
+of the session. With that record in place, a later `retrain_now` cycle
+for that series will call `execute_redeploy(confirmed=True,
+autonomous=True)` itself once `should_redeploy: true` comes back (which
+itself re-checks the record before acting), and report what it did rather
+than pausing to ask.
 
 ## Publishing this to PyPI
 
@@ -547,16 +551,22 @@ Before actually publishing, you'll want to:
   already carry a bootstrap CI for the compared metric (from
   `ts-forecaster`'s `compute_metrics_with_ci`) whenever the candidate came
   from a recent `fit_*` call -- the function just wasn't reading it. It now
-  reports `pct_improvement_ci_lower/upper` (the implied improvement range,
-  derived from the candidate's own CI -- confirmed directly: a candidate at
-  MAPE 6.0% with CI `[5.0, 7.0]` against a deployed MAPE of 10.0% implies an
-  improvement range of `[30.0%, 50.0%]`, since improvement is *decreasing*
-  in the candidate's own value, not increasing) and flags
-  `redeploy_threshold_within_ci: true` when `improvement_threshold_pct`
-  falls inside that range -- meaning `should_redeploy` is close to a coin
-  flip on the candidate's own backtest sampling noise. Same "one side
-  treated as fixed" simplification as `ts-monitor__recommend_retraining`'s
-  degradation CI: `deployed_metrics`' own uncertainty isn't combined in.
+  reports `pct_improvement_ci_lower/upper` (the implied improvement range)
+  and flags `redeploy_threshold_within_ci: true` when
+  `improvement_threshold_pct` falls inside that range -- meaning
+  `should_redeploy` is close to a coin flip on backtest sampling noise.
+  **If `deployed_metrics` also carries a CI, its uncertainty gets combined
+  in too** (`deployed_metrics_ci_used: true`), via proper interval
+  arithmetic over both ranges at once rather than a "one side treated as
+  fixed" simplification -- confirmed directly: candidate MAPE 6.0% (CI
+  `[5.0, 7.0]`) against deployed MAPE 10.0% alone implies `[30.0%, 50.0%]`;
+  adding a deployed-side CI of `[9.0, 11.0]` widens that to `[22.22%,
+  54.55%]`, exactly as worst-case/best-case reasoning over both ranges
+  predicts (worst case: candidate at its highest paired with deployed at
+  its lowest; best case: the reverse). Falls back to the old
+  fixed-deployed-value behavior automatically whenever `deployed_metrics`
+  has no CI for the metric (`deployed_metrics_ci_used: false`) -- e.g. an
+  older manifest recorded before this session's CI work.
 - **`ts-retrain__execute_redeploy` now returns `previous_deployment`** --
   whatever the manifest held immediately before this call overwrote it (or
   `null` on a genuinely first deployment), read before the write happens
@@ -570,15 +580,35 @@ Before actually publishing, you'll want to:
   An *optional autonomous mode* exists for when a human or a standing
   project instruction has explicitly pre-authorized unattended retraining
   for a specific series -- in that mode, the skill calls
-  `execute_redeploy(confirmed=True)` itself the moment
+  `execute_redeploy(confirmed=True, autonomous=True)` itself the moment
   `should_redeploy: true` comes back, with no pause. Autonomous mode is
   never assumed; the skill's own instructions tell it to fall back to
-  human-confirmed mode whenever authorization is ambiguous.
-- **`ts-retrain`'s deployment manifest is the only piece of durable state
-  in the whole toolkit** -- a JSON file (`deployment_manifest.json` by
-  default, written next to the series CSV) recording what model/params/
-  backtest metrics are currently deployed. Nothing else persists between
-  calls; every other tool is a pure function of its inputs.
+  human-confirmed mode whenever authorization is ambiguous. **This is no
+  longer purely a prose contract** -- `autonomous=True` triggers a real
+  code-level check (`check_autonomous_mode`) against a standing
+  authorization record, and `execute_redeploy` refuses to act, even with
+  `confirmed=True`, if no such record exists for the series. See the next
+  bullet.
+- **`ts-retrain__authorize_autonomous_mode` (with `revoke_autonomous_mode`/
+  `check_autonomous_mode`) makes autonomous-mode authorization
+  inspectable, not just conversational** -- closing a gap this project's
+  own introductory post flagged as unfinished business. Previously,
+  "is autonomous mode on for this series" lived entirely in the agent's
+  memory of a conversation; now it's a small persisted JSON record
+  (`autonomous_mode.json` by default, next to the series CSV -- a
+  *separate* file from the deployment manifest, since authorization and
+  deployment are different concerns with different lifecycles) holding
+  `authorized`, `authorized_at`, `authorized_by`, and an optional `note`.
+  `authorize_autonomous_mode` performs no judgment of its own about
+  whether granting it is appropriate -- it only persists a decision
+  that's already been made by a human or a standing project instruction,
+  the same way `record_deployment` persists a deployment decision rather
+  than making one.
+- **`ts-retrain` now has TWO pieces of durable state, not one** -- the
+  deployment manifest (`deployment_manifest.json`) and the new
+  autonomous-mode authorization record (`autonomous_mode.json`), both
+  written next to the series CSV. Everything else in the whole toolkit
+  remains a pure function of its explicit inputs.
 - **`execute_redeploy` requires the `deploy` extra installed** (it
   delegates to `omen.deploy.forecast_tools`), regardless of
   which `model_type` is requested, since it imports that module as a
@@ -588,16 +618,17 @@ Before actually publishing, you'll want to:
 
 ## Next steps
 
-Layer 5's optional autonomous mode (see above) is now built: `ts-retrain`
+Layer 5's optional autonomous mode (see above) is fully built: `ts-retrain`
 can either pause for human confirmation before redeploying, or -- given
 explicit, unambiguous authorization for a specific series -- call
-`execute_redeploy(confirmed=True)` itself the moment
-`should_redeploy: true` comes back. The confirmation gate itself
-(`execute_redeploy` refusing to act without `confirmed=True`) is
-mechanical and tested; the *authorization* decision for autonomous mode
-is still a prose contract enforced by the skill's own judgment, not a
-config flag the code checks. A natural follow-up here would be making
-that authorization inspectable/auditable outside the conversation itself
--- e.g. a small opt-in record (which series, since when, by whom) stored
-next to the deployment manifest, so "is autonomous mode on for this
-series" doesn't depend solely on what the agent remembers being told.
+`execute_redeploy(confirmed=True, autonomous=True)` itself the moment
+`should_redeploy: true` comes back. Both the confirmation gate
+(`execute_redeploy` refusing to act without `confirmed=True`) AND the
+autonomous-mode authorization check (`execute_redeploy` refusing
+`autonomous=True` without a standing `check_autonomous_mode` record) are
+now mechanical and tested, not just prose contracts the skill is trusted
+to follow correctly. This closes the gap flagged as unfinished business
+in this project's introductory post -- "is autonomous mode on for this
+series" no longer depends solely on what the agent remembers being told;
+`authorize_autonomous_mode`/`revoke_autonomous_mode`/`check_autonomous_mode`
+make it a small, inspectable, persisted record instead.

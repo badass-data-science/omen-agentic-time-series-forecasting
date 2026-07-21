@@ -17,16 +17,25 @@ mode unless autonomous mode is unambiguously authorized** -- when in
 doubt, ask rather than assume.
 
 - **Human-confirmed mode (default)**: after getting the deterministic
-  verdict, stop and report it. Only call `execute_redeploy` in a
-  follow-up turn, after a human has explicitly told you to proceed.
+  verdict, stop and report it. Only call `execute_redeploy(confirmed=True)`
+  (leave `autonomous` at its default `False`) in a follow-up turn, after a
+  human has explicitly told you to proceed.
 - **Autonomous mode (opt-in only)**: skip the pause and call
-  `execute_redeploy(confirmed=True)` directly the moment the verdict says
-  `should_redeploy: true` -- but ONLY if you have been explicitly told,
-  either in the current conversation or via a standing project-level
-  instruction, that autonomous retraining is authorized for this specific
-  series. "The user seems busy" or "this looks like a low-stakes series"
-  are not authorization. If you're not certain autonomous mode applies,
-  treat it as not authorized and fall back to human-confirmed mode.
+  `execute_redeploy(confirmed=True, autonomous=True)` directly the moment
+  the verdict says `should_redeploy: true` -- but ONLY if you have been
+  explicitly told, either in the current conversation or via a standing
+  project-level instruction, that autonomous retraining is authorized for
+  this specific series, AND that authorization has actually been recorded
+  via `authorize_autonomous_mode` (see "Granting or checking
+  autonomous-mode authorization" below). "The user seems
+  busy" or "this looks like a low-stakes series" are not authorization.
+  If you're not certain autonomous mode applies, treat it as not
+  authorized and fall back to human-confirmed mode. Unlike the rest of
+  this contract, this specific check is NOT just a prose instruction you
+  have to remember correctly -- `execute_redeploy` itself refuses to
+  proceed with `autonomous=True` unless a standing record exists, so an
+  agent that skips this step gets a hard error back, not a silent policy
+  violation.
 
 ## Prerequisites
 
@@ -39,6 +48,27 @@ You need:
    (nothing recorded yet), say so plainly and stop: without a recorded
    deployed-model baseline, there's nothing to compare a new candidate
    against.
+
+## Granting or checking autonomous-mode authorization (not a retrain-cycle step)
+
+This is separate from the four-step cycle below -- it's how the
+standing authorization record itself gets created, not something you do
+every cycle. Only relevant if autonomous mode is in play for this series
+at all; skip straight to Step 1 otherwise.
+
+- If a human explicitly grants autonomous retraining for a specific
+  series in conversation (or a standing project instruction unambiguously
+  covers it), call `ts-retrain__authorize_autonomous_mode` to persist
+  that -- pass `authorized_by` describing who/what granted it (e.g.
+  `"user, in conversation on 2026-07-21"`), so the record is
+  self-explanatory to whoever reads it back later. Do this once, not
+  every cycle -- the record persists until revoked.
+- If you're ever unsure whether autonomous mode is actually authorized
+  for a series (rather than just recalled from earlier in the
+  conversation), call `ts-retrain__check_autonomous_mode` and trust its
+  `authorized` field over your own memory of the conversation.
+- If a human revokes authorization, or you're told autonomous mode should
+  no longer apply to a series, call `ts-retrain__revoke_autonomous_mode`.
 
 ## Available tools
 
@@ -53,7 +83,11 @@ You need:
   result also reports `pct_improvement_ci_lower`/`pct_improvement_ci_upper`
   and flags `redeploy_threshold_within_ci: true` when the threshold itself
   falls inside that range -- meaning `should_redeploy` is close to a coin
-  flip on the candidate's own backtest sampling noise, not a clean call.
+  flip on backtest sampling noise, not a clean call. If the deployed
+  model's manifest also has a CI for the same metric (from a CI-aware
+  deployment), that uncertainty gets combined in too
+  (`deployed_metrics_ci_used: true`) rather than treating the deployed
+  value as a fixed point.
 - `ts-retrain__execute_redeploy` — the one tool in this skill that takes a
   real action: retrains `model_type` with `params` on the full series and
   overwrites the deployment manifest. Refuses to run unless called with
@@ -63,7 +97,16 @@ You need:
   includes `previous_deployment` -- whatever was deployed immediately
   before this call (or `null` on a first deployment) -- so what actually
   changed is right there in the tool's own output, not something you have
-  to reconstruct from earlier in the conversation.
+  to reconstruct from earlier in the conversation. Pass `autonomous=True`
+  for an unattended autonomous-mode call specifically -- it will refuse
+  even with `confirmed=True` unless `authorize_autonomous_mode` has
+  already recorded standing authorization for this series.
+- `ts-retrain__authorize_autonomous_mode` / `ts-retrain__revoke_autonomous_mode` /
+  `ts-retrain__check_autonomous_mode` — persist, remove, and read back a
+  standing autonomous-mode authorization record for a specific series (a
+  small JSON file next to the manifest, not a field within it). See
+  "Granting or checking autonomous-mode authorization" above -- these are
+  not part of the normal four-step cycle.
 - `ts-retrain__record_deployment` — writes the manifest directly, without
   retraining anything. Only useful if you deployed by some path outside
   this skill (e.g. you ran `ts-deploy`'s tools manually) and just need to
@@ -134,10 +177,15 @@ skill)?
 - **Autonomous mode (only if unambiguously authorized)**: state in your
   report that autonomous mode is active and why you believe it's
   authorized for this series, then call
-  `execute_redeploy(..., confirmed=True)` directly in this same turn.
-  Report the result (the new forecast and the updated manifest) alongside
-  everything above -- don't let an autonomous action pass without being
-  visibly reported just because no one had to approve it first.
+  `execute_redeploy(..., confirmed=True, autonomous=True)` directly in
+  this same turn. If you're not certain a standing authorization record
+  actually exists, call `check_autonomous_mode` first rather than
+  guessing -- but even if you skip that, `execute_redeploy` itself will
+  refuse and return an explanatory error rather than silently redeploying
+  when `autonomous=True` has no matching record. Report the result (the
+  new forecast and the updated manifest) alongside everything above --
+  don't let an autonomous action pass without being visibly reported just
+  because no one had to approve it first.
 
 In either mode, once `execute_redeploy` has run, report what it says
 `previous_deployment` was alongside the new deployment -- a concrete
@@ -155,5 +203,6 @@ from within this skill as a substitute.
   across all layers -- in particular: why `compare_candidate_to_deployed`
   requires a relative improvement above a threshold rather than any
   improvement, why `execute_redeploy` needs the `deploy` extra installed
-  regardless of `model_type`, and the full human-confirmed vs.
-  autonomous-mode contract with example authorization phrasing.
+  regardless of `model_type`, the full human-confirmed vs. autonomous-mode
+  contract with example authorization phrasing, and why the autonomous-mode
+  authorization record is a separate file from the deployment manifest.

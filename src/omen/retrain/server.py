@@ -24,6 +24,9 @@ from .retrain_tools import (
     load_deployment_manifest as _load_deployment_manifest,
     compare_candidate_to_deployed as _compare_candidate_to_deployed,
     execute_redeploy as _execute_redeploy,
+    authorize_autonomous_mode as _authorize_autonomous_mode,
+    revoke_autonomous_mode as _revoke_autonomous_mode,
+    check_autonomous_mode as _check_autonomous_mode,
 )
 
 mcp = FastMCP("ts-retrain")
@@ -99,10 +102,12 @@ def compare_candidate_to_deployed(
     `pct_improvement_ci_lower`/`pct_improvement_ci_upper` (the implied
     improvement range) and flags `redeploy_threshold_within_ci: true` when
     `improvement_threshold_pct` falls inside that range -- meaning
-    should_redeploy is sensitive to the candidate's own backtest sampling
-    noise, not a clean call. Same pattern as
-    ts-monitor__recommend_retraining's optional degradation CI;
-    deployed_metrics' own uncertainty is not combined in.
+    should_redeploy is sensitive to backtest sampling noise, not a clean
+    call. If deployed_metrics ALSO has a CI for metric_name, its
+    uncertainty is combined in too via interval arithmetic over both
+    ranges at once (`deployed_metrics_ci_used: true`); otherwise the range
+    reflects the candidate's own uncertainty alone with deployed_value
+    treated as fixed (`deployed_metrics_ci_used: false`).
 
     Args:
         candidate_metrics: backtest_metrics dict from a fresh
@@ -131,9 +136,11 @@ def execute_redeploy(
     horizon: int,
     backtest_metrics: dict,
     confirmed: bool = False,
+    autonomous: bool = False,
     date_col: str = "date",
     value_col: str = "value",
     manifest_path: Optional[str] = None,
+    autonomous_mode_path: Optional[str] = None,
 ) -> dict:
     """Actually perform a redeploy: retrain model_type on the full series
     with params (delegating to the matching ts-deploy forecast function)
@@ -144,6 +151,13 @@ def execute_redeploy(
     of two situations (see the ts-retrain SKILL.md): a human has approved
     this specific redeploy in the current conversation, or an explicitly
     authorized autonomous-mode instruction covers this series.
+
+    Pass autonomous=True for the second situation specifically. When set,
+    this ALSO calls check_autonomous_mode(csv_path) internally and refuses
+    to act -- even with confirmed=True -- unless a standing authorization
+    record exists for this series (call authorize_autonomous_mode first).
+    This is a real code-level check, not just a prose instruction. Leave
+    autonomous at its default (False) for ordinary human-confirmed calls.
 
     Returns `previous_deployment`: whatever the manifest held immediately
     before this call overwrote it, or null if nothing was deployed yet for
@@ -164,10 +178,14 @@ def execute_redeploy(
             record in the new deployment manifest.
         confirmed: Must be explicitly True or this call is a no-op that
             returns an explanatory error.
+        autonomous: True only for an unattended autonomous-mode call --
+            triggers the check_autonomous_mode authorization check above.
         date_col: Name of the date column in the CSV.
         value_col: Name of the value column in the CSV.
         manifest_path: Where to write the manifest. Defaults to
             deployment_manifest.json next to csv_path.
+        autonomous_mode_path: Where to look for the authorization record.
+            Defaults to autonomous_mode.json next to csv_path.
     """
     return _execute_redeploy(
         csv_path,
@@ -176,10 +194,69 @@ def execute_redeploy(
         horizon=horizon,
         backtest_metrics=backtest_metrics,
         confirmed=confirmed,
+        autonomous=autonomous,
         date_col=date_col,
         value_col=value_col,
         manifest_path=manifest_path,
+        autonomous_mode_path=autonomous_mode_path,
     )
+
+
+@mcp.tool()
+def authorize_autonomous_mode(
+    csv_path: str,
+    authorized_by: str,
+    note: Optional[str] = None,
+    autonomous_mode_path: Optional[str] = None,
+) -> dict:
+    """Record that autonomous (unattended) retraining is authorized for
+    this specific series. Call this ONLY after a human has explicitly
+    granted this in the current conversation, or a standing project-level
+    instruction (e.g. in AGENTS.md) unambiguously covers this series --
+    this tool performs no judgment of its own about whether that
+    authorization is legitimate, it only persists a decision that's
+    already been made elsewhere. Overwrites any existing record for this
+    series; reflects the CURRENT authorization state, not a history.
+
+    Args:
+        csv_path: Path to the series CSV this authorization applies to.
+        authorized_by: Who/what granted this, e.g. "user, in conversation
+            on 2026-07-21" or "AGENTS.md standing instruction" -- so the
+            record is self-explanatory later, not just a bare boolean.
+        note: Optional free-text context.
+        autonomous_mode_path: Where to write the record. Defaults to
+            autonomous_mode.json next to csv_path.
+    """
+    return _authorize_autonomous_mode(csv_path, authorized_by=authorized_by, note=note, autonomous_mode_path=autonomous_mode_path)
+
+
+@mcp.tool()
+def revoke_autonomous_mode(csv_path: str, autonomous_mode_path: Optional[str] = None) -> dict:
+    """Remove any autonomous-mode authorization record for this series.
+    After this, execute_redeploy(..., autonomous=True) calls for this
+    series will refuse until authorize_autonomous_mode is called again.
+    Safe to call even if no record exists.
+
+    Args:
+        csv_path: Path to the series CSV.
+        autonomous_mode_path: Where to look. Defaults to
+            autonomous_mode.json next to csv_path.
+    """
+    return _revoke_autonomous_mode(csv_path, autonomous_mode_path=autonomous_mode_path)
+
+
+@mcp.tool()
+def check_autonomous_mode(csv_path: str, autonomous_mode_path: Optional[str] = None) -> dict:
+    """Read whatever authorize_autonomous_mode last recorded for this
+    series. Returns {"authorized": False, ...} -- not an error -- when
+    nothing has been recorded, since that's the default, expected state.
+
+    Args:
+        csv_path: Path to the series CSV.
+        autonomous_mode_path: Where to look. Defaults to
+            autonomous_mode.json next to csv_path.
+    """
+    return _check_autonomous_mode(csv_path, autonomous_mode_path=autonomous_mode_path)
 
 
 def main():

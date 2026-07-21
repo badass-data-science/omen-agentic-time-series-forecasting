@@ -14,15 +14,22 @@ What's missing without this layer is:
 3. A single, explicitly-gated action that actually performs a redeploy,
    for the cases where a human (or an explicitly authorized autonomous
    workflow) decides to act on that answer -- see execute_redeploy below.
+4. A durable, inspectable record of WHICH series autonomous mode is
+   actually authorized for -- see authorize_autonomous_mode below. Before
+   this, that fact lived only in the agent's own memory of a conversation.
 
-record_deployment/load_deployment_manifest/compare_candidate_to_deployed
-are pure diagnostics with no side effects beyond the manifest file itself.
-execute_redeploy is the one function in this whole toolkit that takes a
-real production action (retrains a model and overwrites the deployment
-manifest) -- it refuses to run unless called with confirmed=True, which is
-never its default. See skills/ts-retrain/SKILL.md for the two ways that
-confirmation is meant to be reached: a human approving in-conversation, or
-an explicitly authorized autonomous mode.
+record_deployment/load_deployment_manifest/compare_candidate_to_deployed/
+authorize_autonomous_mode/revoke_autonomous_mode/check_autonomous_mode are
+pure diagnostics/record-keeping with no side effects beyond their own
+small JSON file. execute_redeploy is the one function in this whole
+toolkit that takes a real production action (retrains a model and
+overwrites the deployment manifest) -- it refuses to run unless called
+with confirmed=True, which is never its default, and if called with
+autonomous=True it ALSO refuses unless check_autonomous_mode finds a
+standing authorization record for this series. See
+skills/ts-retrain/SKILL.md for the two ways that confirmation is meant to
+be reached: a human approving in-conversation, or an explicitly
+authorized autonomous mode.
 """
 
 import json
@@ -30,6 +37,7 @@ import os
 from datetime import datetime, timezone
 
 DEFAULT_MANIFEST_FILENAME = "deployment_manifest.json"
+DEFAULT_AUTONOMOUS_MODE_FILENAME = "autonomous_mode.json"
 
 _MODEL_TYPES = ("naive", "ets", "sarima", "gbt")
 
@@ -41,6 +49,90 @@ def _manifest_path_for(csv_path: str, manifest_path: str = None) -> str:
         return manifest_path
     directory = os.path.dirname(os.path.abspath(csv_path))
     return os.path.join(directory, DEFAULT_MANIFEST_FILENAME)
+
+
+def _autonomous_mode_path_for(csv_path: str, autonomous_mode_path: str = None) -> str:
+    """Default autonomous-mode-record location: alongside the series CSV,
+    unless an explicit path is given. Deliberately a SEPARATE file from
+    the deployment manifest, not a field within it -- authorization and
+    deployment are different concerns with different lifecycles (an
+    authorization can outlive many deployments, or be revoked without
+    touching what's currently deployed)."""
+    if autonomous_mode_path:
+        return autonomous_mode_path
+    directory = os.path.dirname(os.path.abspath(csv_path))
+    return os.path.join(directory, DEFAULT_AUTONOMOUS_MODE_FILENAME)
+
+
+def authorize_autonomous_mode(
+    csv_path: str,
+    authorized_by: str,
+    note: str = None,
+    autonomous_mode_path: str = None,
+) -> dict:
+    """Record that autonomous (unattended) retraining is authorized for
+    this specific series. Call this ONLY after a human has explicitly
+    granted this in the current conversation, or a standing project-level
+    instruction (e.g. in AGENTS.md) unambiguously covers this series --
+    this function performs no judgment of its own about whether that
+    authorization is legitimate, it only persists a decision that's
+    already been made elsewhere, the same way record_deployment persists
+    a deployment decision rather than making one.
+
+    `authorized_by` should identify who/what granted this (e.g. "user, in
+    conversation on 2026-07-21" or "AGENTS.md standing instruction") so
+    the record is self-explanatory to whoever reads it back later, not
+    just a bare boolean with no provenance.
+
+    Overwrites any existing record for this series -- like the deployment
+    manifest, this reflects the CURRENT authorization state, not a
+    history of grants and revocations.
+    """
+    path = _autonomous_mode_path_for(csv_path, autonomous_mode_path)
+    record = {
+        "csv_path": os.path.abspath(csv_path),
+        "authorized": True,
+        "authorized_at": datetime.now(timezone.utc).isoformat(),
+        "authorized_by": authorized_by,
+        "note": note,
+    }
+    with open(path, "w") as f:
+        json.dump(record, f, indent=2)
+
+    return {"status": "ok", "written_to": path, "record": record}
+
+
+def revoke_autonomous_mode(csv_path: str, autonomous_mode_path: str = None) -> dict:
+    """Remove any autonomous-mode authorization record for this series.
+    After this, execute_redeploy(..., autonomous=True) calls for this
+    series will refuse until authorize_autonomous_mode is called again.
+    Safe to call even if no record currently exists -- returns "ok"
+    either way, not an error, since the end state (not authorized) is the
+    same regardless of whether there was anything to remove.
+    """
+    path = _autonomous_mode_path_for(csv_path, autonomous_mode_path)
+    if os.path.exists(path):
+        os.remove(path)
+        return {"status": "ok", "removed": path}
+    return {"status": "ok", "removed": None, "note": "No authorization record existed for this series."}
+
+
+def check_autonomous_mode(csv_path: str, autonomous_mode_path: str = None) -> dict:
+    """Read whatever authorize_autonomous_mode last recorded for this
+    series. Returns {"authorized": False, ...} -- NOT an error -- when
+    nothing has been recorded, since "not authorized" is the default,
+    expected state for most series, not a bug to raise on.
+    """
+    path = _autonomous_mode_path_for(csv_path, autonomous_mode_path)
+    if not os.path.exists(path):
+        return {
+            "authorized": False,
+            "checked_path": path,
+            "note": "No authorization record found for this series.",
+        }
+    with open(path) as f:
+        record = json.load(f)
+    return record
 
 
 def record_deployment(
@@ -118,11 +210,23 @@ def compare_candidate_to_deployed(
     any recent fit_* result), this also reports the implied
     `pct_improvement_ci_lower`/`pct_improvement_ci_upper` and flags
     `redeploy_threshold_within_ci: true` when `improvement_threshold_pct`
-    falls inside that range -- meaning should_redeploy is sensitive to the
-    candidate's own backtest sampling noise, not a clean call. Same
-    pattern as ts-monitor__recommend_retraining's degradation CI:
-    `deployed_metrics`' own uncertainty (if it has any) is NOT combined
-    in, same "one side treated as fixed" simplification used there.
+    falls inside that range -- meaning should_redeploy is sensitive to
+    backtest sampling noise, not a clean call. If `deployed_metrics` ALSO
+    has a CI for `metric_name` (e.g. the deployed model's manifest was
+    recorded from a CI-aware fit_* result), its uncertainty is combined in
+    too via interval arithmetic over both ranges at once -- NOT a naive
+    "one side fixed" simplification. `deployed_metrics_ci_used` reports
+    whether that combination actually happened (true) or the range only
+    reflects the candidate's own uncertainty with `deployed_value` treated
+    as fixed (false, e.g. an older manifest with no CI recorded).
+
+    pct_improvement = 100*(deployed_value - candidate_value)/deployed_value
+    is DECREASING in candidate_value and INCREASING in deployed_value (for
+    positive values) -- so the WORST-case improvement uses the candidate's
+    highest plausible value paired with the deployed model's LOWEST, and
+    the BEST-case uses the candidate's lowest paired with the deployed
+    model's HIGHEST. Not a naive lower-bound-in/lower-bound-out mapping on
+    either side.
 
     Args:
         candidate_metrics: backtest_metrics dict from a fresh
@@ -145,6 +249,7 @@ def compare_candidate_to_deployed(
 
     pct_improvement_ci_lower = pct_improvement_ci_upper = None
     redeploy_threshold_within_ci = None
+    deployed_metrics_ci_used = False
 
     if deployed_value == 0:
         pct_improvement = None
@@ -156,15 +261,38 @@ def compare_candidate_to_deployed(
         candidate_ci_lower = candidate_metrics.get(f"{metric_name}_ci_lower")
         candidate_ci_upper = candidate_metrics.get(f"{metric_name}_ci_upper")
         if candidate_ci_lower is not None and candidate_ci_upper is not None:
-            # pct_improvement is DECREASING in candidate_value (it's
-            # subtracted), so the candidate's own smallest CI value gives
-            # the BEST-case improvement and its largest gives the
-            # WORST-case -- not a naive lower-bound-in, lower-bound-out mapping.
-            pct_improvement_ci_upper = round(100 * (deployed_value - float(candidate_ci_lower)) / deployed_value, 2)
-            pct_improvement_ci_lower = round(100 * (deployed_value - float(candidate_ci_upper)) / deployed_value, 2)
-            redeploy_threshold_within_ci = bool(
-                pct_improvement_ci_lower <= improvement_threshold_pct <= pct_improvement_ci_upper
-            )
+            deployed_ci_lower = deployed_metrics.get(f"{metric_name}_ci_lower")
+            deployed_ci_upper = deployed_metrics.get(f"{metric_name}_ci_upper")
+            if deployed_ci_lower is None or deployed_ci_upper is None:
+                # No usable CI on the deployed side -- fall back to treating
+                # deployed_value as fixed (both "bounds" collapse to the
+                # point value), which reduces exactly to the candidate-only
+                # combination.
+                deployed_ci_lower = deployed_ci_upper = deployed_value
+            else:
+                deployed_metrics_ci_used = True
+            deployed_ci_lower = float(deployed_ci_lower)
+            deployed_ci_upper = float(deployed_ci_upper)
+
+            # pct_improvement(C, D) = 100*(D-C)/D is monotonic in each
+            # variable independently (decreasing in C, increasing in D for
+            # D > 0), so its extrema over the box
+            # [candidate_ci_lower, candidate_ci_upper] x [deployed_ci_lower, deployed_ci_upper]
+            # occur at opposite corners -- proper interval arithmetic, not
+            # a guess. Guard each bound's own denominator separately in
+            # case one side of the deployed CI happens to be exactly 0.
+            if deployed_ci_lower != 0:
+                pct_improvement_ci_lower = round(
+                    100 * (deployed_ci_lower - float(candidate_ci_upper)) / deployed_ci_lower, 2
+                )
+            if deployed_ci_upper != 0:
+                pct_improvement_ci_upper = round(
+                    100 * (deployed_ci_upper - float(candidate_ci_lower)) / deployed_ci_upper, 2
+                )
+            if pct_improvement_ci_lower is not None and pct_improvement_ci_upper is not None:
+                redeploy_threshold_within_ci = bool(
+                    pct_improvement_ci_lower <= improvement_threshold_pct <= pct_improvement_ci_upper
+                )
 
     if should_redeploy:
         reasoning = (
@@ -189,11 +317,12 @@ def compare_candidate_to_deployed(
         )
 
     if redeploy_threshold_within_ci:
+        ci_source = "both the candidate's and the deployed model's" if deployed_metrics_ci_used else "the candidate's own"
         reasoning += (
-            f" Note: the candidate's own bootstrap CI implies an improvement range of "
+            f" Note: {ci_source} bootstrap CI implies an improvement range of "
             f"[{pct_improvement_ci_lower}%, {pct_improvement_ci_upper}%], which straddles the "
             f"{improvement_threshold_pct}% threshold -- this should_redeploy verdict is "
-            "sensitive to the candidate's backtest sampling noise, not a clean call."
+            "sensitive to backtest sampling noise, not a clean call."
         )
 
     return {
@@ -203,6 +332,7 @@ def compare_candidate_to_deployed(
         "pct_improvement": pct_improvement,
         "pct_improvement_ci_lower": pct_improvement_ci_lower,
         "pct_improvement_ci_upper": pct_improvement_ci_upper,
+        "deployed_metrics_ci_used": deployed_metrics_ci_used,
         "redeploy_threshold_within_ci": redeploy_threshold_within_ci,
         "should_redeploy": should_redeploy,
         "reasoning": reasoning,
@@ -217,9 +347,11 @@ def execute_redeploy(
     horizon: int,
     backtest_metrics: dict,
     confirmed: bool = False,
+    autonomous: bool = False,
     date_col: str = "date",
     value_col: str = "value",
     manifest_path: str = None,
+    autonomous_mode_path: str = None,
 ) -> dict:
     """Actually perform a redeploy: retrain `model_type` on the full series
     with `params` (delegating to the matching
@@ -233,6 +365,18 @@ def execute_redeploy(
     redeploy in the current conversation, or an explicitly authorized
     autonomous-mode instruction covers this series. Don't set it to True
     just to see what happens.
+
+    Pass `autonomous=True` for the second situation specifically -- an
+    UNATTENDED call with no human turn in between. When `autonomous=True`,
+    this ALSO calls check_autonomous_mode(csv_path) internally and refuses
+    to act (even with confirmed=True) unless a standing authorization
+    record exists for this series. This is a real, code-level check, not
+    just a prose instruction the skill is trusted to follow correctly --
+    call authorize_autonomous_mode first if one doesn't exist yet and a
+    human or standing project instruction has genuinely granted it. Leave
+    `autonomous` at its default (False) for ordinary human-confirmed
+    calls; no authorization record is needed or checked in that case,
+    since the human's in-conversation approval IS the authorization.
 
     `params` should be the same `params` dict a ts-forecaster fit_* call
     returned for the chosen candidate (fit_sarima/fit_ets/
@@ -265,6 +409,23 @@ def execute_redeploy(
                 "instruction. Set confirmed=True only once you actually have that."
             ),
         }
+
+    if autonomous:
+        auth = check_autonomous_mode(csv_path, autonomous_mode_path=autonomous_mode_path)
+        if not auth.get("authorized"):
+            return {
+                "status": "not_executed",
+                "error": (
+                    "autonomous=True was passed, but no standing autonomous-mode "
+                    f"authorization record was found for this series (checked "
+                    f"{auth.get('checked_path', _autonomous_mode_path_for(csv_path, autonomous_mode_path))}). "
+                    "Call authorize_autonomous_mode first -- only after a human or a "
+                    "standing project instruction has genuinely and unambiguously "
+                    "granted it -- or omit autonomous=True and use human-confirmed "
+                    "mode (get an explicit go-ahead in conversation, then call this "
+                    "with confirmed=True alone)."
+                ),
+            }
 
     if model_type not in _MODEL_TYPES:
         return {"error": f"Unknown model_type '{model_type}'. Must be one of {list(_MODEL_TYPES)}."}

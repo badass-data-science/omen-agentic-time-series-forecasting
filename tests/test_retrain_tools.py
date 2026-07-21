@@ -7,6 +7,9 @@ from omen.retrain.retrain_tools import (
     load_deployment_manifest,
     compare_candidate_to_deployed,
     execute_redeploy,
+    authorize_autonomous_mode,
+    revoke_autonomous_mode,
+    check_autonomous_mode,
 )
 
 
@@ -134,7 +137,29 @@ def test_compare_candidate_to_deployed_flags_threshold_within_ci():
         improvement_threshold_pct=10.0,
     )
     assert result["redeploy_threshold_within_ci"] is True
-    assert "sensitive to the candidate's backtest sampling noise" in result["reasoning"]
+    assert "sensitive to backtest sampling noise" in result["reasoning"]
+    assert result["deployed_metrics_ci_used"] is False
+
+
+def test_compare_candidate_to_deployed_combines_both_sides_ci():
+    result = compare_candidate_to_deployed(
+        candidate_metrics={"mape_pct": 6.0, "mape_pct_ci_lower": 5.0, "mape_pct_ci_upper": 7.0},
+        deployed_metrics={"mape_pct": 10.0, "mape_pct_ci_lower": 9.0, "mape_pct_ci_upper": 11.0},
+        improvement_threshold_pct=10.0,
+    )
+    # worst case: candidate at its highest (7.0), deployed at its lowest (9.0): 100*(9-7)/9
+    # best case: candidate at its lowest (5.0), deployed at its highest (11.0): 100*(11-5)/11
+    assert result["pct_improvement_ci_lower"] == pytest.approx(22.22, abs=0.01)
+    assert result["pct_improvement_ci_upper"] == pytest.approx(54.55, abs=0.01)
+    assert result["deployed_metrics_ci_used"] is True
+    # Combining both sides' uncertainty widens the range relative to candidate-only.
+    candidate_only = compare_candidate_to_deployed(
+        candidate_metrics={"mape_pct": 6.0, "mape_pct_ci_lower": 5.0, "mape_pct_ci_upper": 7.0},
+        deployed_metrics={"mape_pct": 10.0},
+        improvement_threshold_pct=10.0,
+    )
+    assert result["pct_improvement_ci_lower"] < candidate_only["pct_improvement_ci_lower"]
+    assert result["pct_improvement_ci_upper"] > candidate_only["pct_improvement_ci_upper"]
 
 
 def test_execute_redeploy_refuses_without_confirmation(tmp_path):
@@ -245,3 +270,139 @@ def test_execute_redeploy_previous_deployment_snapshots_prior_manifest(tmp_path)
     assert second["previous_deployment"]["backtest_metrics"]["mape_pct"] == 12.0
     # The manifest itself still only ever holds the CURRENT deployment, not a history.
     assert second["manifest"]["backtest_metrics"]["mape_pct"] == 8.0
+
+
+def test_check_autonomous_mode_defaults_to_not_authorized(tmp_path):
+    csv_path = tmp_path / "series.csv"
+    csv_path.write_text("date,value\n2024-01-01,1.0\n")
+
+    result = check_autonomous_mode(str(csv_path))
+    assert result["authorized"] is False
+
+
+def test_authorize_and_check_autonomous_mode_round_trip(tmp_path):
+    csv_path = tmp_path / "series.csv"
+    csv_path.write_text("date,value\n2024-01-01,1.0\n")
+
+    write_result = authorize_autonomous_mode(str(csv_path), authorized_by="user, test conversation", note="testing")
+    assert write_result["status"] == "ok"
+
+    check_result = check_autonomous_mode(str(csv_path))
+    assert check_result["authorized"] is True
+    assert check_result["authorized_by"] == "user, test conversation"
+    assert check_result["note"] == "testing"
+
+
+def test_revoke_autonomous_mode_clears_authorization(tmp_path):
+    csv_path = tmp_path / "series.csv"
+    csv_path.write_text("date,value\n2024-01-01,1.0\n")
+
+    authorize_autonomous_mode(str(csv_path), authorized_by="user")
+    assert check_autonomous_mode(str(csv_path))["authorized"] is True
+
+    revoke_result = revoke_autonomous_mode(str(csv_path))
+    assert revoke_result["status"] == "ok"
+    assert check_autonomous_mode(str(csv_path))["authorized"] is False
+
+
+def test_revoke_autonomous_mode_is_safe_when_nothing_to_revoke(tmp_path):
+    csv_path = tmp_path / "series.csv"
+    csv_path.write_text("date,value\n2024-01-01,1.0\n")
+
+    result = revoke_autonomous_mode(str(csv_path))
+    assert result["status"] == "ok"
+    assert result["removed"] is None
+
+
+def test_execute_redeploy_autonomous_refuses_without_authorization(tmp_path):
+    pytest.importorskip("statsmodels")
+    pytest.importorskip("sklearn")
+
+    from omen.data_prep import generate_synthetic_series
+
+    csv_path = tmp_path / "series.csv"
+    generate_synthetic_series(n_days=200).to_csv(csv_path, index=False)
+
+    result = execute_redeploy(
+        str(csv_path),
+        model_type="naive",
+        params={"method": "naive"},
+        horizon=10,
+        backtest_metrics={"mape_pct": 10.0},
+        confirmed=True,
+        autonomous=True,
+    )
+    assert result["status"] == "not_executed"
+    assert "error" in result
+    assert not (tmp_path / "deployment_manifest.json").exists()
+
+
+def test_execute_redeploy_autonomous_succeeds_once_authorized(tmp_path):
+    pytest.importorskip("statsmodels")
+    pytest.importorskip("sklearn")
+
+    from omen.data_prep import generate_synthetic_series
+
+    csv_path = tmp_path / "series.csv"
+    generate_synthetic_series(n_days=200).to_csv(csv_path, index=False)
+
+    authorize_autonomous_mode(str(csv_path), authorized_by="user, test conversation")
+
+    result = execute_redeploy(
+        str(csv_path),
+        model_type="naive",
+        params={"method": "naive"},
+        horizon=10,
+        backtest_metrics={"mape_pct": 10.0},
+        confirmed=True,
+        autonomous=True,
+    )
+    assert result["status"] == "redeployed"
+
+
+def test_execute_redeploy_autonomous_refuses_again_after_revoke(tmp_path):
+    pytest.importorskip("statsmodels")
+    pytest.importorskip("sklearn")
+
+    from omen.data_prep import generate_synthetic_series
+
+    csv_path = tmp_path / "series.csv"
+    generate_synthetic_series(n_days=200).to_csv(csv_path, index=False)
+
+    authorize_autonomous_mode(str(csv_path), authorized_by="user")
+    revoke_autonomous_mode(str(csv_path))
+
+    result = execute_redeploy(
+        str(csv_path),
+        model_type="naive",
+        params={"method": "naive"},
+        horizon=10,
+        backtest_metrics={"mape_pct": 10.0},
+        confirmed=True,
+        autonomous=True,
+    )
+    assert result["status"] == "not_executed"
+
+
+def test_execute_redeploy_human_confirmed_mode_ignores_authorization_state(tmp_path):
+    # Ordinary human-confirmed calls (autonomous left at its default False)
+    # must keep working regardless of whether any authorization record
+    # exists -- the human's in-conversation approval IS the authorization
+    # in that mode, no persisted record required.
+    pytest.importorskip("statsmodels")
+    pytest.importorskip("sklearn")
+
+    from omen.data_prep import generate_synthetic_series
+
+    csv_path = tmp_path / "series.csv"
+    generate_synthetic_series(n_days=200).to_csv(csv_path, index=False)
+
+    result = execute_redeploy(
+        str(csv_path),
+        model_type="naive",
+        params={"method": "naive"},
+        horizon=10,
+        backtest_metrics={"mape_pct": 10.0},
+        confirmed=True,
+    )
+    assert result["status"] == "redeployed"
