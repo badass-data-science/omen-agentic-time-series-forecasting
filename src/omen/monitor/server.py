@@ -61,11 +61,12 @@ def compare_forecast_to_actuals(
 
     `residual_outliers` flags matched-point residuals (actual - forecast)
     that look like outliers via a modified z-score (same technique as
-    ts-analyst's detect_anomalies_robust_zscore), and reports
-    `metrics_excluding_outliers` so you can see whether the aggregate
-    error above is being driven by a small number of unusual days rather
-    than a systematic miss -- these call for different responses when
-    deciding whether to retrain.
+    ts-analyst's detect_anomalies_robust_zscore): `flagged_dates` (which
+    dates, if any), `max_abs_modified_z_score`, and per-point detail in
+    `per_point`. It also reports `metrics_excluding_outliers` so you can
+    see whether the aggregate error above is being driven by a small
+    number of unusual days rather than a systematic miss -- these call
+    for different responses when deciding whether to retrain.
 
     Args:
         forecast: The `forecast` list from a ts-deploy tool's result
@@ -144,8 +145,9 @@ def rolling_drift_check(
     the real constraint is having enough historical data to walk back
     through (see the tool's error message for the exact requirement).
 
-    Returns `persistent_drift`: true when at least
-    `persistence_threshold_frac` of the successful checks flagged drift,
+    Returns `n_flagged`/`frac_flagged` (how many of the successful checks
+    flagged drift, and what fraction that is) and `persistent_drift`:
+    true when `frac_flagged` is at least `persistence_threshold_frac`,
     meaning the shift shows up consistently across time rather than in
     just one window.
 
@@ -203,9 +205,11 @@ def recommend_retraining(
         mape_now_ci_lower: Optional bootstrap CI lower bound on mape_now
             (compare_forecast_to_actuals's backtest_style_metrics.mape_pct_ci_lower).
             If supplied alongside mape_now_ci_upper, the result reports the
-            implied degradation range and flags when the threshold itself
-            falls inside it -- i.e. the degraded/not-degraded verdict is
-            sensitive to sampling noise in mape_now, not clear-cut.
+            implied degradation range as `pct_degradation_ci_lower`/
+            `pct_degradation_ci_upper`, and flags `degradation_threshold_within_ci: true`
+            when the threshold itself falls inside that range -- i.e. the
+            degraded/not-degraded verdict is sensitive to sampling noise in
+            mape_now, not clear-cut.
         mape_now_ci_upper: See mape_now_ci_lower (mape_pct_ci_upper).
         error_degradation_threshold_pct: How much worse (relative %)
             mape_now can be than mape_backtest before counting as degraded.

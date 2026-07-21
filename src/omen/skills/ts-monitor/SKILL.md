@@ -35,10 +35,10 @@ You need three things to do this properly:
   (`empirical_coverage_ci_lower/upper`) -- supplementary context, doesn't
   change the existing `well_calibrated` verdict, but a wide CI here (a
   small number of elapsed dates) means treat that verdict as provisional.
-  Also returns `residual_outliers`: flags matched-point residuals that
-  look like outliers (same modified-z-score technique as
-  `ts-analyst__detect_anomalies_robust_zscore`) and reports
-  `metrics_excluding_outliers`, so you can tell "the forecast missed a
+  Also returns `residual_outliers`: `flagged_dates` (any matched-point
+  residuals that look like outliers, same modified-z-score technique as
+  `ts-analyst__detect_anomalies_robust_zscore`), `max_abs_modified_z_score`,
+  and `metrics_excluding_outliers`, so you can tell "the forecast missed a
   little every day" from "the forecast was fine except one wild day"
   before treating the aggregate error as evidence the model needs retraining.
 - `ts-monitor__detect_data_drift` — compares a recent window of the series
@@ -50,12 +50,15 @@ You need three things to do this properly:
   (Cohen's d, KS statistic), not just the fact that a p-value cleared 0.05.
 - `ts-monitor__rolling_drift_check` — repeats `detect_data_drift` at
   several points walking backward through the series instead of trusting
-  one single recent/reference split. Use this when `detect_data_drift`
-  flags drift and you want to know whether it's a SUSTAINED shift
-  (`persistent_drift: true`, flagged across most checks) or looks more
-  like an isolated blip (flagged in few or none of the other checks) --
-  cheap to run (no model fitting), so reach for it whenever the single-
-  window verdict alone would leave you guessing.
+  one single recent/reference split. Reports `n_flagged`/`frac_flagged`
+  (how many of the checks flagged drift, and what fraction) and
+  `persistent_drift` (true once `frac_flagged` clears
+  `persistence_threshold_frac`, default 50%). Use this when
+  `detect_data_drift` flags drift and you want to know whether it's a
+  SUSTAINED shift (`persistent_drift: true`) or looks more like an
+  isolated blip (`frac_flagged` low) -- cheap to run (no model fitting),
+  so reach for it whenever the single-window verdict alone would leave
+  you guessing.
 - `ts-monitor__recommend_retraining` — a DELIBERATELY deterministic,
   rule-based decision (not a judgment call for you to make from scratch)
   combining error degradation and drift into one of: `retrain_now`,
@@ -63,10 +66,12 @@ You need three things to do this properly:
   than eyeballing your own verdict -- the point of this tool existing is
   that this decision should be reproducible given the same inputs. Pass
   `mape_now_ci_lower`/`mape_now_ci_upper` (from Step 1's
-  `mape_pct_ci_lower`/`mape_pct_ci_upper`) if you have them -- when the
-  degradation threshold falls inside that CI, the result flags
-  `degradation_threshold_within_ci: true` and says so in `reasoning`,
-  meaning the verdict is sensitive to sampling noise, not clear-cut.
+  `mape_pct_ci_lower`/`mape_pct_ci_upper`) if you have them -- the result
+  then reports the implied degradation range as `pct_degradation_ci_lower`/
+  `pct_degradation_ci_upper`, and when the degradation threshold falls
+  inside that range, flags `degradation_threshold_within_ci: true` and
+  says so in `reasoning`, meaning the verdict is sensitive to sampling
+  noise, not clear-cut.
 
 ## Step 1 — Compare forecast to reality
 
