@@ -51,6 +51,13 @@ def forecast_naive(
     `interval_note`) if there's not enough history to estimate a residual
     standard deviation.
 
+    Also returns `plausibility_check`: compares this forecast's implied
+    endpoint change against the empirical distribution of horizon-length
+    changes the series has actually made historically, flagging
+    `is_extreme_relative_to_history` and whether the forecast ever leaves
+    the historical min/max range. Not a hypothesis test -- a prompt for
+    scrutiny, not a verdict.
+
     Args:
         csv_path: Path to a CSV with a date column and a value column.
         horizon: Number of future steps to forecast.
@@ -80,6 +87,18 @@ def forecast_ets(
     steps beyond the last observation. Returns a prediction interval
     derived from simulated future paths (falls back to point-forecast-only
     if simulation isn't supported for this parameter combination).
+
+    Also returns `aic` and `aicc` (small-sample-corrected AIC, Hurvich &
+    Tsai 1989 -- `null` when the training size is too small relative to
+    the parameter count) for this refit on the FULL series, and
+    `plausibility_check`: compares the forecast's implied endpoint change
+    against the empirical distribution of horizon-length changes the
+    series has actually made historically, flagging
+    `is_extreme_relative_to_history` and whether the forecast ever leaves
+    the historical min/max range. Note `aicc` here is NOT directly
+    comparable to ts-forecaster's `fit_ets` `aicc` for the same series --
+    that one is computed on the training split only, this one on the full
+    series, so both `n` and the fitted params can differ.
 
     Args:
         csv_path: Path to a CSV with a date column and a value column.
@@ -117,6 +136,18 @@ def forecast_sarima(
     """Retrain SARIMA on the FULL series and forecast `horizon` steps
     beyond the last observation, with an analytic confidence interval from
     the state-space model.
+
+    Also returns `aic`, `bic`, and `aicc` (small-sample-corrected AIC,
+    Hurvich & Tsai 1989 -- `null` when the training size is too small
+    relative to the parameter count) for this refit on the FULL series,
+    and `plausibility_check`: compares the forecast's implied endpoint
+    change against the empirical distribution of horizon-length changes
+    the series has actually made historically, flagging
+    `is_extreme_relative_to_history` and whether the forecast ever leaves
+    the historical min/max range. Note `aicc` here is NOT directly
+    comparable to ts-forecaster's `fit_sarima` `aicc` for the same series
+    -- that one is computed on the training split only, this one on the
+    full series, so both `n` and the fitted params can differ.
 
     Args:
         csv_path: Path to a CSV with a date column and a value column.
@@ -165,6 +196,12 @@ def forecast_gradient_boosted_trees(
     on top of the three already needed for the forecast+interval). Pass
     `n_bootstrap=0` to skip this and get `ci_lower`/`ci_upper` as `null`
     cheaply, if you only care about the point importances.
+
+    Also returns `plausibility_check`: compares the forecast's implied
+    endpoint change against the empirical distribution of horizon-length
+    changes the series has actually made historically, flagging
+    `is_extreme_relative_to_history` and whether the forecast ever leaves
+    the historical min/max range.
 
     Args:
         csv_path: Path to a CSV with a date column and a value column.
@@ -224,6 +261,12 @@ def forecast_ensemble(
     true uncertainty -- it can come out narrower than any single
     component's own interval, which is the expected effect of combining
     independent estimates, not a bug. See interval_note.
+
+    Also returns `plausibility_check`, computed on the COMBINED weighted
+    forecast: compares its implied endpoint change against the empirical
+    distribution of horizon-length changes the series has actually made
+    historically, flagging `is_extreme_relative_to_history` and whether
+    the combined forecast ever leaves the historical min/max range.
 
     Args:
         csv_path: Path to a CSV with a date column and a value column.

@@ -28,8 +28,14 @@ silently default to arbitrary parameters as if they were validated.
   Prediction interval from simulated future paths (falls back to
   point-only if simulation fails for the given settings -- check the
   `interval_note` field, don't assume an interval is always present).
+  Also returns `aic`/`aicc` for this full-series refit -- useful as a
+  diagnostic on the deployed model itself, but NOT directly comparable to
+  `ts-forecaster__fit_ets`'s `aicc` for the same series (different `n`:
+  training split there, full series here).
 - `ts-deploy__forecast_sarima` — SARIMA, retrained on the full series.
-  Analytic confidence interval from the state-space model.
+  Analytic confidence interval from the state-space model. Also returns
+  `aic`/`bic`/`aicc` for this full-series refit -- same non-comparability
+  caveat as `forecast_ets` above applies against `ts-forecaster__fit_sarima`.
 - `ts-deploy__forecast_gradient_boosted_trees` — retrained on the full
   series, then forecasts RECURSIVELY (each prediction feeds back in as a
   lag feature for the next step). The tool result's `caveat` field
