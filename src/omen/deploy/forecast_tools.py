@@ -396,6 +396,8 @@ def _fit_gbt_values(
     max_depth: int,
     learning_rate: float,
     confidence_level: float,
+    n_bootstrap: int = 100,
+    seed: int = 42,
 ) -> dict:
     lags = lags or [1, 7, 14]
     feat = _build_lag_features(df, lags)
@@ -456,7 +458,45 @@ def _fit_gbt_values(
     # nonsensical interval before returning it.
     lower_arr, upper_arr = np.minimum(lower_arr, upper_arr), np.maximum(lower_arr, upper_arr)
 
-    importances = {col: round(float(imp), 4) for col, imp in zip(feature_cols, point_model.feature_importances_)}
+    point_importances = {
+        col: round(float(imp), 4) for col, imp in zip(feature_cols, point_model.feature_importances_)
+    }
+
+    # Bootstrap CI for feature importances: refit on resampled TRAINING ROWS
+    # (not resampled residuals/errors like compute_metrics_with_ci elsewhere
+    # in this toolkit -- there's no "error" to resample here, importance is
+    # a property of the fitted model itself, so the resampling has to act on
+    # what the model is fit ON). Each resample is a full GradientBoosting fit
+    # at the SAME n_estimators/max_depth/learning_rate as the point model --
+    # this is real, not cheap: n_bootstrap extra full model fits on top of
+    # the three above, unlike the rest of this toolkit's bootstrap CIs (which
+    # resample a precomputed metric formula, not refit a model each time).
+    # n_bootstrap=0 is a legitimate, cheap opt-out (e.g. forecast_ensemble's
+    # internal GBT fit uses it -- ensemble results never surface per-model
+    # feature importances at all, so paying for the CI there is pure waste).
+    if n_bootstrap > 0:
+        rng = np.random.default_rng(seed)
+        n_rows = len(feat)
+        boot_samples = {col: [] for col in feature_cols}
+        for _ in range(n_bootstrap):
+            idx = rng.integers(0, n_rows, size=n_rows)
+            boot_model = GradientBoostingRegressor(
+                n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate, random_state=42
+            )
+            boot_model.fit(feat[feature_cols].iloc[idx], feat["value"].iloc[idx])
+            for col, imp in zip(feature_cols, boot_model.feature_importances_):
+                boot_samples[col].append(imp)
+
+        importances = {}
+        for col in feature_cols:
+            samples = np.asarray(boot_samples[col], dtype=float)
+            importances[col] = {
+                "importance": point_importances[col],
+                "ci_lower": round(float(np.percentile(samples, 100 * alpha / 2)), 4),
+                "ci_upper": round(float(np.percentile(samples, 100 * (1 - alpha / 2))), 4),
+            }
+    else:
+        importances = {col: {"importance": point_importances[col], "ci_lower": None, "ci_upper": None} for col in feature_cols}
 
     return {
         "point": np.array(point_preds),
@@ -465,6 +505,8 @@ def _fit_gbt_values(
         "dates": future_dates,
         "lags": lags,
         "feature_importances": importances,
+        "feature_importance_ci_n_bootstrap": n_bootstrap,
+        "feature_importance_ci_confidence_level": confidence_level,
         "interval_note": (
             f"{int(confidence_level * 100)}% interval from separate quantile-regression models "
             f"(loss='quantile', alpha={round(alpha / 2, 4)} and {round(1 - alpha / 2, 4)}) trained "
@@ -484,6 +526,8 @@ def forecast_gradient_boosted_trees(
     max_depth: int = 3,
     learning_rate: float = 0.05,
     confidence_level: float = 0.95,
+    n_bootstrap: int = 100,
+    seed: int = 42,
 ) -> dict:
     """Retrain gradient-boosted trees on lag + calendar features using the
     FULL series, then forecast `horizon` steps ahead RECURSIVELY: each
@@ -497,16 +541,30 @@ def forecast_gradient_boosted_trees(
     A prediction interval is available (via two extra quantile-regression
     models, see _fit_gbt_values) but is approximate -- it does not itself
     account for the recursive compounding risk described above and in the
-    `caveat` field. Fitting three models instead of one triples this
-    tool's compute cost relative to before.
+    `caveat` field.
+
+    `feature_importances` is now `{col: {importance, ci_lower, ci_upper}}`,
+    not a bare `{col: importance}` float -- a SHAPE CHANGE, not just an
+    added field, same pattern as ts-analyst's earlier ACF/anomaly-detector
+    upgrades. The CI comes from refitting on `n_bootstrap` resamples of the
+    TRAINING ROWS (not resampled errors -- there's no "error" to resample
+    for a feature-importance question, only what the model was fit on).
+    This is expensive: `n_bootstrap` extra full model fits on top of the
+    three already required for the point forecast and its interval --
+    fitting this tool now costs roughly `3 + n_bootstrap` model fits total,
+    not 3. Lower `n_bootstrap` (or `n_estimators`) if that cost matters for
+    your use case; both are honest quality/speed tradeoffs, not defaults
+    to leave untouched by convention.
     """
-    raw = _fit_gbt_values(df, horizon, lags, n_estimators, max_depth, learning_rate, confidence_level)
+    raw = _fit_gbt_values(df, horizon, lags, n_estimators, max_depth, learning_rate, confidence_level, n_bootstrap, seed)
     rows, truncated = _format_forecast(raw["dates"], raw["point"], raw["lower"], raw["upper"])
 
     return {
         "model": "Gradient Boosted Trees (recursive multi-step forecast)",
         "params": {"lags": raw["lags"], "n_estimators": n_estimators, "max_depth": max_depth, "learning_rate": learning_rate},
         "feature_importances": raw["feature_importances"],
+        "feature_importance_ci_n_bootstrap": raw["feature_importance_ci_n_bootstrap"],
+        "feature_importance_ci_confidence_level": raw["feature_importance_ci_confidence_level"],
         "horizon": horizon,
         "forecast": rows,
         "truncated": truncated,
@@ -554,15 +612,22 @@ def forecast_ensemble(
     own defaults.
 
     The combined point forecast is a straightforward weighted average at
-    each future date. The combined interval, when reported, is a weighted
-    average of each component's own interval BOUNDS -- an honest but
-    naive combination that does not account for correlation between the
-    component models' errors, unlike a properly derived ensemble
-    interval. If any included model contributes no interval of its own
-    (e.g. naive with too little history to estimate residual variance, or
-    ETS after a failed simulation), the ensemble reports no combined
-    interval at all rather than silently dropping that model's weight
-    from an interval-only average.
+    each future date. The combined interval, when reported, is a
+    VARIANCE combination (each component's own interval width is
+    converted to an implied standard deviation, combined via
+    sqrt(sum(w_i^2 * sigma_i^2)) under an INDEPENDENCE assumption between
+    components, then rebuilt around the weighted point forecast) -- more
+    principled than a plain bound average, but the independence
+    assumption is optimistic (every component is fit on the SAME series
+    and shares real error structure), so treat it as a lower bound on the
+    ensemble's true uncertainty; see `interval_note`. It CAN come out
+    narrower than any single component's own interval -- that's the
+    expected effect of combining independent estimates, not a bug. If any
+    included model contributes no interval of its own (e.g. naive with
+    too little history to estimate residual variance, or ETS after a
+    failed simulation), the ensemble reports no combined interval at all
+    rather than silently dropping that model's weight from a partial
+    combination.
     """
     if not model_types or len(model_types) < 2:
         return {"error": f"Need at least 2 model_types to ensemble, got {model_types!r}."}
@@ -618,6 +683,7 @@ def forecast_ensemble(
                     params.get("max_depth", 3),
                     params.get("learning_rate", 0.05),
                     confidence_level,
+                    n_bootstrap=0,  # ensemble results don't surface feature_importances at all
                 )
                 point, lower, upper = raw["point"], raw["lower"], raw["upper"]
                 label = "Gradient Boosted Trees (recursive)"
@@ -636,17 +702,36 @@ def forecast_ensemble(
 
     lower = upper = None
     if all(iv is not None for iv in interval_pairs):
-        weighted_lower = np.zeros(horizon)
-        weighted_upper = np.zeros(horizon)
+        # Variance combination, not a bound average: convert each component's
+        # own interval half-width back into an implied standard deviation
+        # (assumes each component's interval is roughly symmetric around its
+        # own point forecast -- true for naive/SARIMA/ETS, approximately true
+        # for GBT's quantile-regression interval), then combine under an
+        # INDEPENDENCE assumption: var_combined = sum(w_i^2 * sigma_i^2).
+        # This is a real, standard variance-combination technique -- but the
+        # independence assumption is almost certainly optimistic, since every
+        # component was fit on the SAME series and will share some error
+        # structure. Treat the result as a lower bound on the ensemble's true
+        # uncertainty, not a precise one; see interval_note.
+        alpha = 1 - confidence_level
+        z = float(_norm.ppf(1 - alpha / 2))
+        combined_variance = np.zeros(horizon)
         for (lo, up), weight in zip(interval_pairs, weights):
-            weighted_lower += weight * np.asarray(lo, dtype=float)
-            weighted_upper += weight * np.asarray(up, dtype=float)
-        lower, upper = weighted_lower, weighted_upper
+            sigma_i = (np.asarray(up, dtype=float) - np.asarray(lo, dtype=float)) / (2 * z)
+            combined_variance += (weight**2) * (sigma_i**2)
+        combined_sigma = np.sqrt(combined_variance)
+        lower = weighted_point - z * combined_sigma
+        upper = weighted_point + z * combined_sigma
         interval_note = (
-            "Interval is a WEIGHTED AVERAGE of each component model's own interval bounds (same "
-            "weights as the point forecast) -- a naive combination, not a statistically rigorous "
-            "ensemble interval, since it doesn't account for correlation between the component "
-            "models' errors."
+            f"{int(confidence_level * 100)}% combined interval assuming component models' forecast "
+            "errors are INDEPENDENT: each component's own interval width is converted to an implied "
+            "standard deviation, combined via sqrt(sum(w_i^2 * sigma_i^2)), then rebuilt around the "
+            "weighted point forecast. A real variance-combination technique, not a bound average -- "
+            "but the independence assumption is almost certainly optimistic (every component was fit "
+            "on the SAME series and shares some error structure), so treat this as a LOWER BOUND on "
+            "the ensemble's true uncertainty, not a precise one. Can come out NARROWER than any single "
+            "component's own interval -- that's the expected effect of combining independent "
+            "estimates, not a bug."
         )
     else:
         missing = [c["model_type"] for c in components if not c["has_interval"]]

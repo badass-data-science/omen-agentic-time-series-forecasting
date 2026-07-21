@@ -142,6 +142,8 @@ def forecast_gradient_boosted_trees(
     max_depth: int = 3,
     learning_rate: float = 0.05,
     confidence_level: float = 0.95,
+    n_bootstrap: int = 100,
+    seed: int = 42,
     date_col: str = "date",
     value_col: str = "value",
 ) -> dict:
@@ -157,6 +159,13 @@ def forecast_gradient_boosted_trees(
     itself grow with the recursive compounding risk the way a proper
     multi-step interval would.
 
+    `feature_importances` is `{col: {importance, ci_lower, ci_upper}}` --
+    the CI comes from refitting on `n_bootstrap` resamples of the training
+    rows, which is real extra compute (n_bootstrap extra full model fits
+    on top of the three already needed for the forecast+interval). Pass
+    `n_bootstrap=0` to skip this and get `ci_lower`/`ci_upper` as `null`
+    cheaply, if you only care about the point importances.
+
     Args:
         csv_path: Path to a CSV with a date column and a value column.
         horizon: Number of future steps to forecast.
@@ -164,7 +173,9 @@ def forecast_gradient_boosted_trees(
         n_estimators: Number of boosting stages.
         max_depth: Max depth per tree.
         learning_rate: Shrinkage rate applied to each tree's contribution.
-        confidence_level: Width of the quantile-regression prediction interval, e.g. 0.95 for 95%.
+        confidence_level: Width of the quantile-regression prediction interval AND the feature-importance CI, e.g. 0.95 for 95%.
+        n_bootstrap: Bootstrap resamples for the feature-importance CI. 0 skips it (cheap).
+        seed: Random seed for the feature-importance bootstrap, for reproducibility.
         date_col: Name of the date column in the CSV.
         value_col: Name of the value column in the CSV.
     """
@@ -177,6 +188,8 @@ def forecast_gradient_boosted_trees(
         max_depth=max_depth,
         learning_rate=learning_rate,
         confidence_level=confidence_level,
+        n_bootstrap=n_bootstrap,
+        seed=seed,
     )
 
 
@@ -201,9 +214,16 @@ def forecast_ensemble(
     pre-normalized (e.g. pass raw inverse-MAE values straight from a Layer 2
     backtest_metrics comparison -- they get normalized internally). The
     combined point forecast is a weighted average at each future date. The
-    combined interval (when every component contributes one) is a weighted
-    average of interval BOUNDS -- an honest but naive combination, not a
-    statistically rigorous ensemble interval; see interval_note.
+    combined interval (when every component contributes one) is a VARIANCE
+    combination -- each component's own interval width becomes an implied
+    standard deviation, combined via sqrt(sum(w_i^2 * sigma_i^2)) assuming
+    the components' errors are INDEPENDENT, then rebuilt around the
+    weighted point forecast. More principled than a plain bound average,
+    but the independence assumption is optimistic (every component is fit
+    on the SAME series), so treat this as a lower bound on the ensemble's
+    true uncertainty -- it can come out narrower than any single
+    component's own interval, which is the expected effect of combining
+    independent estimates, not a bug. See interval_note.
 
     Args:
         csv_path: Path to a CSV with a date column and a value column.

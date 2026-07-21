@@ -406,6 +406,21 @@ Before actually publishing, you'll want to:
   quantile models' -- one consistent path instead of three diverging
   ones. Independently-fit quantile models can cross (`lower > upper`);
   guarded against with an elementwise min/max before returning.
+  **`feature_importances` now includes a bootstrap confidence interval per
+  feature** (`{col: {importance, ci_lower, ci_upper}}` -- a shape change,
+  not just an added field). Refits the point model on `n_bootstrap`
+  (default 100) resamples of the TRAINING ROWS, not resampled errors --
+  there's no "error" to resample for a feature-importance question, only
+  what the model was fit on. Real extra cost: `n_bootstrap` full model
+  refits on top of the three already needed for the forecast/interval.
+  Confirmed on the project's own synthetic data that this CI is
+  informative, not decorative: `lag_7` (the real weekly seasonality)
+  showed `importance=0.593` but `ci_lower=0.26, ci_upper=0.77` -- a
+  genuinely wide range, since `lag_7` and `lag_14` compete for
+  "explaining" the same weekly pattern and which one wins varies by
+  resample. `n_bootstrap=0` skips this cheaply (`ci_lower`/`ci_upper`
+  come back `null`) -- `forecast_ensemble`'s internal GBT fit always uses
+  this, since ensemble results never surface `feature_importances` at all.
 - **Every `ts-deploy__forecast_*` tool (including `forecast_ensemble`)
   returns a `plausibility_check` field** that automates part of the
   "does this look plausible" eyeball check `ts-deploy/SKILL.md` Step 3
@@ -427,12 +442,22 @@ Before actually publishing, you'll want to:
   is this layer's job, evaluating them individually is Layer 2's).
   `weights` default to equal, needn't be pre-normalized (raw inverse-MAE
   values from a Layer 2 comparison work directly), and the combined point
-  forecast is a straightforward weighted average at each date. The
+  forecast is a straightforward weighted average at each date. **The
   combined interval, reported only when EVERY included model contributes
-  one of its own, is a weighted average of interval BOUNDS -- an honest
-  but naive combination that doesn't account for correlation between the
-  component models' errors, unlike a properly derived ensemble interval;
-  `interval_note` says so. Including `"gbt"` carries its recursive-
+  one of its own, is a VARIANCE combination, not a bound average**: each
+  component's own interval width is converted to an implied standard
+  deviation, combined via `sqrt(sum(w_i^2 * sigma_i^2))` assuming the
+  components' errors are INDEPENDENT, then rebuilt around the weighted
+  point forecast. More principled than literally averaging bounds -- but
+  the independence assumption is optimistic (every component is fit on
+  the SAME series and shares real error structure), so `interval_note`
+  frames the result as a lower bound on the ensemble's true uncertainty,
+  not a precise one. Confirmed on the project's own synthetic data: two
+  identical naive components at equal weight (0.5/0.5) combine to a
+  95% interval exactly `1/sqrt(2)` (≈0.707x) the width of either
+  component's own interval alone -- narrower than any single component,
+  which is the expected mathematical effect of combining independent
+  estimates, not a bug. Including `"gbt"` carries its recursive-
   compounding caveat into the combined result too (diluted by weight, not
   eliminated).
 - **`ts-monitor`'s drift detector can't distinguish trend/seasonality from

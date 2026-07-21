@@ -78,13 +78,13 @@ def test_forecast_sarima_has_analytic_interval(sample_df):
 
 
 def test_forecast_gbt_flags_compounding_error_caveat(sample_df):
-    result = forecast_gradient_boosted_trees(sample_df, horizon=10)
+    result = forecast_gradient_boosted_trees(sample_df, horizon=10, n_bootstrap=0)
     assert "caveat" in result
     assert "recursive" in result["caveat"].lower() or "compound" in result["caveat"].lower()
 
 
 def test_forecast_gbt_has_quantile_interval(sample_df):
-    result = forecast_gradient_boosted_trees(sample_df, horizon=10)
+    result = forecast_gradient_boosted_trees(sample_df, horizon=10, n_bootstrap=0)
     row = result["forecast"][0]
     assert "lower" in row and "upper" in row
     assert row["lower"] <= row["forecast"] <= row["upper"]
@@ -92,10 +92,28 @@ def test_forecast_gbt_has_quantile_interval(sample_df):
 
 
 def test_forecast_gbt_interval_never_crosses(sample_df):
-    result = forecast_gradient_boosted_trees(sample_df, horizon=30)
+    result = forecast_gradient_boosted_trees(sample_df, horizon=30, n_bootstrap=0)
     for row in result["forecast"]:
         if "forecast" in row:
             assert row["lower"] <= row["upper"]
+
+
+def test_forecast_gbt_feature_importance_ci_shape(sample_df):
+    result = forecast_gradient_boosted_trees(sample_df, horizon=10, n_bootstrap=10)
+    assert result["feature_importance_ci_n_bootstrap"] == 10
+    assert result["feature_importance_ci_confidence_level"] == 0.95
+    for col, entry in result["feature_importances"].items():
+        assert set(entry.keys()) == {"importance", "ci_lower", "ci_upper"}
+        assert entry["ci_lower"] <= entry["ci_upper"]
+
+
+def test_forecast_gbt_feature_importance_ci_skipped_when_n_bootstrap_zero(sample_df):
+    result = forecast_gradient_boosted_trees(sample_df, horizon=10, n_bootstrap=0)
+    assert result["feature_importance_ci_n_bootstrap"] == 0
+    for entry in result["feature_importances"].values():
+        assert entry["ci_lower"] is None
+        assert entry["ci_upper"] is None
+        assert entry["importance"] is not None
 
 
 @pytest.mark.parametrize(
@@ -104,7 +122,7 @@ def test_forecast_gbt_interval_never_crosses(sample_df):
         (forecast_naive, {}),
         (forecast_ets, {}),
         (forecast_sarima, {}),
-        (forecast_gradient_boosted_trees, {}),
+        (forecast_gradient_boosted_trees, {"n_bootstrap": 0}),
     ],
 )
 def test_all_forecast_tools_include_plausibility_check(sample_df, forecast_fn, kwargs):
@@ -177,6 +195,24 @@ def test_forecast_ensemble_combined_interval_when_all_components_have_one(sample
     result = forecast_ensemble(sample_df, model_types=["ets", "sarima"], horizon=10)
     assert "lower" in result["forecast"][0]
     assert "upper" in result["forecast"][0]
+
+
+def test_forecast_ensemble_interval_is_variance_combined_not_bound_averaged(sample_df):
+    # Two identical naive components at equal weight (0.5 each): under the
+    # independence assumption, combined sigma = sigma * sqrt(0.5^2+0.5^2)
+    # = sigma / sqrt(2), i.e. NARROWER than either component's own
+    # interval -- the opposite of what a plain bound average would give
+    # (which would reproduce the single naive interval exactly, same as
+    # the point forecast does in the weighted-average test above).
+    single = forecast_naive(sample_df, horizon=5, method="naive")
+    single_width = single["forecast"][0]["upper"] - single["forecast"][0]["lower"]
+
+    ensemble = forecast_ensemble(sample_df, model_types=["naive", "naive"], horizon=5, model_params={"naive": {"method": "naive"}})
+    combined_width = ensemble["forecast"][0]["upper"] - ensemble["forecast"][0]["lower"]
+
+    assert combined_width == pytest.approx(single_width / (2**0.5), rel=1e-2)
+    assert combined_width < single_width
+    assert "independent" in ensemble["interval_note"].lower()
 
 
 def test_forecast_ensemble_gbt_caveat_present(sample_df):

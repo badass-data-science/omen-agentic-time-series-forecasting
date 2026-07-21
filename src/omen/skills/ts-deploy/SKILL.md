@@ -39,7 +39,13 @@ silently default to arbitrary parameters as if they were validated.
   DOES have a prediction interval (via quantile regression), but that
   interval is approximate and doesn't itself account for the compounding
   risk -- `interval_note` and `caveat` both say so; don't present it with
-  the same confidence as SARIMA's analytic interval.
+  the same confidence as SARIMA's analytic interval. `feature_importances`
+  now includes a bootstrap confidence interval per feature
+  (`{col: {importance, ci_lower, ci_upper}}`) -- a wide CI on a feature
+  means its apparent importance isn't very stable across resamples of the
+  training data, worth mentioning if you're leaning on feature importance
+  to explain the forecast. This CI costs real extra compute (`n_bootstrap`
+  extra model fits, default 100); pass `n_bootstrap=0` if you don't need it.
 - `ts-deploy__forecast_ensemble` — combines two or more of the above into
   one weighted forecast. Use this when more than one candidate backtested
   reasonably well in Layer 2 and you don't want to force a single winner.
@@ -108,9 +114,15 @@ set to the candidates you want combined:
   inverse-error values are fine, they get normalized internally, you
   don't need to pre-compute proportions yourself.
 - Read `interval_note`: a combined interval is only reported if every
-  included model contributed one of its own, and even then it's a naive
-  weighted average of bounds, not a rigorously derived ensemble interval
-  -- say so if you report it.
+  included model contributed one of its own, and even then it's built by
+  combining each component's implied variance under an INDEPENDENCE
+  assumption between models -- more principled than a plain bound
+  average, but still optimistic, since every component is fit on the SAME
+  series and shares real error structure. Say so if you report it. It can
+  come out narrower than any single component's own interval -- that's
+  the expected effect of combining independent estimates, not a bug worth
+  second-guessing, but still worth a caveat in the report (treat the
+  combined interval as a lower bound on true uncertainty).
 - If you include `"gbt"`, the recursive-compounding caveat still applies
   and shows up in the result's own `caveat` field -- it doesn't go away
   just because other models are blended in, only gets diluted by weight.
