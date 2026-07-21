@@ -93,18 +93,26 @@ at all; skip straight to Step 1 otherwise.
   overwrites the deployment manifest. Refuses to run unless called with
   `confirmed=True` -- see the two modes above for when that's appropriate.
   `params` should be passed through unchanged from the `params` field your
-  chosen candidate's `ts-forecaster` `fit_*` result returned. Its result
-  includes `previous_deployment` -- whatever was deployed immediately
-  before this call (or `null` on a first deployment) -- so what actually
-  changed is right there in the tool's own output, not something you have
-  to reconstruct from earlier in the conversation. Pass `autonomous=True`
-  for an unattended autonomous-mode call specifically -- it will refuse
-  even with `confirmed=True` unless `authorize_autonomous_mode` has
-  already recorded standing authorization for this series.
+  chosen candidate's `ts-forecaster` `fit_*` result returned. On success
+  its result includes `forecast_result` (the actual new forecast) and
+  `manifest` (the deployment record as just written) -- report both, not
+  just a bare "redeployed successfully." It also includes
+  `previous_deployment` -- whatever was deployed immediately before this
+  call (or `null` on a first deployment) -- so what actually changed is
+  right there in the tool's own output, not something you have to
+  reconstruct from earlier in the conversation. Pass `autonomous=True` for
+  an unattended autonomous-mode call specifically -- it will refuse even
+  with `confirmed=True` unless `authorize_autonomous_mode` has already
+  recorded standing authorization for this series.
 - `ts-retrain__authorize_autonomous_mode` / `ts-retrain__revoke_autonomous_mode` /
   `ts-retrain__check_autonomous_mode` — persist, remove, and read back a
   standing autonomous-mode authorization record for a specific series (a
-  small JSON file next to the manifest, not a field within it). See
+  small JSON file next to the manifest, not a field within it).
+  `authorize_autonomous_mode` returns `record` (`authorized_at`,
+  `authorized_by`, `note`); `check_autonomous_mode` returns those same
+  fields flat when `authorized: true`, or `checked_path` (which file it
+  looked at) when not -- cite `authorized_by`/`authorized_at` when
+  reporting that autonomous mode applied, not just the bare boolean. See
   "Granting or checking autonomous-mode authorization" above -- these are
   not part of the normal four-step cycle.
 - `ts-retrain__record_deployment` — writes the manifest directly, without
@@ -182,9 +190,9 @@ skill)?
   actually exists, call `check_autonomous_mode` first rather than
   guessing -- but even if you skip that, `execute_redeploy` itself will
   refuse and return an explanatory error rather than silently redeploying
-  when `autonomous=True` has no matching record. Report the result (the
-  new forecast and the updated manifest) alongside everything above --
-  don't let an autonomous action pass without being visibly reported just
+  when `autonomous=True` has no matching record. Report the result
+  (`forecast_result` and `manifest`) alongside everything above -- don't
+  let an autonomous action pass without being visibly reported just
   because no one had to approve it first.
 
 In either mode, once `execute_redeploy` has run, report what it says

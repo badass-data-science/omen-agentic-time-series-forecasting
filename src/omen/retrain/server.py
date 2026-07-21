@@ -159,12 +159,19 @@ def execute_redeploy(
     This is a real code-level check, not just a prose instruction. Leave
     autonomous at its default (False) for ordinary human-confirmed calls.
 
-    Returns `previous_deployment`: whatever the manifest held immediately
-    before this call overwrote it, or null if nothing was deployed yet for
-    this series -- lets you report what actually changed straight from
-    this tool's own output, instead of relying on conversation history to
-    reconstruct it. The manifest itself still only ever holds the single
-    current deployment, not a history.
+    On success (`status: "redeployed"`), also returns `forecast_result`
+    (the actual new forecast just produced -- same shape as the matching
+    ts-deploy `forecast_*` tool's own result) and `manifest` (the deployment
+    manifest as just written -- same shape as `load_deployment_manifest`'s
+    result). Report both when describing what this call did, not just the
+    bare "redeployed successfully" status.
+
+    Also returns `previous_deployment`: whatever the manifest held
+    immediately before this call overwrote it, or null if nothing was
+    deployed yet for this series -- lets you report what actually changed
+    straight from this tool's own output, instead of relying on
+    conversation history to reconstruct it. The manifest itself still only
+    ever holds the single current deployment, not a history.
 
     Args:
         csv_path: Path to the series CSV to retrain and forecast on.
@@ -218,6 +225,12 @@ def authorize_autonomous_mode(
     already been made elsewhere. Overwrites any existing record for this
     series; reflects the CURRENT authorization state, not a history.
 
+    Returns `record`: the full authorization record as written
+    (`csv_path`, `authorized`, `authorized_at`, `authorized_by`, `note`) --
+    the same shape `check_autonomous_mode` returns back later when
+    `authorized` is true, so you can cite exactly who authorized this and
+    when in a later report instead of just knowing that it happened.
+
     Args:
         csv_path: Path to the series CSV this authorization applies to.
         authorized_by: Who/what granted this, e.g. "user, in conversation
@@ -248,8 +261,14 @@ def revoke_autonomous_mode(csv_path: str, autonomous_mode_path: Optional[str] = 
 @mcp.tool()
 def check_autonomous_mode(csv_path: str, autonomous_mode_path: Optional[str] = None) -> dict:
     """Read whatever authorize_autonomous_mode last recorded for this
-    series. Returns {"authorized": False, ...} -- not an error -- when
-    nothing has been recorded, since that's the default, expected state.
+    series. When authorized, returns the full record: `authorized: true`,
+    plus `authorized_at`, `authorized_by`, and `note` -- cite these when
+    reporting that autonomous mode applied to a redeploy, not just the
+    bare boolean. When nothing has been recorded, returns
+    `{"authorized": False, "checked_path": ..., "note": ...}` -- NOT an
+    error, since that's the default, expected state; `checked_path` names
+    exactly which file was checked, useful if authorization seems to be
+    missing unexpectedly (e.g. a mismatched `autonomous_mode_path`).
 
     Args:
         csv_path: Path to the series CSV.
