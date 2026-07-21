@@ -102,6 +102,41 @@ def test_compare_candidate_to_deployed_errors_on_missing_metric():
     assert "error" in result
 
 
+def test_compare_candidate_to_deployed_omits_ci_fields_when_absent():
+    result = compare_candidate_to_deployed(
+        candidate_metrics={"mape_pct": 4.0},
+        deployed_metrics={"mape_pct": 5.0},
+        improvement_threshold_pct=10.0,
+    )
+    assert result["pct_improvement_ci_lower"] is None
+    assert result["pct_improvement_ci_upper"] is None
+    assert result["redeploy_threshold_within_ci"] is None
+
+
+def test_compare_candidate_to_deployed_reports_ci_when_present():
+    result = compare_candidate_to_deployed(
+        candidate_metrics={"mape_pct": 6.0, "mape_pct_ci_lower": 5.0, "mape_pct_ci_upper": 7.0},
+        deployed_metrics={"mape_pct": 10.0},
+        improvement_threshold_pct=10.0,
+    )
+    # pct_improvement is DECREASING in candidate_value -- the candidate's
+    # smallest CI value (5.0) gives the BEST-case improvement (50%), its
+    # largest (7.0) gives the WORST-case (30%).
+    assert result["pct_improvement_ci_lower"] == 30.0
+    assert result["pct_improvement_ci_upper"] == 50.0
+    assert result["redeploy_threshold_within_ci"] is False  # 10% threshold is below both bounds
+
+
+def test_compare_candidate_to_deployed_flags_threshold_within_ci():
+    result = compare_candidate_to_deployed(
+        candidate_metrics={"mape_pct": 8.8, "mape_pct_ci_lower": 7.5, "mape_pct_ci_upper": 9.8},
+        deployed_metrics={"mape_pct": 10.0},
+        improvement_threshold_pct=10.0,
+    )
+    assert result["redeploy_threshold_within_ci"] is True
+    assert "sensitive to the candidate's backtest sampling noise" in result["reasoning"]
+
+
 def test_execute_redeploy_refuses_without_confirmation(tmp_path):
     csv_path = tmp_path / "series.csv"
     csv_path.write_text("date,value\n2024-01-01,1.0\n")
@@ -158,3 +193,55 @@ def test_execute_redeploy_retrains_and_records_manifest(tmp_path):
     loaded = load_deployment_manifest(str(csv_path))
     assert loaded["backtest_metrics"]["mape_pct"] == 4.5
     assert loaded["horizon"] == 10
+
+
+def test_execute_redeploy_previous_deployment_is_none_on_first_deploy(tmp_path):
+    pytest.importorskip("statsmodels")
+    pytest.importorskip("sklearn")
+
+    from omen.data_prep import generate_synthetic_series
+
+    csv_path = tmp_path / "series.csv"
+    generate_synthetic_series(n_days=200).to_csv(csv_path, index=False)
+
+    result = execute_redeploy(
+        str(csv_path),
+        model_type="naive",
+        params={"method": "naive"},
+        horizon=10,
+        backtest_metrics={"mape_pct": 12.0},
+        confirmed=True,
+    )
+    assert result["previous_deployment"] is None
+
+
+def test_execute_redeploy_previous_deployment_snapshots_prior_manifest(tmp_path):
+    pytest.importorskip("statsmodels")
+    pytest.importorskip("sklearn")
+
+    from omen.data_prep import generate_synthetic_series
+
+    csv_path = tmp_path / "series.csv"
+    generate_synthetic_series(n_days=200).to_csv(csv_path, index=False)
+
+    first = execute_redeploy(
+        str(csv_path),
+        model_type="naive",
+        params={"method": "naive"},
+        horizon=10,
+        backtest_metrics={"mape_pct": 12.0},
+        confirmed=True,
+    )
+    second = execute_redeploy(
+        str(csv_path),
+        model_type="naive",
+        params={"method": "seasonal_naive"},
+        horizon=14,
+        backtest_metrics={"mape_pct": 8.0},
+        confirmed=True,
+    )
+    assert second["previous_deployment"] is not None
+    assert second["previous_deployment"]["model"] == first["manifest"]["model"]
+    assert second["previous_deployment"]["backtest_metrics"]["mape_pct"] == 12.0
+    # The manifest itself still only ever holds the CURRENT deployment, not a history.
+    assert second["manifest"]["backtest_metrics"]["mape_pct"] == 8.0

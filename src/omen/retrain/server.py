@@ -93,6 +93,17 @@ def compare_candidate_to_deployed(
     improvement of at least improvement_threshold_pct before recommending
     a swap, to avoid churn from noise-level differences.
 
+    If candidate_metrics also has a bootstrap CI for metric_name (i.e.
+    `{metric_name}_ci_lower`/`{metric_name}_ci_upper` -- present on any
+    recent ts-forecaster fit_* result), this also reports
+    `pct_improvement_ci_lower`/`pct_improvement_ci_upper` (the implied
+    improvement range) and flags `redeploy_threshold_within_ci: true` when
+    `improvement_threshold_pct` falls inside that range -- meaning
+    should_redeploy is sensitive to the candidate's own backtest sampling
+    noise, not a clean call. Same pattern as
+    ts-monitor__recommend_retraining's optional degradation CI;
+    deployed_metrics' own uncertainty is not combined in.
+
     Args:
         candidate_metrics: backtest_metrics dict from a fresh
             ts-forecaster fit_* call on the updated series.
@@ -133,6 +144,13 @@ def execute_redeploy(
     of two situations (see the ts-retrain SKILL.md): a human has approved
     this specific redeploy in the current conversation, or an explicitly
     authorized autonomous-mode instruction covers this series.
+
+    Returns `previous_deployment`: whatever the manifest held immediately
+    before this call overwrote it, or null if nothing was deployed yet for
+    this series -- lets you report what actually changed straight from
+    this tool's own output, instead of relying on conversation history to
+    reconstruct it. The manifest itself still only ever holds the single
+    current deployment, not a history.
 
     Args:
         csv_path: Path to the series CSV to retrain and forecast on.

@@ -112,6 +112,18 @@ def compare_candidate_to_deployed(
     against redeploying (and resetting the monitoring clock) over
     noise-level differences between two similar fits.
 
+    If `candidate_metrics` also has a bootstrap confidence interval for
+    `metric_name` (i.e. `{metric_name}_ci_lower`/`{metric_name}_ci_upper`
+    -- the fields ts-forecaster's compute_metrics_with_ci adds, present on
+    any recent fit_* result), this also reports the implied
+    `pct_improvement_ci_lower`/`pct_improvement_ci_upper` and flags
+    `redeploy_threshold_within_ci: true` when `improvement_threshold_pct`
+    falls inside that range -- meaning should_redeploy is sensitive to the
+    candidate's own backtest sampling noise, not a clean call. Same
+    pattern as ts-monitor__recommend_retraining's degradation CI:
+    `deployed_metrics`' own uncertainty (if it has any) is NOT combined
+    in, same "one side treated as fixed" simplification used there.
+
     Args:
         candidate_metrics: backtest_metrics dict from a fresh
             ts-forecaster fit_* call on the updated series.
@@ -131,12 +143,28 @@ def compare_candidate_to_deployed(
     candidate_value = float(candidate_metrics[metric_name])
     deployed_value = float(deployed_metrics[metric_name])
 
+    pct_improvement_ci_lower = pct_improvement_ci_upper = None
+    redeploy_threshold_within_ci = None
+
     if deployed_value == 0:
         pct_improvement = None
         should_redeploy = candidate_value < deployed_value
     else:
         pct_improvement = round(100 * (deployed_value - candidate_value) / deployed_value, 2)
         should_redeploy = pct_improvement >= improvement_threshold_pct
+
+        candidate_ci_lower = candidate_metrics.get(f"{metric_name}_ci_lower")
+        candidate_ci_upper = candidate_metrics.get(f"{metric_name}_ci_upper")
+        if candidate_ci_lower is not None and candidate_ci_upper is not None:
+            # pct_improvement is DECREASING in candidate_value (it's
+            # subtracted), so the candidate's own smallest CI value gives
+            # the BEST-case improvement and its largest gives the
+            # WORST-case -- not a naive lower-bound-in, lower-bound-out mapping.
+            pct_improvement_ci_upper = round(100 * (deployed_value - float(candidate_ci_lower)) / deployed_value, 2)
+            pct_improvement_ci_lower = round(100 * (deployed_value - float(candidate_ci_upper)) / deployed_value, 2)
+            redeploy_threshold_within_ci = bool(
+                pct_improvement_ci_lower <= improvement_threshold_pct <= pct_improvement_ci_upper
+            )
 
     if should_redeploy:
         reasoning = (
@@ -160,11 +188,22 @@ def compare_candidate_to_deployed(
             "just refreshed parameters of the same one)."
         )
 
+    if redeploy_threshold_within_ci:
+        reasoning += (
+            f" Note: the candidate's own bootstrap CI implies an improvement range of "
+            f"[{pct_improvement_ci_lower}%, {pct_improvement_ci_upper}%], which straddles the "
+            f"{improvement_threshold_pct}% threshold -- this should_redeploy verdict is "
+            "sensitive to the candidate's backtest sampling noise, not a clean call."
+        )
+
     return {
         "metric_name": metric_name,
         "candidate_value": round(candidate_value, 4),
         "deployed_value": round(deployed_value, 4),
         "pct_improvement": pct_improvement,
+        "pct_improvement_ci_lower": pct_improvement_ci_lower,
+        "pct_improvement_ci_upper": pct_improvement_ci_upper,
+        "redeploy_threshold_within_ci": redeploy_threshold_within_ci,
         "should_redeploy": should_redeploy,
         "reasoning": reasoning,
         "improvement_threshold_pct": improvement_threshold_pct,
@@ -204,6 +243,15 @@ def execute_redeploy(
     Requires the `deploy` extra installed (statsmodels/scikit-learn)
     regardless of which model_type is used, since it imports
     omen.deploy.forecast_tools as a whole module.
+
+    Returns `previous_deployment`: whatever the manifest held immediately
+    before this call overwrote it (read before writing, not reconstructed
+    afterward), or `None` if nothing was deployed yet for this series. The
+    manifest itself still only ever holds the single current deployment,
+    not a history -- this is a one-time snapshot in the ACTION'S OWN
+    output, so what just changed is self-documenting from the tool call
+    itself rather than something that has to be reconstructed from
+    conversation history.
     """
     if not confirmed:
         return {
@@ -243,6 +291,14 @@ def execute_redeploy(
     }
     forecast_result = dispatch[model_type](df, horizon=horizon, **params)
 
+    # Snapshot whatever was deployed BEFORE this call overwrites it -- read
+    # before record_deployment writes, so the action's own output is
+    # self-documenting about what it just replaced, rather than relying on
+    # conversation history to reconstruct it. None if nothing was deployed
+    # yet (a legitimate first-deployment case, not an error).
+    previous = load_deployment_manifest(csv_path, manifest_path)
+    previous_deployment = None if "error" in previous else previous
+
     manifest_result = record_deployment(
         csv_path,
         model=forecast_result["model"],
@@ -254,6 +310,7 @@ def execute_redeploy(
 
     return {
         "status": "redeployed",
+        "previous_deployment": previous_deployment,
         "forecast_result": forecast_result,
         "manifest": manifest_result["manifest"],
     }

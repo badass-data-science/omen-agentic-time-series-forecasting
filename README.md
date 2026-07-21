@@ -541,6 +541,30 @@ Before actually publishing, you'll want to:
   (deterministic, same reason as `recommend_retraining` above), and
   `execute_redeploy` itself refuses to do anything unless called with
   `confirmed=True`. There is no default that takes action.
+- **`ts-retrain__compare_candidate_to_deployed` now uses confidence-interval
+  data it was already being handed but previously ignored.** The full
+  `backtest_metrics` dicts passed in as `candidate_metrics`/`deployed_metrics`
+  already carry a bootstrap CI for the compared metric (from
+  `ts-forecaster`'s `compute_metrics_with_ci`) whenever the candidate came
+  from a recent `fit_*` call -- the function just wasn't reading it. It now
+  reports `pct_improvement_ci_lower/upper` (the implied improvement range,
+  derived from the candidate's own CI -- confirmed directly: a candidate at
+  MAPE 6.0% with CI `[5.0, 7.0]` against a deployed MAPE of 10.0% implies an
+  improvement range of `[30.0%, 50.0%]`, since improvement is *decreasing*
+  in the candidate's own value, not increasing) and flags
+  `redeploy_threshold_within_ci: true` when `improvement_threshold_pct`
+  falls inside that range -- meaning `should_redeploy` is close to a coin
+  flip on the candidate's own backtest sampling noise. Same "one side
+  treated as fixed" simplification as `ts-monitor__recommend_retraining`'s
+  degradation CI: `deployed_metrics`' own uncertainty isn't combined in.
+- **`ts-retrain__execute_redeploy` now returns `previous_deployment`** --
+  whatever the manifest held immediately before this call overwrote it (or
+  `null` on a genuinely first deployment), read before the write happens
+  rather than reconstructed afterward. The manifest file itself is
+  unchanged and still only ever holds the single current deployment, not a
+  history -- this is a one-time snapshot in the ACTION'S OWN output, so
+  "what did this redeploy actually replace" is answerable straight from the
+  tool call instead of requiring a trawl back through conversation history.
 - **`ts-retrain` supports two ways of reaching that confirmation**: the
   default is a human explicitly approving the redeploy in conversation.
   An *optional autonomous mode* exists for when a human or a standing

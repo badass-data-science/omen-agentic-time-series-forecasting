@@ -47,13 +47,23 @@ You need:
 - `ts-retrain__compare_candidate_to_deployed` — DELIBERATELY deterministic
   decision: does a freshly backtested candidate beat the deployed model by
   more than a threshold (default 10% relative improvement)? Call this
-  rather than eyeballing whether the new numbers "look better."
+  rather than eyeballing whether the new numbers "look better." If your
+  candidate's `backtest_metrics` has a bootstrap CI for the compared metric
+  (it will, if it came from a recent `ts-forecaster` `fit_*` call), the
+  result also reports `pct_improvement_ci_lower`/`pct_improvement_ci_upper`
+  and flags `redeploy_threshold_within_ci: true` when the threshold itself
+  falls inside that range -- meaning `should_redeploy` is close to a coin
+  flip on the candidate's own backtest sampling noise, not a clean call.
 - `ts-retrain__execute_redeploy` — the one tool in this skill that takes a
   real action: retrains `model_type` with `params` on the full series and
   overwrites the deployment manifest. Refuses to run unless called with
   `confirmed=True` -- see the two modes above for when that's appropriate.
   `params` should be passed through unchanged from the `params` field your
-  chosen candidate's `ts-forecaster` `fit_*` result returned.
+  chosen candidate's `ts-forecaster` `fit_*` result returned. Its result
+  includes `previous_deployment` -- whatever was deployed immediately
+  before this call (or `null` on a first deployment) -- so what actually
+  changed is right there in the tool's own output, not something you have
+  to reconstruct from earlier in the conversation.
 - `ts-retrain__record_deployment` — writes the manifest directly, without
   retraining anything. Only useful if you deployed by some path outside
   this skill (e.g. you ran `ts-deploy`'s tools manually) and just need to
@@ -93,7 +103,9 @@ Call `compare_candidate_to_deployed` with:
 Do not substitute your own read of "does this look better" for this
 tool's output -- if its verdict surprises you given what you saw in Step
 2, say so as a caveat in your report, but still report what it actually
-returned.
+returned. If `redeploy_threshold_within_ci: true` came back, say so
+plainly in your report before Step 4 -- the verdict is close to the
+threshold, not a clean call, even though it's still the verdict you act on.
 
 ## Step 4 — Act (or stop), depending on mode
 
@@ -126,6 +138,12 @@ skill)?
   Report the result (the new forecast and the updated manifest) alongside
   everything above -- don't let an autonomous action pass without being
   visibly reported just because no one had to approve it first.
+
+In either mode, once `execute_redeploy` has run, report what it says
+`previous_deployment` was alongside the new deployment -- a concrete
+"replaced X with Y" statement is a better report than just "redeployed
+successfully," and the tool's own output already has the old model/params
+right there, no need to dig back through the conversation for them.
 
 In both modes, `execute_redeploy` is the only tool that should ever
 actually change the deployment -- never call `ts-deploy`'s tools directly
