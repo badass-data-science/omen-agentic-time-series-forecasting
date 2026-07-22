@@ -65,6 +65,25 @@ def mojito_inventory() -> pd.DataFrame:
     return df
 
 
+def mojito_inventory_clean() -> pd.DataFrame:
+    """Chapter 14's deployment-ready series: mojito_inventory() with its
+    5 missing days linearly interpolated -- the fix for the chapter's
+    own opening gotcha, where deploying straight from the raw CSV
+    silently produced an all-null forecast with no error raised. Round-
+    trips through CSV text first, matching the real workflow (read the
+    raw CSV, then interpolate) byte-for-byte -- interpolating the
+    in-memory, not-yet-serialized values instead gives float64 results
+    that differ from the CSV-sourced ones in their last one or two
+    significant digits."""
+    import io
+    buf = io.StringIO()
+    mojito_inventory().to_csv(buf, index=False)
+    buf.seek(0)
+    df = pd.read_csv(buf, parse_dates=["date"])
+    df["value"] = df["value"].interpolate(method="linear")
+    return df
+
+
 def mojito_inventory_constant() -> pd.DataFrame:
     """Chapter 3's zero-variance edge case: a week where the mojito
     count never changed, to show the honest null/null confidence
@@ -189,6 +208,7 @@ def minion_overtime() -> pd.DataFrame:
 DATASETS = {
     "grumbling_level": grumbling_level,
     "mojito_inventory": mojito_inventory,
+    "mojito_inventory_clean": mojito_inventory_clean,
     "mojito_inventory_constant": mojito_inventory_constant,
     "deathray_revenue": deathray_revenue,
     "deathray_revenue_slow_month": deathray_revenue_slow_month,
