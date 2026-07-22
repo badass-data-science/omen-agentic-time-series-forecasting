@@ -453,12 +453,18 @@ def _fit_gbt_values(
             [history, pd.DataFrame({"date": [current_date], "value": [point_pred]})], ignore_index=True
         )
 
+    point_arr = np.array(point_preds)
     lower_arr = np.array(lower_preds)
     upper_arr = np.array(upper_preds)
     # Independently-fit quantile models can cross (lower > upper),
     # especially with limited data -- guard against a physically
     # nonsensical interval before returning it.
     lower_arr, upper_arr = np.minimum(lower_arr, upper_arr), np.maximum(lower_arr, upper_arr)
+    # The point model is ALSO independently fit (squared-error loss, not
+    # quantile loss) -- nothing mathematically ties it to the quantile
+    # models, so it can legitimately fall outside their own interval.
+    # Same guard-don't-refit philosophy as the crossing fix above.
+    lower_arr, upper_arr = np.minimum(lower_arr, point_arr), np.maximum(upper_arr, point_arr)
 
     point_importances = {
         col: round(float(imp), 4) for col, imp in zip(feature_cols, point_model.feature_importances_)
