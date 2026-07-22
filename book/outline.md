@@ -50,8 +50,10 @@ doesn't belong in the seasonality chapter no matter how funny the premise is.
     **What It Means** (the plain-language interpretation).
   - A note that every tool result shown in this book is a *real* result from
     a *real* run against synthetic data generated the same way the project's
-    own test suite generates it — not a hand-typed mockup — and how to
-    regenerate any of them yourself.
+    own test suite generates it — not a hand-typed mockup — and that every
+    named dataset (Secret Lab™ Mojito Inventory, Death-Ray Revenue, and the
+    rest) can be regenerated exactly, from the same fixed seeds, by running
+    `book/examples/generate_book_datasets.py` (see `book/examples/README.md`).
   - Pointers to `prompts/testing-and-learning-prompts.md` (more prompts per
     layer than the book has room to use) and `AGENTS.md` (the toolkit's own
     running design-decision log, useful once you want to go deeper than any
