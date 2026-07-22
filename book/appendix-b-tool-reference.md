@@ -15,6 +15,12 @@ Every MCP tool this book actually called, grouped by layer, in the order each la
 | `detect_anomalies_zscore` | Flags points far from a rolling mean/standard deviation — vulnerable to self-dilution from the anomaly it's trying to catch. | 7 |
 | `detect_anomalies_robust_zscore` | The same idea, built on a rolling median and MAD instead — more robust, with its own documented edge case. | 7 |
 | `detect_changepoints` | Finds a structural shift in a series' level using a CUSUM statistic and permutation test. | 7 |
+| `plot_series` | Renders a series as a line plot, with missing values shown as real gaps rather than smoothed over. | 3 |
+| `plot_seasonal_decomposition` | Plots the same trend/seasonal/residual split `seasonal_decomposition_summary` computes. | 5 |
+| `plot_periodogram` | Plots the periodogram `detect_seasonality_period` searches, with the dominant and top in-range candidates marked. | 5 |
+| `plot_acf_pacf` | Plots ACF and PACF side by side with the same Bartlett confidence bands `acf_pacf_summary` reports. | 6 |
+| `plot_anomalies` | Marks `detect_anomalies_robust_zscore`'s flagged points directly on the series. | 7 |
+| `plot_changepoints` | Shades the series on either side of each break `detect_changepoints` finds. | 7 |
 
 ## Layer 2 — `ts-forecaster`
 
@@ -27,6 +33,9 @@ Every MCP tool this book actually called, grouped by layer, in the order each la
 | `fit_gradient_boosted_trees` | Backtests gradient-boosted trees on lag and calendar features, one-step-ahead, with feature importances. | 11 |
 | `diebold_mariano_test` | A paired significance test for whether two models' backtest errors differ meaningfully. | 12 |
 | `rolling_origin_backtest` | Repeats a backtest at several walk-forward origins to measure performance stability, not just its average. | 13 |
+| `plot_backtest` | Plots actual vs. predicted over a holdout, with an interval band if the caller supplies one. | 8 |
+| `plot_search_sarima_orders` | Plots AICc by candidate order from a `search_sarima_orders` result, zoomed to make a close margin visible. | 10 |
+| `plot_rolling_origin` | Plots per-origin MAPE from a `rolling_origin_backtest` result, with a mean ± 1 std band. | 13 |
 
 ## Layer 3 — `ts-deploy`
 
@@ -37,6 +46,7 @@ Every MCP tool this book actually called, grouped by layer, in the order each la
 | `forecast_sarima` | A deployed SARIMA forecast, refit on the entire series, with an analytic confidence interval. | 14 |
 | `forecast_gradient_boosted_trees` | A deployed, recursive multi-step GBT forecast, with a quantile-regression-based interval and an explicit compounding-error caveat. | 14 |
 | `forecast_ensemble` | Combines two or more of this layer's own forecasts into one weighted forecast, with variance-combined intervals. | 15 |
+| `plot_forecast` | Plots a series' history plus a deployed forecast's trajectory and interval band. | 14 |
 
 ## Layer 4 — `ts-monitor`
 
@@ -46,6 +56,9 @@ Every MCP tool this book actually called, grouped by layer, in the order each la
 | `detect_data_drift` | Compares a recent window against a reference window for a distributional shift, reporting both p-values and effect sizes. | 17 |
 | `rolling_drift_check` | Repeats `detect_data_drift` at several walk-forward points to distinguish a sustained shift from a one-off blip. | 17 |
 | `recommend_retraining` | A deterministic verdict (`retrain_now` / `investigate` / `monitor_closely` / `no_action_needed`) combining degradation and drift signals. | 17 |
+| `plot_forecast_vs_actuals` | Plots a deployed forecast against the real actuals `compare_forecast_to_actuals` matched it to. | 16 |
+| `plot_drift` | Plots the recent and reference windows' distributions side by side, annotated with `detect_data_drift`'s real Cohen's d. | 17 |
+| `plot_rolling_drift` | Plots Cohen's d across a `rolling_drift_check`'s walk-forward checks, marking which ones flagged. | 17 |
 
 ## Layer 5 — `ts-retrain`
 
