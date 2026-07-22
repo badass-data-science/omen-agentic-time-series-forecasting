@@ -36,7 +36,7 @@ The current version converts each component's own interval width back into an im
 | `forecast_naive` interval | None, ever | Analytic residual-based interval, widens with horizon |
 | `forecast_ensemble` combined interval | Weighted average of bounds | Variance combination under an independence assumption |
 
-While the ensemble's interval logic was being reworked, `forecast_gradient_boosted_trees` picked up one more thing: a bootstrap confidence interval on its own `feature_importances`, which used to be a bare point estimate sitting right next to a project's worth of fields that all got confidence intervals. Refitting on a hundred resamples of the training rows (not resampled errors — there's no "error" to resample for a feature-importance question, only what the model was actually fit on) turned out to be informative, not decorative: on the project's own synthetic weekly-seasonal data, `lag_7` came back with an importance of 0.593 but a confidence interval of `[0.26, 0.77]`, because `lag_7` and `lag_14` are effectively competing to explain the same weekly pattern, and which one "wins" a given resample isn't especially stable. A single point estimate would have quietly implied more certainty about *why* the model works than the model actually has.
+While the ensemble's interval logic was being reworked, `forecast_gradient_boosted_trees` picked up one more thing: a bootstrap confidence interval on its own `feature_importances`, which used to be a bare point estimate sitting right next to a project's worth of fields that all got confidence intervals. Refitting on a hundred resamples of the training rows (not resampled errors — there's no "error" to resample for a feature-importance question, only what the model was actually fit on) turned out to be informative, not decorative: on the project's own synthetic weekly-seasonal data, `lag_7` came back with an importance of 0.622 but a confidence interval of `[0.44, 0.79]`, because `lag_7` and `lag_14` are effectively competing to explain the same weekly pattern, and which one "wins" a given resample isn't especially stable. A single point estimate would have quietly implied more certainty about *why* the model works than the model actually has.
 
 ## The Bug That Was Already There
 
@@ -57,6 +57,8 @@ Nobody had ever called any `forecast_*` tool with a one- or two-row series befor
 `ts-deploy` spent this project's first two rounds of rigor sitting quietly on the sidelines, producing forecasts nobody was checking the confidence of. It's caught up now: every tool returns an interval or explains clearly why it can't, every forecast gets checked against the series' own history before anyone has to eyeball it, and combining two decent candidates is now a real, if honestly caveated, option instead of forcing a single winner by fiat. The most useful thing found along the way wasn't a new feature at all — it was a three-line date-inference bug that had been quietly waiting for someone to ask this layer to handle a series shorter than three rows.
 
 Mojito inventory forecasting proceeds with slightly more honest error bars than before.
+
+Want to actually work through this layer's tools yourself, with real worked examples? Chapters 14-15 of *Agentic Time Series Forecasting for Supervillains* (`../book/`) cover `ts-deploy` in depth — including the exact mojito-inventory deployment referenced above.
 
 ## Code
 

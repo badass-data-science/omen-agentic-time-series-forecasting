@@ -52,6 +52,8 @@ One more small thing worth admitting to, because it very nearly undermined the w
 
 The suspicious foreman earned that nickname by refusing to redeploy anything without being asked twice. It's now also the layer that, when it does eventually get asked to act without being asked twice, actually checks a signed piece of paper first instead of just recalling that someone probably said it was fine a while back. Our heroine considers a gatekeeper that keeps its own receipts a meaningfully more trustworthy gatekeeper than one that merely means well.
 
+Want to actually work through this layer's tools yourself, with real worked examples? Chapters 18-19 of *Agentic Time Series Forecasting for Supervillains* (`../book/`) cover `ts-retrain` in depth — including a full live-run sequence proving the authorization gate refuses, succeeds, and refuses again exactly when it should.
+
 ## Code
 
 Code is available at [badass-data-science/Data-Science](https://github.com/badass-data-science/Data-Science/tree/agentic-time-series-tools/Forecasting/omen), on the `agentic-time-series-tools` branch.

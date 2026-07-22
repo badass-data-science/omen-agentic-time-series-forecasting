@@ -50,6 +50,14 @@ This post was written to introduce the pipeline at cruising altitude. Every laye
 - [`ts-monitor` Learns Not to Trust a Clean Bill of Health](ts-monitor-learns-to-doubt-good-news.md)
 - [`ts-retrain` Checks Its Papers](ts-retrain-checks-its-papers.md)
 
+If even that's not enough detail: there's now a full book. *Agentic Time
+Series Forecasting for Supervillains* (`../book/`) walks through all
+five layers in 22 chapters plus appendices, teaching the underlying
+forecasting concepts alongside the tooling, one real, live-verified
+worked example per chapter — every number on the page comes from an
+actual tool call, not a hand-typed guess, and every dataset it uses is
+reproducible from `book/examples/generate_book_datasets.py`.
+
 ## Next Steps
 
 - ~~Make autonomous-mode authorization inspectable, not just conversational.~~ **Done.** Whether autonomous mode applies to a given series no longer lives solely in the agent's memory of a conversation — a standing, per-series authorization record now exists, and `execute_redeploy` checks it in code before acting unattended, not just in prose. See the `ts-retrain` deep dive above for the details.
