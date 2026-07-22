@@ -167,6 +167,25 @@ def power_consumption() -> pd.DataFrame:
     return df
 
 
+def minion_overtime() -> pd.DataFrame:
+    """Chapter 11: 400 days of Minion Overtime Hours, with a strong
+    weekly cycle (weekend cover) and a milder yearly one (year-end
+    quota scramble) -- built to make lag_7 dominate gradient-boosted
+    trees' feature importances, and to show month's crude categorical
+    bucketing losing most of that same yearly signal."""
+    df = generate_synthetic_series(
+        n_days=400,
+        seed=42,
+        base_level=8.0,
+        trend_per_day=0.01,
+        weekly_amplitude=4.0,
+        yearly_amplitude=3.5,
+        noise_std=1.2,
+    )
+    df["value"] = df["value"].clip(lower=0)
+    return df
+
+
 DATASETS = {
     "grumbling_level": grumbling_level,
     "mojito_inventory": mojito_inventory,
@@ -176,6 +195,7 @@ DATASETS = {
     "drycleaning_bills": drycleaning_bills,
     "drycleaning_bills_steep_trend": drycleaning_bills_steep_trend,
     "power_consumption": power_consumption,
+    "minion_overtime": minion_overtime,
 }
 
 
