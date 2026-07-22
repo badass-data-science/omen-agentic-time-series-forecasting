@@ -101,9 +101,12 @@ def _custom_title_page_header() -> str:
 
     return (
         "\\usepackage{graphicx}\n"
+        "\\usepackage{xcolor}\n"
         "\\makeatletter\n"
         "\\renewcommand{\\maketitle}{%\n"
         "  \\begin{titlepage}\n"
+        "  \\pagecolor{black}\n"
+        "  \\color{white}\n"
         "  \\begin{center}\n"
         "    \\vspace*{2cm}\n"
         f"    {{\\LARGE {_latex_escape(TITLE)} \\par}}\n"
@@ -116,6 +119,8 @@ def _custom_title_page_header() -> str:
         "    \\vspace*{2cm}\n"
         "  \\end{center}\n"
         "  \\end{titlepage}\n"
+        "  \\pagecolor{white}\n"
+        "  \\color{black}\n"
         "}\n"
         "\\makeatother\n"
     )
