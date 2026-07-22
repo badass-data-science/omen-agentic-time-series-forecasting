@@ -1,12 +1,10 @@
-# Introducing Omen (or, How Our Heroine Built a Forecasting Assembly Line With a Very Suspicious Foreman at the End of It)
+# Agentic Time Series Forecasting with Omen
 
-*Five layers, one Secret Lab™, and a robot that refuses to redeploy anything without being asked twice.*
-
-Our heroine the data scientist has, over the course of her various schemes, accumulated an inconvenient number of things that need forecasting. Mojito inventory for the Secret Lab™. Strut material budgets for [her forthcoming geodesic hideout](https://badassdatascience.substack.com/p/introducing-pydome-or-how-our-heroine). The VIX, for [the Risk Desk](https://badassdatascience.substack.com/p/ai-method-mashup-expert-systems-crash), which currently only tells her how nervous the market is *right now*, not next week, which is a real gap when your entire operating model depends on staying two steps ahead of the Powers That Be™.
+Our heroine the data scientist has, over the course of her various schemes, accumulated an inconvenient number of things that need forecasting. Mojito inventory for her Secret Lab™. Strut material budgets for [her forthcoming geodesic lair](https://badassdatascience.substack.com/p/introducing-pydome-or-how-our-heroine). The VIX, for [the Risk Desk](https://badassdatascience.substack.com/p/ai-method-mashup-expert-systems-crash), which currently only tells her how nervous the market is *right now*, not next week, which is a real gap when your entire operating model depends on staying two steps ahead of the Powers That Be™.
 
 Every one of these problems could, in principle, be solved by writing a fresh forecasting script each time: load some data, eyeball a chart, fit whatever model comes to mind first, ship it, forget about it until it's embarrassingly wrong. Our heroine has done this. It works right up until it doesn't, and by then the mojitos have run out.
 
-So instead, she built **Omen**: a general-purpose, reusable, five-layer pipeline for exploring a time series, fitting and honestly comparing candidate forecasting models, deploying the winner, watching it in production, and — this is the new part — deciding, on paper, whether it's worth retraining and redeploying when reality drifts. An AI agent drives all five layers. A very small number of the more consequential decisions are, deliberately, *not* left to that agent's judgment at all.
+So instead, she built **Omen**: an agentic, general-purpose, reusable, five-layer pipeline for exploring a time series, fitting and honestly comparing candidate forecasting models, deploying the winner, watching it in production, and then deciding whether it's worth retraining and redeploying when reality drifts. An AI agent drives all five layers. A very small number of the more consequential decisions are, deliberately, *not* left to that agent's judgment at all.
 
 ## Why Bother?
 
@@ -36,9 +34,7 @@ And then — the actual point of this layer — there is exactly one tool that c
 
 Underneath the fanfare, this is a normal installable Python package (`pip install -e ".[all]"`, or per-layer extras if you don't want, say, `scikit-learn` dragged in just to run Layer 1). Each layer follows the same split: plain functions that take a DataFrame and return a small JSON-safe dict — so the tool logic is unit-testable without spinning up MCP at all — and a thin `server.py` that wraps those functions as `@mcp.tool()` and handles CSV loading. One shared `data_prep.py` generates synthetic demand data (trend, weekly and yearly seasonality, a few injected anomalies) or loads your own CSV, so nobody had to write the same loader four times.
 
-The durable state in the entire toolkit lives in two small JSON files, both written next to the series CSV, both deliberately kept separate from each other: a deployment manifest (model type, params, backtest metrics, timestamp) written whenever something actually gets deployed, and — added since this post first went up — a standing autonomous-mode authorization record, written only when a human or a standing project instruction explicitly grants unattended retraining for a specific series. Every other tool in every other layer is a pure function of its explicit inputs. This was a deliberate choice: the fewer places state can quietly live, the fewer places it can quietly go stale.
-
-It's worth noting the whole thing was originally developed and hardened against **GLM-5.2 running on Ollama Cloud**, not against Claude at all — nothing about the design is model-specific, which our heroine confirmed the honest way, by later bringing in an entirely different AI (Claude Code, yes, hello) to design and build Layer 5 on top of the existing four without anything falling over. She collects AI assistants the way some people collect passport stamps.
+The durable state in the entire toolkit lives in two small JSON files, both written next to the series CSV, both deliberately kept separate from each other: a deployment manifest (model type, params, backtest metrics, timestamp) written whenever something actually gets deployed, and a standing autonomous-mode authorization record, written only when a human or a standing project instruction explicitly grants unattended retraining for a specific series. Every other tool in every other layer is a pure function of its explicit inputs. This was a deliberate choice: the fewer places state can quietly live, the fewer places it can quietly go stale.
 
 ## The Deep Dives
 
@@ -60,14 +56,13 @@ reproducible from `book/examples/generate_book_datasets.py`.
 
 ## Next Steps
 
-- ~~Make autonomous-mode authorization inspectable, not just conversational.~~ **Done.** Whether autonomous mode applies to a given series no longer lives solely in the agent's memory of a conversation — a standing, per-series authorization record now exists, and `execute_redeploy` checks it in code before acting unattended, not just in prose. See the `ts-retrain` deep dive above for the details.
 - **Add a real CI pipeline and some linting.** The test suite is solid (137 tests now, up from 35 at this post's original writing, `pytest.importorskip` guards so the core install doesn't drag in `statsmodels`/`scikit-learn` unnecessarily) but nothing runs it automatically yet, and there's no type-checking despite type hints sprinkled throughout.
 - **Actually publish it.** The package layout is PyPI-ready as-is — `pyproject.toml`, console scripts, the works — but the metadata still says `"Your Name" <you@example.com>`. Somebody has to confirm `omen` is actually free on PyPI before claiming it — it's a short, generic word, so don't assume it isn't already taken.
 - **No expiry on autonomous-mode grants.** A standing authorization persists until someone explicitly revokes it — there's no time-boxing yet, so a "for the next month" grant isn't currently expressible, only "until revoked."
 
 ## Conclusion
 
-Our heroine now has an agent that will explore a series, argue honestly about which model deserves to go live, ship a real forecast, watch that forecast for signs of trouble, and — when trouble shows up — go check whether a fresh model actually fixes it before touching production, and even then, only with someone's explicit say-so. That's five layers of judgment stacked on top of one very stubborn gatekeeper, which is, frankly, more oversight than most of her human collaborators get.
+Our heroine now has an agent that will explore a time series, argue honestly about which model of it deserves to go live, ship a real forecast, watch that forecast for signs of trouble, and — when trouble shows up — go check whether a fresh model actually fixes it before touching production, and even then, only with someone's explicit say-so. That's five layers of judgment stacked on top of one very stubborn gatekeeper, which is, frankly, more oversight than most of her human collaborators get.
 
 The mojito forecast, for the record, remains bullish.
 
