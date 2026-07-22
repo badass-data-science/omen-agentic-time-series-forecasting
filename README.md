@@ -286,8 +286,9 @@ Before actually publishing, you'll want to:
   JSON API), set in `pyproject.toml`'s `name` field. The importable
   module stays plain `omen` -- only the PyPI listing name changed; see
   the comment above `[project.scripts]` in `pyproject.toml` for why.
-- fill in real author info in `pyproject.toml` (still says
-  `"Your Name" <you@example.com>`)
+- ~~fill in real author info in `pyproject.toml`~~ **Done.** `authors`
+  now lists the real name/email instead of the `"Your Name"
+  <you@example.com>` placeholder.
 - bump `version` for each release
 
 ## Things worth knowing about specific tools (carried over from earlier layers)
