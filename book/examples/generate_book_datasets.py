@@ -92,6 +92,27 @@ def deathray_revenue() -> pd.DataFrame:
     return _weekly_resample(daily)
 
 
+def deathray_revenue_slow_month() -> pd.DataFrame:
+    """Chapter 8's MAPE-vs-MAE demonstration: a shorter, supplementary
+    Death-Ray Revenue series where four consecutive weeks of exactly $0
+    revenue (a rival's cease-and-desist freezing bookings) sit inside the
+    backtest holdout -- shows mape_points_excluded_near_zero actually
+    firing, and MAE catching a disaster that MAPE alone would hide."""
+    daily = generate_synthetic_series(
+        n_days=350,
+        seed=42,
+        base_level=2000.0,
+        trend_per_day=6.0,
+        weekly_amplitude=150.0,
+        yearly_amplitude=100.0,
+        noise_std=120.0,
+    )
+    weekly = _weekly_resample(daily)
+    freeze_idx = [len(weekly) - 8, len(weekly) - 7, len(weekly) - 6, len(weekly) - 5]
+    weekly.loc[freeze_idx, "value"] = 0.0
+    return weekly
+
+
 def drycleaning_bills() -> pd.DataFrame:
     """Chapters 5-6: 155 weeks (~3 years) of Henchman Costume
     Dry-Cleaning Bills, with a genuine annual (Halloween) cycle and a
@@ -151,6 +172,7 @@ DATASETS = {
     "mojito_inventory": mojito_inventory,
     "mojito_inventory_constant": mojito_inventory_constant,
     "deathray_revenue": deathray_revenue,
+    "deathray_revenue_slow_month": deathray_revenue_slow_month,
     "drycleaning_bills": drycleaning_bills,
     "drycleaning_bills_steep_trend": drycleaning_bills_steep_trend,
     "power_consumption": power_consumption,
