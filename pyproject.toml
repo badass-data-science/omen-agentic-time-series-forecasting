@@ -45,8 +45,8 @@ all = ["statsmodels>=0.14", "scikit-learn>=1.4", "scipy>=1.11"]
 dev = ["pytest>=8.0"]
 
 [project.urls]
-Homepage = "https://github.com/badass-data-science/Data-Science/tree/agentic-time-series-tools/Forecasting/omen"
-Repository = "https://github.com/badass-data-science/Data-Science"
+Homepage = "https://github.com/badass-data-science/omen-agentic-time-series-forecasting"
+Repository = "https://github.com/badass-data-science/omen-agentic-time-series-forecasting"
 
 # Console scripts: after `pip install`, these run each layer's MCP server
 # directly, so OpenClaw (or any MCP client) can point its config at the
