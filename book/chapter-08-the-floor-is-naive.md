@@ -6,6 +6,27 @@ Part III starts fitting models. Before any of them get to be interesting, they h
 
 A **naive** forecast just repeats the last observed value, forever. A **seasonal-naive** forecast repeats the value from one full seasonal cycle back, tiled across the forecast horizon. Neither one involves fitting anything — no parameters, no optimization, nothing that could go subtly wrong in the way a real model can. That's the entire point: whatever Chapters 9 through 11 build has to out-perform *this*, or it isn't earning its complexity.
 
+## Check the Split Before You Fit Anything
+
+Before any backtest, it's worth confirming what "holdout" actually means for this series and this holdout size — not by trusting a number silently, but by asking the tool that does no fitting at all, just reports the dates.
+
+**Prompt:**
+> Before fitting anything, show me the train/test split for the death-ray revenue series with a 30-week holdout.
+
+**What Comes Back** (a real result, same 70-week Death-Ray Revenue series, `holdout_size=30`):
+
+```json
+{
+  "n_total": 70,
+  "n_train": 40,
+  "n_test": 30,
+  "train_range": ["2024-01-08", "2024-10-07"],
+  "test_range": ["2024-10-14", "2025-05-05"]
+}
+```
+
+**What It Means:** `ts-forecaster__holdout_split_summary` doesn't fit or backtest anything — it just answers "what would `holdout_size=30` actually carve this series into," so a bad assumption gets caught before it's buried inside a fitted model's output. Here it confirms the split is sane: 40 training weeks, a full 30-week test window, no overlap, dates in the expected order. On a shorter series, or a holdout size that's too large relative to the data, this is where you'd catch it — an empty or tiny `train_range`, or a `n_train` too small to fit anything meaningful — before spending a real model fit finding out the hard way. This is the SKILL's own recommended first move, before `fit_naive_baselines` or anything else in this chapter runs.
+
 ## Backtesting Death-Ray Revenue's Floor
 
 **Prompt:**
