@@ -10,9 +10,11 @@ type to an agent with the `ts-analyst`/`ts-forecaster`/`ts-deploy`/
 A few notes before diving in:
 
 - Most prompts assume you have a series CSV to point at. If you don't have
-  one yet, ask the agent to generate synthetic data first (`omen.data_prep`'s
-  `generate_synthetic_series` is exactly what the project's own tests and
-  blog posts use) -- several prompts below do this explicitly.
+  one yet, ask the agent to generate synthetic data first -- `ts-analyst`
+  exposes exactly this as `generate_synthetic_data`, a thin wrapper around
+  `omen.data_prep`'s `generate_synthetic_series` (the same generator the
+  project's own tests and blog posts use) -- several prompts below do this
+  explicitly.
 - Prompts are meant to be adapted, not copy-pasted verbatim forever --
   swap in your own CSV path, horizon, or thresholds once you're comfortable.
 - Each layer's prompts move roughly from "does this basic thing work" toward
