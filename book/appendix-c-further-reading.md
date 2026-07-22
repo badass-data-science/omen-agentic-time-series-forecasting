@@ -42,9 +42,10 @@ onward.
 **Hyndman, R. J., & Athanasopoulos, G.** *Forecasting: Principles and
 Practice* (any edition; freely available at otexts.com/fpp3). The
 standard reference for the naive-forecast interval formulas behind
-`fit_naive_baselines` and `forecast_naive`, and a genuinely good general
-forecasting textbook beyond what this book's own scope covers. Ch. 8,
-Ch. 14.
+`fit_naive_baselines` and `forecast_naive`, and for the trend/seasonal
+strength heuristic behind `seasonal_decomposition_summary` -- also a
+genuinely good general forecasting textbook beyond what this book's own
+scope covers. Ch. 5, Ch. 8, Ch. 14.
 
 **Diebold, F. X., & Mariano, R. S. (1995).** "Comparing Predictive
 Accuracy." *Journal of Business & Economic Statistics*. The paired

@@ -29,7 +29,10 @@ closed-form formula. Ch. 8.
 **Cohen's d.** A standardized effect size for a difference in means —
 the difference divided by a pooled standard deviation — that tells you
 the *magnitude* of a shift, not just whether it's statistically
-significant. Ch. 4, Ch. 7, Ch. 17.
+significant. Ch. 7's changepoint detection and Ch. 17's drift detection
+both use it; Ch. 4's own "effect size" entries (mean-reversion half-life,
+KPSS-statistic-to-critical-value ratio) are a different, unrelated
+concept sharing only the name. Ch. 7, Ch. 17.
 
 **Coefficient of variation.** A standard deviation divided by its own
 mean — used in this book to flag when a model's performance is
@@ -129,10 +132,13 @@ different candidate periods, used to find a dominant cycle without
 guessing its length in advance — vulnerable to a strong trend
 overwhelming a real seasonal signal. Ch. 5.
 
-**Persistence (rolling drift check).** Whether a drift signal shows up
-across most of several rolling windows (a sustained shift) or only one
-(a one-off blip). Ch. 13's rolling-origin backtest and Ch. 17's rolling
-drift check share this design.
+**Persistent drift.** Whether `rolling_drift_check`'s drift signal shows
+up across most of several rolling windows (a sustained shift) or only a
+minority of them (more consistent with a one-off blip) — a fraction-
+flagged threshold distinct from Ch. 13's coefficient-of-variation-based
+instability check, which measures a different thing (backtest accuracy
+stability, not drift persistence) with no comparable pass/fail flag of
+its own. Ch. 17.
 
 **Plausibility check.** An automated comparison of a forecast's implied
 change against a series' own historical distribution of changes —
@@ -141,8 +147,11 @@ a verdict. Ch. 14.
 
 **Prediction interval.** A range meant to contain a future observation
 with some stated probability — built differently by different model
-families in this book (analytic, simulated, quantile-regression-based),
-each with a different real failure mode. Ch. 9, Ch. 10, Ch. 11, Ch. 14.
+families in this book (ETS's simulated paths, SARIMA's analytic
+state-space formula, GBT's quantile regression), each with a different
+real failure mode. Notably absent from `fit_gradient_boosted_trees`'s
+own backtest (Ch. 11) — GBT only gets one once deployed (Ch. 14). Ch. 9,
+Ch. 10, Ch. 14.
 
 **Rolling-origin / walk-forward backtest.** Repeating a backtest at
 several different points in a series, walking backward, to measure
