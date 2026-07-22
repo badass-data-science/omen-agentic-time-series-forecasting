@@ -1,11 +1,12 @@
 """
 generate_book_datasets.py
 
-Regenerates every named example dataset used in "Forecasting for
-Supervillains," exactly as it was generated for the chapter that first
-introduces it. Every generation call here uses a fixed seed, so running
-this script reproduces the exact same CSVs -- and, run through the same
-Omen tools shown in each chapter, the exact same numbers -- every time.
+Regenerates every named example dataset used in "Agentic Time Series
+Forecasting for Supervillains," exactly as it was generated for the
+chapter that first introduces it. Every generation call here uses a
+fixed seed, so running this script reproduces the exact same CSVs --
+and, run through the same Omen tools shown in each chapter, the exact
+same numbers -- every time.
 
 This exists specifically because a book that shows real, live tool
 output has to let readers regenerate that same output themselves, not

@@ -1,4 +1,4 @@
-# Forecasting for Supervillains
+# Agentic Time Series Forecasting for Supervillains
 ### Statistical Time Series Prediction with Omen and Agentic AI
 **Proposed Outline**
 

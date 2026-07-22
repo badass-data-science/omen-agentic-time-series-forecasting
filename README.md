@@ -37,7 +37,7 @@ package.
 
 ## Learn more
 
-- **`book/`** -- *Forecasting for Supervillains*, a complete 22-chapter
+- **`book/`** -- *Agentic Time Series Forecasting for Supervillains*, a complete 22-chapter
   e-book (plus glossary, tool reference, and further-reading appendices)
   teaching time series forecasting through this toolkit, one concept per
   chapter, each worked example run for real against the live MCP servers
@@ -106,7 +106,7 @@ omen/
 │   └── ts-retrain-checks-its-papers.md
 ├── prompts/                       # ready-to-use prompts for testing/learning each layer
 │   └── testing-and-learning-prompts.md
-└── book/                          # "Forecasting for Supervillains" e-book, not part of the package
+└── book/                          # "Agentic Time Series Forecasting for Supervillains" e-book, not part of the package
     ├── outline.md
     ├── chapter-01-introducing-omen-and-agentic-ai.md ... chapter-22-conclusion.md
     ├── appendix-a-glossary.md, appendix-b-tool-reference.md, appendix-c-further-reading.md
