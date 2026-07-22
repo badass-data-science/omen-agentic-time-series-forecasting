@@ -205,6 +205,37 @@ def drycleaning_bills_steep_trend() -> pd.DataFrame:
     return _weekly_resample(daily)
 
 
+def interpol_attention() -> pd.DataFrame:
+    """Chapter 17: 91 weeks of Interpol Attention Level, a genuinely,
+    steadily trending-upward "heat" index -- exactly the shape that
+    exposes detect_data_drift's real blind spot: an ordinary, expected
+    trend alone produces a LARGE Cohen's d (1.45), not a small,
+    reassuring one."""
+    daily = generate_synthetic_series(
+        n_days=651, seed=42, base_level=30.0, trend_per_day=0.12,
+        weekly_amplitude=3.0, yearly_amplitude=5.0, noise_std=4.0,
+    )
+    daily["value"] = daily["value"].clip(lower=0, upper=100)
+    return _weekly_resample(daily)
+
+
+def interpol_attention_shifted() -> pd.DataFrame:
+    """Chapter 17's real escalation: interpol_attention() with a flat
+    +300 level shift added to its final 8 weeks -- a genuine incident
+    on top of the ongoing trend, pushing Cohen's d from 1.45 to 11.91
+    and giving the drift check something to actually distinguish from
+    business as usual. Round-trips through CSV text first (see
+    mojito_inventory_clean's docstring for why this matters for exact
+    byte-for-byte reproduction)."""
+    import io
+    buf = io.StringIO()
+    interpol_attention().to_csv(buf, index=False)
+    buf.seek(0)
+    df = pd.read_csv(buf, parse_dates=["date"])
+    df.loc[df.index[-8:], "value"] += 300.0
+    return df
+
+
 def power_consumption() -> pd.DataFrame:
     """Chapter 7: 250 days of Secret Lab(tm) Power Consumption, with a
     real injected +500 single-day spike (the death ray misfire, day
@@ -255,6 +286,8 @@ DATASETS = {
     "deathray_revenue_slow_month": deathray_revenue_slow_month,
     "drycleaning_bills": drycleaning_bills,
     "drycleaning_bills_steep_trend": drycleaning_bills_steep_trend,
+    "interpol_attention": interpol_attention,
+    "interpol_attention_shifted": interpol_attention_shifted,
     "power_consumption": power_consumption,
     "minion_overtime": minion_overtime,
 }
