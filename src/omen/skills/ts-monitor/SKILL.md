@@ -77,6 +77,24 @@ You need three things to do this properly:
   inside that range, flags `degradation_threshold_within_ci: true` and
   says so in `reasoning`, meaning the verdict is sensitive to sampling
   noise, not clear-cut.
+- `ts-monitor__plot_forecast_vs_actuals` — visual, INLINE-rendered
+  companion to `compare_forecast_to_actuals`: forecast trajectory (with
+  interval band, if any) against the real observed actuals. Same
+  `forecast`/`csv_path` arguments as that tool -- reuses its own
+  date-matching internally, so the points plotted are exactly the ones
+  its `backtest_style_metrics` were computed from.
+- `ts-monitor__plot_drift` — visual companion to `detect_data_drift`:
+  recent-vs-reference window distributions side by side, annotated with
+  the real Cohen's d and drift verdict. Same `csv_path`/window-size
+  arguments as that tool; calls it internally rather than reimplementing
+  the statistics.
+- `ts-monitor__plot_rolling_drift` — visual companion to
+  `rolling_drift_check`: Cohen's d across the walk-forward checks, with
+  flagged checks marked. Takes that tool's own `checks` list directly.
+
+All three plot_* tools are supplementary visual feedback, never a
+substitute for the exact numbers in the JSON tools above -- report those
+numbers regardless of whether you also show a plot.
 
 ## Step 1 — Compare forecast to reality
 

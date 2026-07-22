@@ -23,6 +23,7 @@ from .forecast_tools import (
     forecast_gradient_boosted_trees as _forecast_gradient_boosted_trees,
     forecast_ensemble as _forecast_ensemble,
 )
+from .plot_tools import plot_forecast as _plot_forecast
 
 mcp = FastMCP("ts-deploy")
 
@@ -288,6 +289,40 @@ def forecast_ensemble(
         model_params=model_params,
         confidence_level=confidence_level,
     )
+
+
+@mcp.tool()
+def plot_forecast(
+    csv_path: str,
+    forecast: list,
+    out_path: Optional[str] = None,
+    date_col: str = "date",
+    value_col: str = "value",
+):
+    """Plot a series' history plus a deployed forecast_* result's own
+    trajectory, with a shaded interval band wherever the forecast points
+    carry lower/upper bounds. Returns the image INLINE (rendered directly
+    in this response, visible immediately) as well as, if `out_path` is
+    given, saved to disk.
+
+    This is a visual complement to forecast_naive/forecast_ets/
+    forecast_sarima/forecast_gradient_boosted_trees's own numbers, never
+    a replacement for them -- the interval band, the point trajectory,
+    the plausibility_check flag all still come from those tools' real
+    JSON output. Use this to SHOW that same forecast, not to re-derive it.
+
+    Args:
+        csv_path: Path to the historical series CSV (the same one the
+            forecast_* call used).
+        forecast: The `forecast` list from a forecast_* result, passed
+            through exactly as returned (including any truncation-note
+            placeholder entry for horizon > 60 -- it's skipped here).
+        out_path: If given, also writes the PNG to this path on disk.
+        date_col: Name of the date column in the CSV.
+        value_col: Name of the value column in the CSV.
+    """
+    df = load_series(csv_path, date_col, value_col)
+    return _plot_forecast(df, forecast, out_path=out_path)
 
 
 def main():

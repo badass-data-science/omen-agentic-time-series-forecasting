@@ -27,6 +27,14 @@ from .analysis_tools import (
     detect_anomalies_robust_zscore as _detect_anomalies_robust_zscore,
     detect_changepoints as _detect_changepoints,
 )
+from .plot_tools import (
+    plot_series as _plot_series,
+    plot_acf_pacf as _plot_acf_pacf,
+    plot_seasonal_decomposition as _plot_seasonal_decomposition,
+    plot_periodogram as _plot_periodogram,
+    plot_anomalies as _plot_anomalies,
+    plot_changepoints as _plot_changepoints,
+)
 from omen.data_prep import generate_synthetic_series, load_series
 
 mcp = FastMCP("ts-analyst")
@@ -307,6 +315,176 @@ def detect_changepoints(
         max_changepoints=max_changepoints,
         n_permutations=n_permutations,
         seed=seed,
+    )
+
+
+@mcp.tool()
+def plot_series(
+    csv_path: str,
+    out_path: Optional[str] = None,
+    date_col: str = "date",
+    value_col: str = "value",
+):
+    """Plot the raw value-vs-date series -- visual companion to
+    basic_stats, never a replacement for its exact numbers. Missing
+    values show as visible GAPS in the line, not interpolated over.
+    Returns the plot inline (always) plus, if out_path is given, also
+    writes it there as a PNG.
+
+    Args:
+        csv_path: Path to a CSV with a date column and a value column.
+        out_path: If given, also saves the plot as a PNG at this path.
+        date_col: Name of the date column in the CSV.
+        value_col: Name of the value column in the CSV.
+    """
+    df = load_series(csv_path, date_col, value_col)
+    return _plot_series(df, out_path=out_path)
+
+
+@mcp.tool()
+def plot_acf_pacf(
+    csv_path: str,
+    n_lags: int = 21,
+    alpha: float = 0.05,
+    out_path: Optional[str] = None,
+    date_col: str = "date",
+    value_col: str = "value",
+):
+    """Plot ACF and PACF side by side, with the SAME per-lag Bartlett
+    significance bands acf_pacf_summary reports (shared computation, not
+    reimplemented) -- visual companion to that tool, never a replacement
+    for its exact per-lag effect sizes.
+
+    Args:
+        csv_path: Path to a CSV with a date column and a value column.
+        n_lags: Number of lags to plot.
+        alpha: Significance level for the per-lag confidence bands.
+        out_path: If given, also saves the plot as a PNG at this path.
+        date_col: Name of the date column in the CSV.
+        value_col: Name of the value column in the CSV.
+    """
+    df = load_series(csv_path, date_col, value_col)
+    return _plot_acf_pacf(df, n_lags=n_lags, alpha=alpha, out_path=out_path)
+
+
+@mcp.tool()
+def plot_seasonal_decomposition(
+    csv_path: str,
+    period: int = 7,
+    out_path: Optional[str] = None,
+    date_col: str = "date",
+    value_col: str = "value",
+):
+    """Plot the additive trend/seasonal/residual decomposition as a
+    vertically stacked subplot -- visual companion to
+    seasonal_decomposition_summary, never a replacement for its exact
+    strength scores.
+
+    Args:
+        csv_path: Path to a CSV with a date column and a value column.
+        period: Assumed seasonal period, in number of observations.
+        out_path: If given, also saves the plot as a PNG at this path.
+        date_col: Name of the date column in the CSV.
+        value_col: Name of the value column in the CSV.
+    """
+    df = load_series(csv_path, date_col, value_col)
+    return _plot_seasonal_decomposition(df, period=period, out_path=out_path)
+
+
+@mcp.tool()
+def plot_periodogram(
+    csv_path: str,
+    min_period: int = 2,
+    max_period: Optional[int] = None,
+    out_path: Optional[str] = None,
+    date_col: str = "date",
+    value_col: str = "value",
+):
+    """Plot periodogram power vs. period, marking both the single
+    globally strongest frequency and the top in-range candidate
+    distinctly -- makes it visually obvious when the two differ (e.g.
+    the globally strongest frequency is really just the series' own
+    trend, outside the sensible seasonality range). Visual companion to
+    detect_seasonality_period, never a replacement for its exact
+    significance test.
+
+    Args:
+        csv_path: Path to a CSV with a date column and a value column.
+        min_period: Smallest period worth marking as a candidate.
+        max_period: Largest period worth marking. Defaults to half the
+            series length.
+        out_path: If given, also saves the plot as a PNG at this path.
+        date_col: Name of the date column in the CSV.
+        value_col: Name of the value column in the CSV.
+    """
+    df = load_series(csv_path, date_col, value_col)
+    return _plot_periodogram(df, min_period=min_period, max_period=max_period, out_path=out_path)
+
+
+@mcp.tool()
+def plot_anomalies(
+    csv_path: str,
+    z_threshold: float = 3.5,
+    window: int = 14,
+    out_path: Optional[str] = None,
+    date_col: str = "date",
+    value_col: str = "value",
+):
+    """Plot the series with points flagged by the ROBUST (median+MAD)
+    anomaly detector marked -- visual companion to
+    detect_anomalies_robust_zscore, never a replacement for its exact
+    modified z-scores.
+
+    Args:
+        csv_path: Path to a CSV with a date column and a value column.
+        z_threshold: Modified z-score magnitude to flag as anomalous.
+        window: Rolling window size (centered) for the local median/MAD.
+        out_path: If given, also saves the plot as a PNG at this path.
+        date_col: Name of the date column in the CSV.
+        value_col: Name of the value column in the CSV.
+    """
+    df = load_series(csv_path, date_col, value_col)
+    return _plot_anomalies(df, z_threshold=z_threshold, window=window, out_path=out_path)
+
+
+@mcp.tool()
+def plot_changepoints(
+    csv_path: str,
+    alpha: float = 0.05,
+    min_segment_size: int = 10,
+    max_changepoints: int = 5,
+    n_permutations: int = 500,
+    seed: int = 42,
+    out_path: Optional[str] = None,
+    date_col: str = "date",
+    value_col: str = "value",
+):
+    """Plot the series with detected changepoints as vertical lines,
+    segments shaded alternately -- visual companion to
+    detect_changepoints, never a replacement for its exact CUSUM
+    statistics/p-values.
+
+    Args:
+        csv_path: Path to a CSV with a date column and a value column.
+        alpha: Significance level for each split's permutation test.
+        min_segment_size: Minimum observations required on each side of
+            a candidate split.
+        max_changepoints: Upper bound on how many changepoints to plot.
+        n_permutations: Permutations used per significance test.
+        seed: Random seed for the permutation test's shuffling.
+        out_path: If given, also saves the plot as a PNG at this path.
+        date_col: Name of the date column in the CSV.
+        value_col: Name of the value column in the CSV.
+    """
+    df = load_series(csv_path, date_col, value_col)
+    return _plot_changepoints(
+        df,
+        alpha=alpha,
+        min_segment_size=min_segment_size,
+        max_changepoints=max_changepoints,
+        n_permutations=n_permutations,
+        seed=seed,
+        out_path=out_path,
     )
 
 

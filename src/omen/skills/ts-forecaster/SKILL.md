@@ -73,15 +73,34 @@ and settings you try here -- don't pick blindly.
   informed by `ts-analyst`'s stationarity findings), ranked by AICc.
   Returns a `top_candidates` shortlist, NOT a final answer -- see Step 3
   below for how to actually use this.
+- `ts-forecaster__plot_backtest` — visual complement to
+  `diebold_mariano_test`, never a replacement for its actual p-value:
+  actual-vs-predicted over the holdout, with a shaded interval band if
+  `lower`/`upper` are supplied. Takes `actuals`/`predicted` directly
+  (same arrays `diebold_mariano_test` takes). Returns an inline image.
+- `ts-forecaster__plot_rolling_origin` — per-origin MAPE across a
+  `rolling_origin_backtest` call, with the mean +/- one std shaded, so
+  cross-origin instability is visible at a glance. Takes that result's
+  own `origins` field directly. Returns an inline image.
+- `ts-forecaster__plot_search_sarima_orders` — AICc by candidate order
+  as a bar chart, so a razor-thin margin between the top candidates
+  (easy to miss in a table of decimals) is visually obvious. Takes a
+  `search_sarima_orders` result's own `top_candidates` field directly.
+  Returns an inline image.
 
-All tools EXCEPT `diebold_mariano_test` take `csv_path`, `holdout_size`
-(keep this CONSISTENT across every call so every model is judged against
-the same window), and optional `date_col`/`value_col`. `fit_*` tools
-additionally take `n_bootstrap`/`confidence_level`/`seed` for their
-backtest-metric CIs (defaults are almost always fine; no need to tune
-these). `diebold_mariano_test` is the one exception -- it takes
-`actuals`/`predicted_a`/`predicted_b` directly (pulled from two `fit_*`
-results' `holdout_actuals`/`holdout_predicted` fields), not a `csv_path`.
+All tools EXCEPT `diebold_mariano_test` and the three `plot_*` tools
+take `csv_path`, `holdout_size` (keep this CONSISTENT across every call
+so every model is judged against the same window), and optional
+`date_col`/`value_col`. `fit_*` tools additionally take
+`n_bootstrap`/`confidence_level`/`seed` for their backtest-metric CIs
+(defaults are almost always fine; no need to tune these).
+`diebold_mariano_test` and the `plot_*` tools instead take arrays/lists
+directly, pulled from an earlier `fit_*`/`rolling_origin_backtest`/
+`search_sarima_orders` result -- not a `csv_path`. The `plot_*` tools
+are purely supplementary visual feedback for a human or agent looking
+at the session; they never report a finding the JSON tools above don't
+already report on their own, and calling one is optional, never a
+required step.
 
 ## Step 1 — Confirm the split
 

@@ -116,6 +116,38 @@ All tools except `generate_synthetic_data` take a `csv_path` argument
 (plus optional `date_col`/`value_col` if your columns aren't named
 "date"/"value").
 
+## Plotting tools (visual companions, not a replacement)
+
+Six `plot_*` tools return a real inline image (visible in the same
+turn) plus, optionally, a saved PNG (`out_path`). Each one reuses the
+SAME underlying computation as its JSON counterpart above -- the
+picture and the numbers can never disagree, because there's only one
+real computation, not two. **Never cite a plot as your evidence for a
+finding** -- cite the JSON tool's exact numbers, and use the matching
+plot only to make that finding easier to see at a glance, or to
+include as a real illustration (e.g. in written material).
+
+- `ts-analyst__plot_series` — value-vs-date line, missing values shown
+  as visible gaps (not interpolated over).
+- `ts-analyst__plot_acf_pacf` — ACF and PACF side by side, with the same
+  per-lag Bartlett bands `acf_pacf_summary` reports.
+- `ts-analyst__plot_seasonal_decomposition` — trend/seasonal/residual
+  stacked subplot, same decomposition `seasonal_decomposition_summary`
+  is computed from.
+- `ts-analyst__plot_periodogram` — power vs. period, with the global
+  strongest frequency and the top in-range candidate both marked
+  distinctly (from `detect_seasonality_period`) -- makes it visually
+  obvious when the two differ, e.g. the global peak is really just
+  trend.
+- `ts-analyst__plot_anomalies` — series with `detect_anomalies_robust_zscore`'s
+  flagged points marked.
+- `ts-analyst__plot_changepoints` — series with `detect_changepoints`'
+  detected break(s) as vertical lines, segments shaded alternately.
+
+Each takes the same `csv_path`/`date_col`/`value_col` plus its
+JSON counterpart's own parameters (e.g. `plot_acf_pacf` takes `n_lags`),
+plus an optional `out_path` to also save the PNG to disk.
+
 ## Step 1 — Get data to analyze
 
 If the user gave you a CSV path, use it directly. If not, call

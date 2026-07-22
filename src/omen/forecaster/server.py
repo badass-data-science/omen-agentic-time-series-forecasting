@@ -26,6 +26,11 @@ from .model_tools import (
     rolling_origin_backtest as _rolling_origin_backtest,
     search_sarima_orders as _search_sarima_orders,
 )
+from .plot_tools import (
+    plot_backtest as _plot_backtest,
+    plot_rolling_origin as _plot_rolling_origin,
+    plot_search_sarima_orders as _plot_search_sarima_orders,
+)
 
 mcp = FastMCP("ts-forecaster")
 
@@ -446,6 +451,72 @@ def search_sarima_orders(
         max_combinations=max_combinations,
         n_bootstrap_per_candidate=n_bootstrap_per_candidate,
     )
+
+
+@mcp.tool()
+def plot_backtest(
+    actuals: list,
+    predicted: list,
+    model_name: str = "Model",
+    lower: Optional[list] = None,
+    upper: Optional[list] = None,
+    out_path: Optional[str] = None,
+):
+    """Plot actual vs. predicted values over a backtest holdout, with a
+    shaded prediction-interval band if lower/upper bounds are supplied
+    -- a visual complement to diebold_mariano_test's exact numbers, not
+    a replacement for them. Returns the plot as an inline image plus a
+    small status dict; also writes a PNG to out_path if given.
+
+    Pass the SAME holdout_actuals/holdout_predicted a fit_* result
+    already returned (the same arrays diebold_mariano_test itself
+    takes) -- this does not refit anything. lower/upper are optional
+    since not every model has an interval (e.g.
+    fit_gradient_boosted_trees's backtest has none).
+
+    Args:
+        actuals: The real holdout values.
+        predicted: The model's predictions on the same holdout.
+        model_name: Label for the predicted line, e.g. "SARIMA".
+        lower: Optional prediction-interval lower bound per point.
+        upper: Optional prediction-interval upper bound per point.
+        out_path: If given, also writes the PNG to this path on disk.
+    """
+    return _plot_backtest(actuals, predicted, model_name=model_name, lower=lower, upper=upper, out_path=out_path)
+
+
+@mcp.tool()
+def plot_rolling_origin(origins: list, out_path: Optional[str] = None):
+    """Plot per-origin MAPE across a rolling_origin_backtest's walk-forward
+    origins, with a shaded band showing the mean +/- one std -- makes
+    cross-origin instability visually obvious rather than requiring a
+    reader to compare a table of numbers. Returns the plot as an inline
+    image plus a small status dict; also writes a PNG to out_path if given.
+
+    Pass rolling_origin_backtest's own `origins` field directly.
+
+    Args:
+        origins: The `origins` list from a rolling_origin_backtest result.
+        out_path: If given, also writes the PNG to this path on disk.
+    """
+    return _plot_rolling_origin(origins, out_path=out_path)
+
+
+@mcp.tool()
+def plot_search_sarima_orders(top_candidates: list, out_path: Optional[str] = None):
+    """Plot AICc by candidate SARIMA order as a bar chart, so a razor-thin
+    margin between top candidates (easy to miss in a table of decimals)
+    is visually obvious. Returns the plot as an inline image plus a
+    small status dict; also writes a PNG to out_path if given.
+
+    Pass search_sarima_orders' own `top_candidates` field directly.
+
+    Args:
+        top_candidates: The `top_candidates` list from a
+            search_sarima_orders result.
+        out_path: If given, also writes the PNG to this path on disk.
+    """
+    return _plot_search_sarima_orders(top_candidates, out_path=out_path)
 
 
 def main():

@@ -22,6 +22,11 @@ from .monitor_tools import (
     rolling_drift_check as _rolling_drift_check,
     recommend_retraining as _recommend_retraining,
 )
+from .plot_tools import (
+    plot_forecast_vs_actuals as _plot_forecast_vs_actuals,
+    plot_drift as _plot_drift,
+    plot_rolling_drift as _plot_rolling_drift,
+)
 
 mcp = FastMCP("ts-monitor")
 
@@ -232,6 +237,81 @@ def recommend_retraining(
         error_degradation_threshold_pct=error_degradation_threshold_pct,
         coverage_miscalibration_threshold_pct=coverage_miscalibration_threshold_pct,
     )
+
+
+@mcp.tool()
+def plot_forecast_vs_actuals(
+    forecast: list,
+    csv_path: str,
+    out_path: Optional[str] = None,
+    date_col: str = "date",
+    value_col: str = "value",
+):
+    """Plot a deployed forecast's trajectory (with interval band, if it
+    has one) against the real observed actuals that have since arrived.
+    Returns the image INLINE as well as, if `out_path` is given, saved
+    to disk.
+
+    Same forecast/csv_path arguments as compare_forecast_to_actuals --
+    reuses that tool's own date-matching internally, so the points
+    plotted here are exactly the ones its backtest_style_metrics were
+    computed from. This is a visual complement to that tool's real
+    numbers, never a replacement for them.
+
+    Args:
+        forecast: The `forecast` list from a ts-deploy tool's result.
+        csv_path: Path to the UPDATED series CSV.
+        out_path: If given, also writes the PNG to this path on disk.
+        date_col: Name of the date column in the CSV.
+        value_col: Name of the value column in the CSV.
+    """
+    df = load_series(csv_path, date_col, value_col)
+    return _plot_forecast_vs_actuals(forecast, df, out_path=out_path)
+
+
+@mcp.tool()
+def plot_drift(
+    csv_path: str,
+    recent_window_size: int = 30,
+    reference_window_size: int = 90,
+    out_path: Optional[str] = None,
+    date_col: str = "date",
+    value_col: str = "value",
+):
+    """Plot the recent window's and reference window's value distributions
+    side by side, annotated with detect_data_drift's own real Cohen's d
+    and drift verdict. Returns the image INLINE as well as, if `out_path`
+    is given, saved to disk.
+
+    Same csv_path/recent_window_size/reference_window_size arguments as
+    detect_data_drift -- calls that function internally rather than
+    reimplementing the statistics, so the annotation can never disagree
+    with the JSON tool's own verdict.
+
+    Args:
+        csv_path: Path to the series CSV.
+        recent_window_size: Same meaning as detect_data_drift's own arg.
+        reference_window_size: Same meaning as detect_data_drift's own arg.
+        out_path: If given, also writes the PNG to this path on disk.
+        date_col: Name of the date column in the CSV.
+        value_col: Name of the value column in the CSV.
+    """
+    df = load_series(csv_path, date_col, value_col)
+    return _plot_drift(df, recent_window_size=recent_window_size, reference_window_size=reference_window_size, out_path=out_path)
+
+
+@mcp.tool()
+def plot_rolling_drift(checks: list, out_path: Optional[str] = None):
+    """Plot Cohen's d across rolling_drift_check's own walk-forward
+    checks, marking which ones flagged drift. Returns the image INLINE
+    as well as, if `out_path` is given, saved to disk.
+
+    Args:
+        checks: The `checks` list from a rolling_drift_check result,
+            passed through exactly as returned.
+        out_path: If given, also writes the PNG to this path on disk.
+    """
+    return _plot_rolling_drift(checks, out_path=out_path)
 
 
 def main():

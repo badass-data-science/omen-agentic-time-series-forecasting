@@ -412,6 +412,19 @@ def detect_seasonality_period(df: pd.DataFrame, min_period: int = 2, max_period:
     }
 
 
+def _acf_pacf_raw(df: pd.DataFrame, n_lags: int, alpha: float):
+    """Shared raw computation behind acf_pacf_summary AND plot_tools.py's
+    plot_acf_pacf -- factored out so the plot's significance shading and
+    the JSON tool's significant_acf_lags can never silently disagree.
+    Returns (acf_vals, acf_confint, pacf_vals, n_lags_used).
+    """
+    series = df["value"].dropna()
+    n_lags = min(n_lags, len(series) // 2 - 1)
+    acf_vals, acf_confint = acf(series, nlags=n_lags, fft=True, alpha=alpha)
+    pacf_vals = pacf(series, nlags=n_lags)
+    return acf_vals, acf_confint, pacf_vals, n_lags
+
+
 def acf_pacf_summary(df: pd.DataFrame, n_lags: int = 21, alpha: float = 0.05) -> dict:
     """Autocorrelation / partial autocorrelation at selected lags. Useful for
     spotting seasonality period and deciding AR/MA order.
@@ -431,11 +444,7 @@ def acf_pacf_summary(df: pd.DataFrame, n_lags: int = 21, alpha: float = 0.05) ->
         alpha: Significance level for the per-lag confidence intervals,
             e.g. 0.05 for 95% intervals.
     """
-    series = df["value"].dropna()
-    n_lags = min(n_lags, len(series) // 2 - 1)
-
-    acf_vals, acf_confint = acf(series, nlags=n_lags, fft=True, alpha=alpha)
-    pacf_vals = pacf(series, nlags=n_lags)
+    acf_vals, acf_confint, pacf_vals, n_lags = _acf_pacf_raw(df, n_lags, alpha)
 
     significant_acf_lags = []
     for i in range(1, len(acf_vals)):

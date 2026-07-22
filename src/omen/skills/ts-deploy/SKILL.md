@@ -56,6 +56,14 @@ silently default to arbitrary parameters as if they were validated.
   one weighted forecast. Use this when more than one candidate backtested
   reasonably well in Layer 2 and you don't want to force a single winner.
   See "Combining candidates" below.
+- `ts-deploy__plot_forecast` — visual, INLINE-rendered companion to any of
+  the forecast_* tools above: history plus the forecast trajectory, with
+  a shaded interval band wherever one exists. Takes the SAME `csv_path`
+  and the `forecast` list a forecast_* call already returned -- it does
+  NOT re-run a forecast, only draws the one you already have. This is
+  supplementary visual feedback, never a substitute for the exact numbers
+  in the forecast_* result itself; report those numbers regardless of
+  whether you also show this plot.
 
 All single-model tools take `csv_path`, `horizon` (how many steps into the
 future to forecast), and optional `date_col`/`value_col`. Every one of
