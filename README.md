@@ -59,8 +59,11 @@ below for the mechanics.
   rather than hand-typed. `book/examples/generate_book_datasets.py` and
   `generate_book_plots.py` regenerate every dataset and every plot image
   the book uses, deterministically, so its numbers -- and its pictures
-  -- are reproducible rather than just asserted. Start at
-  `book/outline.md` or jump straight to `book/chapter-01-*.md`.
+  -- are reproducible rather than just asserted. `assemble_book.py` in
+  the same directory concatenates the front matter, all 22 chapters,
+  and the three appendices into a single Markdown file and (via pandoc)
+  a PDF. Start at `book/outline.md` or jump straight to
+  `book/chapter-01-*.md`.
 - **`blog-posts/`** -- shorter, punchier write-ups covering the same
   five layers, one post per layer plus an introductory overview.
 - **`prompts/testing-and-learning-prompts.md`** -- ready-to-use prompts
@@ -138,6 +141,7 @@ omen/
     └── examples/
         ├── generate_book_datasets.py  # regenerates every dataset the book uses
         ├── generate_book_plots.py     # regenerates every plot image the book embeds
+        ├── assemble_book.py           # concatenates the book into one Markdown file + PDF
         └── images/                    # the 16 real PNGs embedded in the book's chapters
 ```
 
