@@ -1,5 +1,10 @@
 # Omen
 
+*Status: Alpha — hand-verified, not yet CI-enforced. The test suite
+(137 tests) is real and the book's worked examples were checked against
+live tool output, but nothing runs any of it automatically on a push;
+see "Publishing this to PyPI" below for the rest of what's still open.*
+
 Five layers of agentic time series tooling, packaged as a normal
 installable Python project. Each layer is a FastMCP server (typed tools)
 plus a companion OpenClaw skill (the reasoning workflow around those
