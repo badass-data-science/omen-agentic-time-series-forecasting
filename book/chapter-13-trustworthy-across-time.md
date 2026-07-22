@@ -40,7 +40,7 @@ One constraint worth knowing before running it: it needs at least `holdout_size 
 
 ![Per-origin MAPE across the 5-origin rolling backtest, with the mean +/- 1 std band shaded](examples/images/ch13_rolling_origin.png)
 
-The middle bar breaking above the shaded band, on both sides of it, is the whole finding in one glance — a model whose accuracy visibly swings depending on which stretch of the series you happened to test it against, not a smooth trend with one outlier easily explained away.
+The second bar breaking well above the shaded band — while the third and fourth sit comfortably inside it, and the last dips down near its lower edge — is the whole finding in one glance: a model whose accuracy visibly swings depending on which stretch of the series you happened to test it against, not a smooth trend with one outlier easily explained away.
 
 ## An Honest Look at *Why*, Without Forcing a Tidy Story
 
