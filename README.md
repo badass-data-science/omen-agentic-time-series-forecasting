@@ -1,7 +1,7 @@
 # Omen
 
 *Status: Alpha — hand-verified, not yet CI-enforced. The test suite
-(137 tests) is real and the book's worked examples were checked against
+(161 tests) is real and the book's worked examples were checked against
 live tool output, but nothing runs any of it automatically on a push;
 see "Publishing this to PyPI" below for the rest of what's still open.*
 
@@ -40,15 +40,26 @@ package.
   alternative is now backed by a real, code-checked authorization record
   rather than only a prose contract.
 
+Layers 1, 2, 3, and 4 also expose 13 `plot_*` tools between them (none
+in Layer 5 -- a redeploy verdict has no natural chart) that render a
+matplotlib figure and return it as an inline image in the same turn,
+with an optional `out_path` to also save a PNG to disk. These are
+strictly supplementary visual feedback: every plot re-derives its
+picture from the same real computation its JSON counterpart already
+returns, and never reports a finding the JSON tool doesn't already
+report on its own. See "Things worth knowing about specific tools"
+below for the mechanics.
+
 ## Learn more
 
 - **`book/`** -- *Agentic Time Series Forecasting for Supervillains*, a complete 22-chapter
   e-book (plus glossary, tool reference, and further-reading appendices)
   teaching time series forecasting through this toolkit, one concept per
   chapter, each worked example run for real against the live MCP servers
-  rather than hand-typed. `book/examples/generate_book_datasets.py`
-  regenerates every dataset the book uses, deterministically, so its
-  numbers are reproducible rather than just asserted. Start at
+  rather than hand-typed. `book/examples/generate_book_datasets.py` and
+  `generate_book_plots.py` regenerate every dataset and every plot image
+  the book uses, deterministically, so its numbers -- and its pictures
+  -- are reproducible rather than just asserted. Start at
   `book/outline.md` or jump straight to `book/chapter-01-*.md`.
 - **`blog-posts/`** -- shorter, punchier write-ups covering the same
   five layers, one post per layer plus an introductory overview.
@@ -69,26 +80,31 @@ omen/
 │   └── omen/
 │       ├── __init__.py            # version + skills_dir() helper
 │       ├── data_prep.py           # shared: synthetic data + CSV loader (used by all 5 layers)
+│       ├── plotting.py            # shared: render_plot() -- inline Image + optional PNG, used by all plot_* tools
 │       ├── analyst/
 │       │   ├── __init__.py
 │       │   ├── analysis_tools.py  # Layer 1 diagnostic functions
+│       │   ├── plot_tools.py      # Layer 1 plotting functions (6 tools)
 │       │   └── server.py          # FastMCP server: ts-analyst
 │       ├── forecaster/
 │       │   ├── __init__.py
 │       │   ├── model_tools.py     # Layer 2 fit/backtest functions
+│       │   ├── plot_tools.py      # Layer 2 plotting functions (3 tools)
 │       │   └── server.py          # FastMCP server: ts-forecaster
 │       ├── deploy/
 │       │   ├── __init__.py
 │       │   ├── forecast_tools.py  # Layer 3 retrain/forecast functions
+│       │   ├── plot_tools.py      # Layer 3 plotting functions (1 tool)
 │       │   └── server.py          # FastMCP server: ts-deploy
 │       ├── monitor/
 │       │   ├── __init__.py
 │       │   ├── monitor_tools.py   # Layer 4 comparison/drift/retrain-decision functions
+│       │   ├── plot_tools.py      # Layer 4 plotting functions (3 tools)
 │       │   └── server.py          # FastMCP server: ts-monitor
 │       ├── retrain/
 │       │   ├── __init__.py
 │       │   ├── retrain_tools.py   # Layer 5 deployment-manifest + redeploy-decision functions
-│       │   └── server.py          # FastMCP server: ts-retrain
+│       │   └── server.py          # FastMCP server: ts-retrain (no plotting tools -- see below)
 │       └── skills/                # bundled as package data -- see skills_dir()
 │           ├── ts-analyst/SKILL.md
 │           ├── ts-forecaster/SKILL.md
@@ -98,9 +114,13 @@ omen/
 ├── tests/
 │   ├── test_data_prep.py
 │   ├── test_analyst_tools.py
+│   ├── test_analyst_plot_tools.py
 │   ├── test_forecaster_tools.py
+│   ├── test_forecaster_plot_tools.py
 │   ├── test_deploy_tools.py
+│   ├── test_deploy_plot_tools.py
 │   ├── test_monitor_tools.py
+│   ├── test_monitor_plot_tools.py
 │   └── test_retrain_tools.py
 ├── blog-posts/                    # draft write-ups about this project, not part of the package
 │   ├── introducing-omen.md
@@ -115,7 +135,10 @@ omen/
     ├── outline.md
     ├── chapter-01-introducing-omen-and-agentic-ai.md ... chapter-22-conclusion.md
     ├── appendix-a-glossary.md, appendix-b-tool-reference.md, appendix-c-further-reading.md
-    └── examples/generate_book_datasets.py  # regenerates every dataset the book uses
+    └── examples/
+        ├── generate_book_datasets.py  # regenerates every dataset the book uses
+        ├── generate_book_plots.py     # regenerates every plot image the book embeds
+        └── images/                    # the 16 real PNGs embedded in the book's chapters
 ```
 
 ## What changed from the earlier ad-hoc layout
@@ -268,6 +291,30 @@ Before actually publishing, you'll want to:
 - bump `version` for each release
 
 ## Things worth knowing about specific tools (carried over from earlier layers)
+
+- **The 13 `plot_*` tools (`ts-analyst`: `plot_series`, `plot_acf_pacf`,
+  `plot_seasonal_decomposition`, `plot_periodogram`, `plot_anomalies`,
+  `plot_changepoints`; `ts-forecaster`: `plot_backtest`,
+  `plot_rolling_origin`, `plot_search_sarima_orders`; `ts-deploy`:
+  `plot_forecast`; `ts-monitor`: `plot_forecast_vs_actuals`,
+  `plot_drift`, `plot_rolling_drift`) all share one rendering path,
+  `omen.plotting.render_plot()`.** Every call returns a `ToolResult`
+  combining an inline FastMCP `Image` content block (base64 PNG,
+  rendered in the same turn a client supports it, e.g. Claude Desktop)
+  with a small `structured_content` dict (`status`, `written_to`, plus
+  whatever else that specific plot wants to surface, e.g.
+  `n_anomalies_flagged`). Pass `out_path` to also write the PNG to disk;
+  omit it and you still get the inline image, just no file on disk.
+  `matplotlib` is a core dependency (not a per-layer extra) specifically
+  so every layer can offer this without an opt-in install step. Every
+  plot function calls its corresponding JSON tool's own computation
+  internally (e.g. `plot_drift` calls `detect_data_drift`, `plot_acf_pacf`
+  reuses `acf_pacf_summary`'s own Bartlett-band math) rather than
+  reimplementing the statistics -- a picture can never silently disagree
+  with the numbers behind it. `ts-retrain` deliberately has none: a
+  redeploy verdict is a single threshold comparison, not something a
+  chart adds value to. See `book/examples/generate_book_plots.py` for
+  16 real, reproducible worked examples across the book's chapters.
 
 - **`ts-analyst__check_stationarity` runs both ADF and KPSS and combines
   them into one joint verdict, each with its own effect size AND
