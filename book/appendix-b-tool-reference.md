@@ -1,11 +1,6 @@
 # Appendix B: Tool Reference Table
 
-Every MCP tool this book actually called, grouped by layer, in the order
-each layer's chapters introduced them. Use this as a fast lookup once
-you're working with your own data instead of the book's running
-examples — for full parameter details, the tool's own docstring (visible
-to any MCP client, including whatever agent you're using) is more
-current than this table will ever be.
+Every MCP tool this book actually called, grouped by layer, in the order each layer's chapters introduced them. Use this as a fast lookup once you're working with your own data instead of the book's running examples — for full parameter details, the tool's own docstring (visible to any MCP client, including whatever agent you're using) is more current than this table will ever be.
 
 ## Layer 1 — `ts-analyst`
 
