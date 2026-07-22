@@ -20,6 +20,8 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **CUSUM statistic.** A cumulative-sum-based statistic used to detect a changepoint — a shift in a series' underlying level or behavior at a specific point in time, as opposed to a single anomalous observation. Ch. 7.
 
+**Cyclical encoding.** Representing a smooth, repeating calendar cycle (like day-of-year) as a `sin`/`cos` pair instead of a discrete bucket (like a 1-12 month integer) — lets a tree-based model split on continuous position-in-cycle instead of a blunt, jump-discontinuous label. Ch. 11.
+
 **Diebold-Mariano test.** A paired hypothesis test (Diebold & Mariano, 1995) for whether two models' forecast errors on the *same* holdout are significantly different, using a loss differential rather than comparing two error numbers directly. Ch. 12.
 
 **Effect size.** A magnitude measure attached to a statistical test, distinguishing "barely detectable" from "enormous" among results that might otherwise share the same p-value. Ch. 4 and throughout.
