@@ -5,12 +5,12 @@ build-backend = "hatchling.build"
 [project]
 name = "omen-agentic-forecasting"
 version = "0.1.0"
-description = "Omen: agentic time series analysis, backtesting, deployment, and monitoring tools, exposed as FastMCP servers"
+description = "Omen: agentic time series analysis, forecasting, backtesting, deployment, and monitoring tools, exposed as FastMCP servers"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-    { name = "Your Name", email = "you@example.com" },
+    { name = "Emily Marie Williams", email = "emw314159@gmail.com" },
 ]
 keywords = ["omen", "agentic", "time-series", "forecasting", "mcp", "agents", "openclaw", "fastmcp"]
 classifiers = [
