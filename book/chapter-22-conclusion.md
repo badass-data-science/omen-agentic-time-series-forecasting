@@ -30,7 +30,6 @@ The rival supervillain does not. Chapter 18 left Death-Ray Revenue with two retr
 
 In the spirit of every honestly-reported gotcha in the preceding twenty-one chapters, here's what's genuinely still open in Omen itself, pulled directly from its own real, current documentation rather than invented for a tidy ending:
 
-- **No CI pipeline yet.** The test suite is real and current — 161 tests, passing — but nothing runs it automatically on a push. This has been true since the project's first blog post and remains true today.
 - **No expiry on autonomous-mode grants.** Chapter 19's authorization record persists until someone explicitly revokes it; there's no time-boxed "for the next month" option yet, only "until revoked."
 - **Not yet published to PyPI.** The package layout is ready — real console scripts, a real `pyproject.toml`, real author metadata — and the distribution name is settled (`omen-agentic-forecasting`, since plain `omen` was already taken; the importable module stays `omen`), but nobody has pushed a real release yet.
 

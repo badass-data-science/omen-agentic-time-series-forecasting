@@ -1,9 +1,10 @@
 # Omen
 
-*Status: Alpha — hand-verified, not yet CI-enforced. The test suite
-(161 tests) is real and the book's worked examples were checked against
-live tool output, but nothing runs any of it automatically on a push;
-see "Publishing this to PyPI" below for the rest of what's still open.*
+*Status: Alpha. The test suite (161 tests) is real and the book's
+worked examples were checked against live tool output. CI (GitHub
+Actions, see `.github/workflows/ci.yml`) runs the suite plus ruff
+linting and mypy type-checking on every push and PR; see "Publishing
+this to PyPI" below for the rest of what's still open.*
 
 Five layers of agentic time series tooling, packaged as a normal
 installable Python project. Each layer is a FastMCP server (typed tools)

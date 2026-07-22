@@ -12,6 +12,7 @@ Run over stdio (how OpenClaw will launch it), after `pip install -e .`:
 """
 
 from typing import Optional
+from fastmcp.tools.tool import ToolResult
 
 from fastmcp import FastMCP
 
@@ -246,7 +247,7 @@ def plot_forecast_vs_actuals(
     out_path: Optional[str] = None,
     date_col: str = "date",
     value_col: str = "value",
-):
+) -> ToolResult:
     """Plot a deployed forecast's trajectory (with interval band, if it
     has one) against the real observed actuals that have since arrived.
     Returns the image INLINE as well as, if `out_path` is given, saved
@@ -277,7 +278,7 @@ def plot_drift(
     out_path: Optional[str] = None,
     date_col: str = "date",
     value_col: str = "value",
-):
+) -> ToolResult:
     """Plot the recent window's and reference window's value distributions
     side by side, annotated with detect_data_drift's own real Cohen's d
     and drift verdict. Returns the image INLINE as well as, if `out_path`
@@ -301,7 +302,7 @@ def plot_drift(
 
 
 @mcp.tool()
-def plot_rolling_drift(checks: list, out_path: Optional[str] = None):
+def plot_rolling_drift(checks: list, out_path: Optional[str] = None) -> ToolResult:
     """Plot Cohen's d across rolling_drift_check's own walk-forward
     checks, marking which ones flagged drift. Returns the image INLINE
     as well as, if `out_path` is given, saved to disk.
@@ -314,7 +315,7 @@ def plot_rolling_drift(checks: list, out_path: Optional[str] = None):
     return _plot_rolling_drift(checks, out_path=out_path)
 
 
-def main():
+def main() -> None:
     """Entry point for the `ts-monitor-server` console script."""
     mcp.run()  # defaults to stdio transport, which is what OpenClaw expects
 

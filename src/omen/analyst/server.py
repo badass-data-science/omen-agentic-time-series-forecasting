@@ -14,6 +14,7 @@ Run over stdio (how OpenClaw / most MCP clients will actually launch it):
 """
 
 from typing import Optional
+from fastmcp.tools.tool import ToolResult
 
 from fastmcp import FastMCP
 
@@ -324,7 +325,7 @@ def plot_series(
     out_path: Optional[str] = None,
     date_col: str = "date",
     value_col: str = "value",
-):
+) -> ToolResult:
     """Plot the raw value-vs-date series -- visual companion to
     basic_stats, never a replacement for its exact numbers. Missing
     values show as visible GAPS in the line, not interpolated over.
@@ -349,7 +350,7 @@ def plot_acf_pacf(
     out_path: Optional[str] = None,
     date_col: str = "date",
     value_col: str = "value",
-):
+) -> ToolResult:
     """Plot ACF and PACF side by side, with the SAME per-lag Bartlett
     significance bands acf_pacf_summary reports (shared computation, not
     reimplemented) -- visual companion to that tool, never a replacement
@@ -374,7 +375,7 @@ def plot_seasonal_decomposition(
     out_path: Optional[str] = None,
     date_col: str = "date",
     value_col: str = "value",
-):
+) -> ToolResult:
     """Plot the additive trend/seasonal/residual decomposition as a
     vertically stacked subplot -- visual companion to
     seasonal_decomposition_summary, never a replacement for its exact
@@ -399,7 +400,7 @@ def plot_periodogram(
     out_path: Optional[str] = None,
     date_col: str = "date",
     value_col: str = "value",
-):
+) -> ToolResult:
     """Plot periodogram power vs. period, marking both the single
     globally strongest frequency and the top in-range candidate
     distinctly -- makes it visually obvious when the two differ (e.g.
@@ -429,7 +430,7 @@ def plot_anomalies(
     out_path: Optional[str] = None,
     date_col: str = "date",
     value_col: str = "value",
-):
+) -> ToolResult:
     """Plot the series with points flagged by the ROBUST (median+MAD)
     anomaly detector marked -- visual companion to
     detect_anomalies_robust_zscore, never a replacement for its exact
@@ -458,7 +459,7 @@ def plot_changepoints(
     out_path: Optional[str] = None,
     date_col: str = "date",
     value_col: str = "value",
-):
+) -> ToolResult:
     """Plot the series with detected changepoints as vertical lines,
     segments shaded alternately -- visual companion to
     detect_changepoints, never a replacement for its exact CUSUM
@@ -488,7 +489,7 @@ def plot_changepoints(
     )
 
 
-def main():
+def main() -> None:
     """Entry point for the `ts-analyst-server` console script."""
     mcp.run()  # defaults to stdio transport, which is what OpenClaw expects
 

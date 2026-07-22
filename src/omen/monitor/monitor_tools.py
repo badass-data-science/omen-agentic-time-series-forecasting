@@ -16,12 +16,14 @@ judgment: "should we retrain" is exactly the kind of decision worth being
 reproducible given the same inputs, not re-derived by an LLM each time.
 """
 
+from typing import Any, Optional
+
 import numpy as np
 import pandas as pd
 from scipy.stats import ks_2samp, norm as _norm, ttest_ind
 
 
-def compute_metrics(y_true, y_pred) -> dict:
+def compute_metrics(y_true: Any, y_pred: Any) -> dict:
     """MAE, RMSE, and MAPE (%) -- same definition Layer 2 used, so numbers
     here are directly comparable to a Layer 2 backtest result."""
     y_true = np.asarray(y_true, dtype=float)
@@ -83,7 +85,7 @@ def _bootstrap_metric_ci(
 
     alpha = 1 - confidence_level
 
-    def _percentile_ci(samples):
+    def _percentile_ci(samples: np.ndarray) -> tuple:
         samples = samples[~np.isnan(samples)]
         if len(samples) == 0:
             return None, None
@@ -106,8 +108,8 @@ def _bootstrap_metric_ci(
 
 
 def compute_metrics_with_ci(
-    y_true,
-    y_pred,
+    y_true: Any,
+    y_pred: Any,
     n_bootstrap: int = 1000,
     confidence_level: float = 0.95,
     seed: int = 42,
@@ -122,7 +124,7 @@ def compute_metrics_with_ci(
     return {**metrics, **ci, "ci_confidence_level": confidence_level, "ci_n_bootstrap": n_bootstrap}
 
 
-def _wilson_score_interval(successes: int, n: int, confidence_level: float = 0.95):
+def _wilson_score_interval(successes: int, n: int, confidence_level: float = 0.95) -> tuple:
     """Wilson score confidence interval for a binomial proportion --
     better-behaved than the normal approximation for small n or a
     proportion near 0/1, both common here since interval coverage is
@@ -277,7 +279,7 @@ def compare_forecast_to_actuals(
     y_pred = [m["forecast"] for m in matched]
     metrics = compute_metrics_with_ci(y_true, y_pred, n_bootstrap=n_bootstrap, confidence_level=confidence_level, seed=seed)
 
-    coverage_result = {"interval_available": False}
+    coverage_result: dict = {"interval_available": False}
     has_intervals = all(m["lower"] is not None and m["upper"] is not None for m in matched)
     if has_intervals:
         within = sum(1 for m in matched if m["lower"] <= m["actual"] <= m["upper"])
@@ -362,8 +364,8 @@ def detect_data_drift(
             )
         }
 
-    recent = df["value"].iloc[-recent_window_size:].values
-    reference = df["value"].iloc[-total_needed:-recent_window_size].values
+    recent = df["value"].iloc[-recent_window_size:].to_numpy(dtype=float)
+    reference = df["value"].iloc[-total_needed:-recent_window_size].to_numpy(dtype=float)
 
     mean_shift_pct = round(100 * (recent.mean() - reference.mean()) / reference.mean(), 3) if reference.mean() != 0 else None
     std_ratio = round(float(recent.std() / reference.std()), 4) if reference.std() != 0 else None
@@ -410,7 +412,7 @@ def rolling_drift_check(
     recent_window_size: int = 30,
     reference_window_size: int = 90,
     n_checks: int = 5,
-    step_size: int = None,
+    step_size: Optional[int] = None,
     persistence_threshold_frac: float = 0.5,
 ) -> dict:
     """Repeats detect_data_drift at n_checks different points walking
@@ -514,10 +516,10 @@ def recommend_retraining(
     mape_now: float,
     mape_backtest: float,
     drift_detected: bool,
-    interval_coverage_pct: float = None,
-    nominal_confidence_pct: float = None,
-    mape_now_ci_lower: float = None,
-    mape_now_ci_upper: float = None,
+    interval_coverage_pct: Optional[float] = None,
+    nominal_confidence_pct: Optional[float] = None,
+    mape_now_ci_lower: Optional[float] = None,
+    mape_now_ci_upper: Optional[float] = None,
     error_degradation_threshold_pct: float = 20.0,
     coverage_miscalibration_threshold_pct: float = 15.0,
 ) -> dict:

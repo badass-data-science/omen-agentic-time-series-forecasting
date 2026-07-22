@@ -15,11 +15,12 @@ for the bundled SKILL.md playbooks.
 """
 
 from importlib.resources import files as _files
+from typing import Any
 
 __version__ = "0.1.0"
 
 
-def skills_dir():
+def skills_dir() -> Any:
     """Return the path to the bundled OpenClaw skill directories
     (ts-analyst/, ts-forecaster/, ts-deploy/, ts-monitor/), so they can be
     copied into an OpenClaw workspace after `pip install`:

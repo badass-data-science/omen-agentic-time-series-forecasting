@@ -7,8 +7,11 @@ monitor_tools.py computation internally rather than reimplementing it,
 so the picture can never silently disagree with the JSON.
 """
 
+from typing import Optional
+
 import matplotlib.pyplot as plt
 import pandas as pd
+from fastmcp.tools.tool import ToolResult
 
 from omen.plotting import render_plot
 from .monitor_tools import compare_forecast_to_actuals, detect_data_drift
@@ -17,8 +20,8 @@ from .monitor_tools import compare_forecast_to_actuals, detect_data_drift
 def plot_forecast_vs_actuals(
     forecast: list,
     df: pd.DataFrame,
-    out_path: str = None,
-) -> "ToolResult":
+    out_path: Optional[str] = None,
+) -> ToolResult:
     """Plot a deployed forecast's trajectory (with interval band, if it
     has one) against the real observed actuals that have since arrived.
 
@@ -73,8 +76,8 @@ def plot_drift(
     df: pd.DataFrame,
     recent_window_size: int = 30,
     reference_window_size: int = 90,
-    out_path: str = None,
-) -> "ToolResult":
+    out_path: Optional[str] = None,
+) -> ToolResult:
     """Plot the recent window's and reference window's value distributions
     side by side, annotated with detect_data_drift's own real Cohen's d
     and drift verdict (computed by calling that function internally, not
@@ -94,8 +97,8 @@ def plot_drift(
         return render_plot(fig, out_path=out_path, status="error", error=result["error"])
 
     total_needed = recent_window_size + reference_window_size
-    recent = df["value"].iloc[-recent_window_size:].values
-    reference = df["value"].iloc[-total_needed:-recent_window_size].values
+    recent = df["value"].iloc[-recent_window_size:].to_numpy(dtype=float)
+    reference = df["value"].iloc[-total_needed:-recent_window_size].to_numpy(dtype=float)
 
     fig, ax = plt.subplots(figsize=(8, 5))
     ax.boxplot([reference, recent], tick_labels=["Reference", "Recent"])
@@ -115,7 +118,7 @@ def plot_drift(
     )
 
 
-def plot_rolling_drift(checks: list, out_path: str = None) -> "ToolResult":
+def plot_rolling_drift(checks: list, out_path: Optional[str] = None) -> ToolResult:
     """Plot Cohen's d across rolling_drift_check's own walk-forward
     checks, marking which ones flagged drift.
 

@@ -56,8 +56,7 @@ reproducible from `book/examples/generate_book_datasets.py`.
 
 ## Next Steps
 
-- **Add a real CI pipeline and some linting.** The test suite is solid (137 tests now, up from 35 at this post's original writing, `pytest.importorskip` guards so the core install doesn't drag in `statsmodels`/`scikit-learn` unnecessarily) but nothing runs it automatically yet, and there's no type-checking despite type hints sprinkled throughout.
-- **Actually publish it.** The package layout is PyPI-ready as-is — `pyproject.toml`, console scripts, the works — but the metadata still says `"Your Name" <you@example.com>`. The name question is settled, at least: `omen` itself turned out to be already taken, exactly the risk of a short, generic word, so the project now publishes under `omen-agentic-forecasting` instead (the importable module stays plain `omen`). Someone still has to fill in real author info and actually push a release.
+- **Actually publish it.** The package layout is PyPI-ready as-is — `pyproject.toml`, console scripts, the works — and the name question is settled too: `omen` itself turned out to be already taken, exactly the risk of a short, generic word, so the project now publishes under `omen-agentic-forecasting` instead (the importable module stays plain `omen`). Someone still has to actually push a release.
 - **No expiry on autonomous-mode grants.** A standing authorization persists until someone explicitly revokes it — there's no time-boxing yet, so a "for the next month" grant isn't currently expressible, only "until revoked."
 
 ## Conclusion

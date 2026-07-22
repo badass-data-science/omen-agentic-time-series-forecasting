@@ -42,7 +42,7 @@ deploy = ["statsmodels>=0.14", "scikit-learn>=1.4"]
 monitor = ["scipy>=1.11"]
 retrain = []
 all = ["statsmodels>=0.14", "scikit-learn>=1.4", "scipy>=1.11"]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "ruff>=0.15", "mypy>=1.10", "pandas-stubs", "scipy-stubs"]
 
 [project.urls]
 Homepage = "https://github.com/badass-data-science/omen-agentic-time-series-forecasting"
@@ -69,3 +69,26 @@ packages = ["src/omen"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.mypy]
+# Pinned to the highest supported version (3.10-3.12 per classifiers above),
+# not the lowest -- newer numpy releases ship stub files using PEP 695 `type`
+# statement syntax (3.12+ only), which mypy's parser rejects outright when
+# targeting 3.10, even though nothing in Omen's own code is version-gated.
+python_version = "3.12"
+files = ["src/omen"]
+disallow_untyped_defs = true
+warn_unused_configs = true
+warn_redundant_casts = true
+
+# statsmodels/sklearn ship no py.typed marker and have no usable third-party
+# stub package; fastmcp.tools.tool resolves fine at runtime (fastmcp exposes
+# ToolResult through it dynamically) but isn't a real file mypy can walk
+# statically. All three are genuine third-party stub-coverage gaps, verified
+# by hand -- not a signal to chase further or silence more broadly.
+[[tool.mypy.overrides]]
+module = ["statsmodels.*", "sklearn.*", "fastmcp.*"]
+ignore_missing_imports = true

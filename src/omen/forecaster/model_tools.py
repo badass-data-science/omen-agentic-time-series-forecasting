@@ -13,6 +13,8 @@ test window -- so every model is evaluated against the same held-out period
 if called with the same holdout_size.
 """
 
+from typing import Any, Callable, Optional
+
 import numpy as np
 import pandas as pd
 from scipy.stats import chi2 as _chi2, t as _t_dist
@@ -22,7 +24,7 @@ from statsmodels.stats.diagnostic import acorr_ljungbox
 from sklearn.ensemble import GradientBoostingRegressor
 
 
-def train_test_split(df: pd.DataFrame, holdout_size: int):
+def train_test_split(df: pd.DataFrame, holdout_size: int) -> tuple:
     """Split a time-ordered DataFrame into train/test by holding out the
     last `holdout_size` rows. Raises if there isn't enough data.
     """
@@ -35,7 +37,7 @@ def train_test_split(df: pd.DataFrame, holdout_size: int):
     return train, test
 
 
-def compute_metrics(y_true, y_pred) -> dict:
+def compute_metrics(y_true: Any, y_pred: Any) -> dict:
     """MAE, RMSE, and MAPE (%) between actual and predicted values. MAPE
     excludes points where y_true is ~0 to avoid division blow-ups, and
     reports how many points were excluded so that's not silently hidden.
@@ -98,7 +100,7 @@ def _bootstrap_metric_ci(
 
     alpha = 1 - confidence_level
 
-    def _percentile_ci(samples):
+    def _percentile_ci(samples: np.ndarray) -> tuple:
         samples = samples[~np.isnan(samples)]
         if len(samples) == 0:
             return None, None
@@ -121,8 +123,8 @@ def _bootstrap_metric_ci(
 
 
 def compute_metrics_with_ci(
-    y_true,
-    y_pred,
+    y_true: Any,
+    y_pred: Any,
     n_bootstrap: int = 1000,
     confidence_level: float = 0.95,
     seed: int = 42,
@@ -135,7 +137,7 @@ def compute_metrics_with_ci(
     return {**metrics, **ci, "ci_confidence_level": confidence_level, "ci_n_bootstrap": n_bootstrap}
 
 
-def residual_diagnostics(residuals, lags: int = 10, alpha: float = 0.05) -> dict:
+def residual_diagnostics(residuals: Any, lags: int = 10, alpha: float = 0.05) -> dict:
     """Ljung-Box test for residual autocorrelation, plus an effect size.
     A high p-value (> alpha) is the reassuring outcome here -- it means we
     fail to reject the null of "residuals are white noise," i.e. the
@@ -178,7 +180,7 @@ def residual_diagnostics(residuals, lags: int = 10, alpha: float = 0.05) -> dict
     }
 
 
-def _aicc(aic: float, n: int, k: int):
+def _aicc(aic: float, n: int, k: int) -> Optional[float]:
     """Corrected AIC (Hurvich & Tsai, 1989) for small samples: AIC's bias
     grows as the number of estimated parameters k approaches the sample
     size n, which matters here since fit_ets/fit_sarima are often fit on
@@ -261,7 +263,7 @@ def fit_naive_baselines(
     else:
         seasonal_naive_pred = naive_pred  # not enough history to be seasonal
 
-    ci_kwargs = dict(n_bootstrap=n_bootstrap, confidence_level=confidence_level, seed=seed)
+    ci_kwargs: dict[str, Any] = dict(n_bootstrap=n_bootstrap, confidence_level=confidence_level, seed=seed)
     return {
         "holdout_size": holdout_size,
         "holdout_actuals": [round(float(v), 4) for v in y_test],
@@ -349,8 +351,8 @@ def fit_ets(
 def fit_sarima(
     df: pd.DataFrame,
     holdout_size: int = 30,
-    order: list = None,
-    seasonal_order: list = None,
+    order: Optional[list] = None,
+    seasonal_order: Optional[list] = None,
     n_bootstrap: int = 1000,
     confidence_level: float = 0.95,
     seed: int = 42,
@@ -374,8 +376,8 @@ def fit_sarima(
     order: (p, d, q) non-seasonal ARIMA order. Default [1, 1, 1].
     seasonal_order: (P, D, Q, s) seasonal order. Default [1, 1, 1, 7].
     """
-    order = tuple(order) if order else (1, 1, 1)
-    seasonal_order = tuple(seasonal_order) if seasonal_order else (1, 1, 1, 7)
+    order_tuple = tuple(order) if order else (1, 1, 1)
+    seasonal_order_tuple = tuple(seasonal_order) if seasonal_order else (1, 1, 1, 7)
 
     train, test = train_test_split(df, holdout_size)
     y_test = test["value"].values
@@ -385,8 +387,8 @@ def fit_sarima(
     # for 1-D endog. Behavior and results are otherwise identical either way.
     model = SARIMAX(
         train[["value"]],
-        order=order,
-        seasonal_order=seasonal_order,
+        order=order_tuple,
+        seasonal_order=seasonal_order_tuple,
         enforce_stationarity=False,
         enforce_invertibility=False,
     )
@@ -399,7 +401,7 @@ def fit_sarima(
 
     return {
         "model": "SARIMA",
-        "params": {"order": list(order), "seasonal_order": list(seasonal_order)},
+        "params": {"order": list(order_tuple), "seasonal_order": list(seasonal_order_tuple)},
         "aic": round(float(fit.aic), 2),
         "aicc": _aicc(float(fit.aic), len(train), len(fit.params)),
         "bic": round(float(fit.bic), 2),
@@ -429,7 +431,7 @@ def _build_lag_features(df: pd.DataFrame, lags: list) -> pd.DataFrame:
 def fit_gradient_boosted_trees(
     df: pd.DataFrame,
     holdout_size: int = 30,
-    lags: list = None,
+    lags: Optional[list] = None,
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
@@ -502,7 +504,7 @@ def diebold_mariano_test(
     model_a_name: str = "Model A",
     model_b_name: str = "Model B",
     loss: str = "squared",
-    n_lags: int = None,
+    n_lags: Optional[int] = None,
 ) -> dict:
     """Diebold-Mariano-style test (Diebold & Mariano, 1995) for whether
     two models' forecasts on the SAME holdout have significantly
@@ -544,22 +546,22 @@ def diebold_mariano_test(
     fit_gradient_boosted_trees itself. Carry that caveat forward
     regardless of what this test says.
     """
-    actuals = np.asarray(actuals, dtype=float)
-    predicted_a = np.asarray(predicted_a, dtype=float)
-    predicted_b = np.asarray(predicted_b, dtype=float)
-    n = len(actuals)
-    if not (len(predicted_a) == n and len(predicted_b) == n):
+    actuals_arr = np.asarray(actuals, dtype=float)
+    predicted_a_arr = np.asarray(predicted_a, dtype=float)
+    predicted_b_arr = np.asarray(predicted_b, dtype=float)
+    n = len(actuals_arr)
+    if not (len(predicted_a_arr) == n and len(predicted_b_arr) == n):
         return {
             "error": (
                 f"actuals, predicted_a, and predicted_b must all be the same length "
-                f"(got {n}, {len(predicted_a)}, {len(predicted_b)})."
+                f"(got {n}, {len(predicted_a_arr)}, {len(predicted_b_arr)})."
             )
         }
     if n < 8:
         return {"error": f"Need at least 8 paired forecast points for a meaningful test, got {n}."}
 
-    errors_a = actuals - predicted_a
-    errors_b = actuals - predicted_b
+    errors_a = actuals_arr - predicted_a_arr
+    errors_b = actuals_arr - predicted_b_arr
 
     if loss == "squared":
         loss_a, loss_b = errors_a**2, errors_b**2
@@ -624,7 +626,7 @@ def diebold_mariano_test(
     }
 
 
-_ROLLING_ORIGIN_FIT_FUNCTIONS = {
+_ROLLING_ORIGIN_FIT_FUNCTIONS: dict[str, Callable[..., dict]] = {
     "ets": fit_ets,
     "sarima": fit_sarima,
     "gbt": fit_gradient_boosted_trees,
@@ -634,7 +636,7 @@ _ROLLING_ORIGIN_FIT_FUNCTIONS = {
 def rolling_origin_backtest(
     df: pd.DataFrame,
     model_type: str,
-    params: dict = None,
+    params: Optional[dict] = None,
     holdout_size: int = 30,
     n_origins: int = 5,
     n_bootstrap: int = 200,
@@ -740,8 +742,8 @@ def rolling_origin_backtest(
     if not successful:
         return {"error": f"All {n_origins} origins failed to fit.", "origins": origins}
 
-    def _mean_std(key):
-        values = [o[key] for o in successful if o[key] is not None]
+    def _mean_std(key: str) -> tuple:
+        values: list = [o[key] for o in successful if o[key] is not None]
         if not values:
             return None, None
         return round(float(np.mean(values)), 4), round(float(np.std(values, ddof=1)) if len(values) > 1 else 0.0, 4)
@@ -892,7 +894,7 @@ def search_sarima_orders(
     if not candidates:
         return {"error": f"All {len(combos)} candidate orders failed to fit."}
 
-    def _rank_key(c):
+    def _rank_key(c: dict) -> float:
         return c["aicc"] if c["aicc"] is not None else c["aic"]
 
     candidates.sort(key=_rank_key)

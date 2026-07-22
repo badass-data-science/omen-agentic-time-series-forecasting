@@ -13,6 +13,7 @@ in what order, and how to interpret the results.
 
 import json
 import warnings
+from typing import Callable, Optional
 
 import numpy as np
 import pandas as pd
@@ -218,7 +219,7 @@ def check_stationarity(df: pd.DataFrame, kpss_regression: str = "c", confidence_
     adf_result = adfuller(series, autolag="AIC")
     adf_stat, adf_p_value = adf_result[0], adf_result[1]
     adf_stationary = bool(adf_p_value < 0.05)
-    reversion = _mean_reversion_effect_size(series.values, confidence_level=confidence_level)
+    reversion = _mean_reversion_effect_size(series.to_numpy(dtype=float), confidence_level=confidence_level)
 
     kpss_result = _kpss_effect_size(series, regression=kpss_regression)
     kpss_stationary = bool(kpss_result["p_value"] >= 0.05)
@@ -288,7 +289,7 @@ def seasonal_decomposition_summary(df: pd.DataFrame, period: int = 7) -> dict:
     trend_var = float(np.nanvar(decomposition.trend))
     total_var = float(np.nanvar(series))
 
-    def strength(component_var):
+    def strength(component_var: float) -> float:
         # Strength-of-signal heuristic (Hyndman & Athanasopoulos):
         # bounded roughly in [0, 1], higher = stronger component relative to noise.
         denom = component_var + resid_var
@@ -307,7 +308,7 @@ def seasonal_decomposition_summary(df: pd.DataFrame, period: int = 7) -> dict:
     }
 
 
-def detect_seasonality_period(df: pd.DataFrame, min_period: int = 2, max_period: int = None) -> dict:
+def detect_seasonality_period(df: pd.DataFrame, min_period: int = 2, max_period: Optional[int] = None) -> dict:
     """Find the dominant cyclical period in a series via its periodogram,
     with a significance test -- so the CALLER doesn't have to already
     know/guess a period before using seasonal_decomposition_summary or
@@ -412,7 +413,7 @@ def detect_seasonality_period(df: pd.DataFrame, min_period: int = 2, max_period:
     }
 
 
-def _acf_pacf_raw(df: pd.DataFrame, n_lags: int, alpha: float):
+def _acf_pacf_raw(df: pd.DataFrame, n_lags: int, alpha: float) -> tuple:
     """Shared raw computation behind acf_pacf_summary AND plot_tools.py's
     plot_acf_pacf -- factored out so the plot's significance shading and
     the JSON tool's significant_acf_lags can never silently disagree.
@@ -521,7 +522,7 @@ def _rolling_mad(series: pd.Series, rolling_median: pd.Series, window: int) -> p
     `rolling_median` as long as both share identical window/min_periods/
     center settings (checked by the caller).
     """
-    def mad(x):
+    def mad(x: np.ndarray) -> float:
         return np.median(np.abs(x - np.median(x)))
 
     return series.rolling(window=window, min_periods=1, center=True).apply(mad, raw=True)
@@ -589,7 +590,7 @@ def detect_anomalies_robust_zscore(df: pd.DataFrame, z_threshold: float = 3.5, w
     }
 
 
-def _cusum_statistic(values: np.ndarray):
+def _cusum_statistic(values: np.ndarray) -> tuple:
     """Standardized CUSUM mean-shift statistic, vectorized over every
     candidate split point k=1..n-1: compares the mean of values[:k] to
     the mean of values[k:], weighted by segment sizes and standardized by
@@ -785,7 +786,7 @@ def detect_changepoints(
 
 
 # Registry used by agent.py to expose these as callable tools by name.
-TOOL_REGISTRY = {
+TOOL_REGISTRY: dict[str, Callable[..., dict]] = {
     "basic_stats": basic_stats,
     "check_stationarity": check_stationarity,
     "seasonal_decomposition_summary": seasonal_decomposition_summary,
@@ -798,7 +799,7 @@ TOOL_REGISTRY = {
 
 
 if __name__ == "__main__":
-    from data_prep import generate_synthetic_series
+    from omen.data_prep import generate_synthetic_series
 
     df = generate_synthetic_series()
     for name, fn in TOOL_REGISTRY.items():

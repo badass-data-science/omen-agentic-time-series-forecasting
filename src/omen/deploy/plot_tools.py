@@ -7,8 +7,11 @@ forecast_* call already produced (not model params -- this doesn't
 re-run a forecast, it draws the one you already have).
 """
 
+from typing import Optional
+
 import matplotlib.pyplot as plt
 import pandas as pd
+from fastmcp.tools.tool import ToolResult
 
 from omen.plotting import render_plot
 
@@ -16,8 +19,8 @@ from omen.plotting import render_plot
 def plot_forecast(
     df: pd.DataFrame,
     forecast: list,
-    out_path: str = None,
-) -> "ToolResult":
+    out_path: Optional[str] = None,
+) -> ToolResult:
     """Plot a series' history plus a deployed forecast_* result's own
     forecast trajectory, with a shaded interval band wherever the
     forecast points carry lower/upper bounds.

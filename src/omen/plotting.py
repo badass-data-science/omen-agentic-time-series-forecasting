@@ -16,7 +16,7 @@ easier to see at a glance.
 """
 
 import io
-from typing import Optional
+from typing import Any, Optional
 
 import matplotlib
 
@@ -27,7 +27,7 @@ from fastmcp.tools.tool import ToolResult  # noqa: E402
 from fastmcp.utilities.types import Image  # noqa: E402
 
 
-def render_plot(fig: "plt.Figure", out_path: Optional[str] = None, **status_extra) -> ToolResult:
+def render_plot(fig: "plt.Figure", out_path: Optional[str] = None, **status_extra: Any) -> ToolResult:
     """Render a finished matplotlib Figure to PNG bytes, return it as an
     inline FastMCP Image content block plus a small structured status
     dict (status, written_to, and anything the caller wants surfaced

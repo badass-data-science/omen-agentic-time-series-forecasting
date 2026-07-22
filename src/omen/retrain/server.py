@@ -286,7 +286,7 @@ def check_autonomous_mode(csv_path: str, autonomous_mode_path: Optional[str] = N
     return _check_autonomous_mode(csv_path, autonomous_mode_path=autonomous_mode_path)
 
 
-def main():
+def main() -> None:
     """Entry point for the `ts-retrain-server` console script."""
     mcp.run()  # defaults to stdio transport, which is what OpenClaw expects
 
