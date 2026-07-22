@@ -45,7 +45,7 @@ BOOK_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 TITLE = "Agentic Time Series Forecasting for Supervillains"
 EDITION = "0th Edition"
-AUTHOR = "Emily Marie Williams, author of Omen"
+AUTHOR = "Emily Marie Williams"
 TITLE_PAGE_IMAGE = os.path.join(BOOK_DIR, "title-page-image.png")
 
 IMAGE_LINK_RE = re.compile(r"(!\[[^\]]*\]\()([^)\s]+)(\))")
@@ -95,7 +95,7 @@ def _custom_title_page_header() -> str:
     """
     image_line = ""
     if os.path.isfile(TITLE_PAGE_IMAGE):
-        image_line = f"    \\includegraphics[width=0.5\\textwidth]{{{TITLE_PAGE_IMAGE}}}\\par\n    \\vspace{{2em}}\n"
+        image_line = f"    \\includegraphics[width=0.85\\textwidth]{{{TITLE_PAGE_IMAGE}}}\\par\n"
     else:
         print(f"Note: {TITLE_PAGE_IMAGE} not found -- title page will have no image.", file=sys.stderr)
 
@@ -107,11 +107,13 @@ def _custom_title_page_header() -> str:
         "  \\begin{center}\n"
         "    \\vspace*{2cm}\n"
         f"    {{\\LARGE {_latex_escape(TITLE)} \\par}}\n"
-        "    \\vspace{1em}\n"
+        "    \\vspace{4em}\n"
         f"    {{\\large {_latex_escape(AUTHOR)} \\par}}\n"
-        "    \\vspace{2em}\n"
+        "    \\vspace{3em}\n"
         f"{image_line}"
+        "    \\vfill\n"
         f"    {{\\large {_latex_escape(EDITION)} \\par}}\n"
+        "    \\vspace*{2cm}\n"
         "  \\end{center}\n"
         "  \\end{titlepage}\n"
         "}\n"
