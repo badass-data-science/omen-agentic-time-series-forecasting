@@ -22,7 +22,7 @@ The academic sources Omen's own methods are actually drawn from — not a genera
 
 **Newey, W. K., & West, K. D. (1994).** "Automatic Lag Selection in Covariance Matrix Estimation." *Review of Economic Studies*. The automatic lag-selection rule behind the Diebold-Mariano test's default HAC-robust variance estimate. Ch. 12.
 
-**Wilson, E. B. (1927).** "Probable Inference, the Law of Succession, and Statistical Inference." *Journal of the American Statistical Association*. The Wilson score interval behind `compare_forecast_to_actuals`'s coverage confidence interval — well- behaved at the small sample sizes a freshly deployed forecast actually has. Ch. 16.
+**Wilson, E. B. (1927).** "Probable Inference, the Law of Succession, and Statistical Inference." *Journal of the American Statistical Association*. The Wilson score interval behind `compare_forecast_to_actuals`'s coverage confidence interval — well-behaved at the small sample sizes a freshly deployed forecast actually has. Ch. 16.
 
 **Cohen, J. (1988).** *Statistical Power Analysis for the Behavioral Sciences* (2nd ed.). The conventional small/medium/large effect-size bins this book cited, and then complicated with real numbers, in Chapter 17 — worth reading Cohen's own original caveats about treating those bins as more universal than he intended.
 

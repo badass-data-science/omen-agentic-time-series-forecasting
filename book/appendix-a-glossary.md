@@ -56,7 +56,7 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **Periodogram.** A decomposition of a series into the relative power of different candidate periods, used to find a dominant cycle without guessing its length in advance — vulnerable to a strong trend overwhelming a real seasonal signal. Ch. 5.
 
-**Persistent drift.** Whether `rolling_drift_check`'s drift signal shows up across most of several rolling windows (a sustained shift) or only a minority of them (more consistent with a one-off blip) — a fraction- flagged threshold distinct from Ch. 13's coefficient-of-variation-based instability check, which measures a different thing (backtest accuracy stability, not drift persistence) with no comparable pass/fail flag of its own. Ch. 17.
+**Persistent drift.** Whether `rolling_drift_check`'s drift signal shows up across most of several rolling windows (a sustained shift) or only a minority of them (more consistent with a one-off blip) — a fraction-flagged threshold distinct from Ch. 13's coefficient-of-variation-based instability check, which measures a different thing (backtest accuracy stability, not drift persistence) with no comparable pass/fail flag of its own. Ch. 17.
 
 **Plausibility check.** An automated comparison of a forecast's implied change against a series' own historical distribution of changes — explicitly documented as a prompt for scrutiny, not a hypothesis test or a verdict. Ch. 14.
 

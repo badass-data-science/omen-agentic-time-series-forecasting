@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "omen"
+name = "omen-agentic-forecasting"
 version = "0.1.0"
 description = "Omen: agentic time series analysis, backtesting, deployment, and monitoring tools, exposed as FastMCP servers"
 readme = "README.md"
@@ -12,7 +12,7 @@ license = { text = "MIT" }
 authors = [
     { name = "Your Name", email = "you@example.com" },
 ]
-keywords = ["omen", "time-series", "forecasting", "mcp", "agents", "openclaw", "fastmcp"]
+keywords = ["omen", "agentic", "time-series", "forecasting", "mcp", "agents", "openclaw", "fastmcp"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -48,8 +48,11 @@ Repository = "https://github.com/badass-data-science/Data-Science"
 # directly, so OpenClaw (or any MCP client) can point its config at the
 # installed command instead of an absolute path to a .py file. Script
 # NAMES stay ts-analyst-server etc. (the five layers' own established
-# branding) even though the package/project itself is now "omen" --
-# see AGENTS.md for why these weren't renamed together.
+# branding) even though the PyPI distribution name is
+# "omen-agentic-forecasting" -- the importable module stays plain
+# `omen` (see [tool.hatch.build.targets.wheel] below), only the PyPI
+# listing name changed, since "omen" was already taken.
+# See AGENTS.md for why the script names weren't renamed too.
 [project.scripts]
 ts-analyst-server = "omen.analyst.server:main"
 ts-forecaster-server = "omen.forecaster.server:main"

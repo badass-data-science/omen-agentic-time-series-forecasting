@@ -251,9 +251,13 @@ twine upload --repository testpypi dist/*    # try TestPyPI first
 twine upload dist/*                          # then the real thing
 ```
 Before actually publishing, you'll want to:
-- confirm `omen` is actually free on PyPI -- it's a short, generic word,
-  so don't assume it isn't already claimed; PyPI names are first-come and
-  effectively permanent once taken
+- ~~confirm `omen` is actually free on PyPI~~ **Done.** `omen` itself
+  was already taken -- the plain word is short and generic, exactly
+  the kind of name that gets claimed early. The project now publishes
+  under `omen-agentic-forecasting` instead (confirmed free via PyPI's
+  JSON API), set in `pyproject.toml`'s `name` field. The importable
+  module stays plain `omen` -- only the PyPI listing name changed; see
+  the comment above `[project.scripts]` in `pyproject.toml` for why.
 - fill in real author info in `pyproject.toml` (still says
   `"Your Name" <you@example.com>`)
 - bump `version` for each release

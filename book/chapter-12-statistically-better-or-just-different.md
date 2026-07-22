@@ -63,7 +63,7 @@ This book's outline originally planned a different headline result for this chap
 {"SARIMA vs naive":          {"p_value": 0.0019, "favored_model": "SARIMA(1,1,2)"}}
 ```
 
-**What It Means:** SARIMA beats both baselines, decisively, on this series. Rather than force the originally planned upset, it's worth saying plainly what actually happened and why it's still a useful result: a test like this doesn't exist to manufacture a specific storyline — it exists to tell you the truth about whichever two models you hand it, and sometimes the truth is that the complicated model really did earn its extra machinery. That's a just-as-real, just-as- useful outcome as an upset would have been. The failure mode this whole book keeps warning about isn't "trusting a complex model" — it's trusting one *without checking*. Here, the check came back in SARIMA's favor, honestly.
+**What It Means:** SARIMA beats both baselines, decisively, on this series. Rather than force the originally planned upset, it's worth saying plainly what actually happened and why it's still a useful result: a test like this doesn't exist to manufacture a specific storyline — it exists to tell you the truth about whichever two models you hand it, and sometimes the truth is that the complicated model really did earn its extra machinery. That's a just-as-real, just-as-useful outcome as an upset would have been. The failure mode this whole book keeps warning about isn't "trusting a complex model" — it's trusting one *without checking*. Here, the check came back in SARIMA's favor, honestly.
 
 ## Choosing `n_lags` for a Genuinely One-Step-Ahead Comparison
 

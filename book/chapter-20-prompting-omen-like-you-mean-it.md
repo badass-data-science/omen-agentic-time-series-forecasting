@@ -10,7 +10,7 @@ This looks harmless. It is exactly the prompt that reproduces Chapter 14's openi
 
 **Rewritten:** "Using the cleaned, interpolated mojito inventory series from Chapter 14, deploy a SARIMA forecast with a 30-day horizon, and tell me if the plausibility check raises any concerns."
 
-What changed, specifically: it names *which* series (the cleaned one, not Chapter 3's raw file — carrying forward a finding instead of leaving the agent to rediscover, or miss, it), *which* layer (`ts-deploy`, not an ambiguous "forecast" that could mean a Layer 2 backtest or a Layer 3 deployment), and *which* model (SARIMA, this series' most-analytically- confident option per Chapter 14's real interval comparison). It still leaves real room for judgment: the horizon is specified, but *how* to read the plausibility check's output is left to the agent, not dictated. This is the shape a well-formed prompt for this toolkit should have — specific about the settled questions, open about the ones that still require reasoning over real tool output.
+What changed, specifically: it names *which* series (the cleaned one, not Chapter 3's raw file — carrying forward a finding instead of leaving the agent to rediscover, or miss, it), *which* layer (`ts-deploy`, not an ambiguous "forecast" that could mean a Layer 2 backtest or a Layer 3 deployment), and *which* model (SARIMA, this series' most-analytically-confident option per Chapter 14's real interval comparison). It still leaves real room for judgment: the horizon is specified, but *how* to read the plausibility check's output is left to the agent, not dictated. This is the shape a well-formed prompt for this toolkit should have — specific about the settled questions, open about the ones that still require reasoning over real tool output.
 
 ## Prompt Two: So Specific It Leaves Nothing to Reason About
 
@@ -34,7 +34,7 @@ This one is harder to fault on vagueness — it's a real, well-formed question a
 
 **What It Means:** All three answers are real, all three are already published in this book, and they don't agree with each other — because they're not actually the same question. Handed the prompt as submitted, an agent has to *guess* which one was meant, and a plausible-sounding answer to the wrong one of the three is worse than an agent that stops to ask, because it doesn't announce itself as wrong.
 
-**Rewritten (pick one):** "Using `ts-monitor`, compare the currently deployed forecast against real observations from the last month, and tell me what `recommend_retraining` suggests" — or, if the Layer 2 question was actually meant, "Using `ts-forecaster`, run a fresh backtest comparison between SARIMA and ETS on the current data, and tell me if Diebold-Mariano finds a significant difference." Naming the layer isn't pedantry — it's the difference between three well-defined, previously- answered real questions and one ambiguous one with no single correct answer to be graded against.
+**Rewritten (pick one):** "Using `ts-monitor`, compare the currently deployed forecast against real observations from the last month, and tell me what `recommend_retraining` suggests" — or, if the Layer 2 question was actually meant, "Using `ts-forecaster`, run a fresh backtest comparison between SARIMA and ETS on the current data, and tell me if Diebold-Mariano finds a significant difference." Naming the layer isn't pedantry — it's the difference between three well-defined, previously-answered real questions and one ambiguous one with no single correct answer to be graded against.
 
 ## Your Turn
 

@@ -28,11 +28,11 @@ The rival supervillain does not. Chapter 18 left Death-Ray Revenue with two retr
 
 ## Where the Toolkit Itself Goes Next
 
-In the spirit of every honestly-reported gotcha in the preceding twenty- one chapters, here's what's genuinely still open in Omen itself, pulled directly from its own real, current documentation rather than invented for a tidy ending:
+In the spirit of every honestly-reported gotcha in the preceding twenty-one chapters, here's what's genuinely still open in Omen itself, pulled directly from its own real, current documentation rather than invented for a tidy ending:
 
 - **No CI pipeline yet.** The test suite is real and current — 137 tests, passing — but nothing runs it automatically on a push. This has been true since the project's first blog post and remains true today.
 - **No expiry on autonomous-mode grants.** Chapter 19's authorization record persists until someone explicitly revokes it; there's no time-boxed "for the next month" option yet, only "until revoked."
-- **Not yet published to PyPI.** The package layout is ready — real console scripts, a real `pyproject.toml` — but nobody has confirmed the name `omen` is actually available to claim, or pushed a real release.
+- **Not yet published to PyPI.** The package layout is ready — real console scripts, a real `pyproject.toml` — and the distribution name is settled (`omen-agentic-forecasting`, since plain `omen` was already taken; the importable module stays `omen`), but nobody has filled in real author metadata or pushed a real release yet.
 
 None of these are secrets. They're exactly the kind of thing this book has modeled, chapter after chapter, as worth saying plainly rather than quietly hoping nobody asks: a genuinely open item, reported honestly, is worth more than a confident claim that doesn't survive being checked.
 
