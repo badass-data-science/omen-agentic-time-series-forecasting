@@ -6,12 +6,14 @@ matter, all 22 chapters, and the three appendices, in reading order -- into
 a single Markdown file, then (by default) renders that file to PDF via
 pandoc. `outline.md` is deliberately excluded: it's this project's internal
 planning document, never reader-facing, and was never part of the book
-itself.
+itself. The PDF's title page shows, top to bottom: title, author,
+book/title-page-image.png (if present), then edition.
 
-Reading order is: dedication.md, about_the_author.md, chapter-01 through
-chapter-22 (sorted by filename, which sorts correctly since every chapter
-number is zero-padded), then appendix-a, appendix-b, appendix-c
-(alphabetical, which is also their intended reading order).
+Reading order is: dedication.md, about_the_author.md,
+ai_use_statement.md, chapter-01 through chapter-22 (sorted by filename,
+which sorts correctly since every chapter number is zero-padded), then
+appendix-a, appendix-b, appendix-c (alphabetical, which is also their
+intended reading order).
 
 Every chapter links its images with a path relative to this directory's
 parent (e.g. `examples/images/ch08_naive_backtest.png`, written as if the
@@ -42,16 +44,93 @@ import sys
 BOOK_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 TITLE = "Agentic Time Series Forecasting for Supervillains"
+EDITION = "0th Edition"
 AUTHOR = "Emily Marie Williams"
+TITLE_PAGE_IMAGE = os.path.join(BOOK_DIR, "title-page-image.png")
 
 IMAGE_LINK_RE = re.compile(r"(!\[[^\]]*\]\()([^)\s]+)(\))")
 
+# Pandoc's code blocks (Shaded/Highlighting, via fancyvrb) don't wrap long
+# lines by default -- a JSON example wider than the page margin just runs
+# off the edge and gets cut off. fvextra's breaklines/breakanywhere fixes
+# this (see pandoc's own manual on the topic); there's no equivalent
+# -M/-V metadata flag for it, so it has to go in via --include-in-header.
+_CODE_WRAP_HEADER = "\\usepackage{fvextra}\n\\fvset{breaklines=true,breakanywhere=true}\n"
+
+
+_LATEX_SPECIAL_CHARS = {
+    "&": r"\&", "%": r"\%", "$": r"\$", "#": r"\#", "_": r"\_",
+    "{": r"\{", "}": r"\}", "~": r"\textasciitilde{}",
+    "^": r"\textasciicircum{}", "\\": r"\textbackslash{}",
+}
+
+
+def _latex_escape(text: str) -> str:
+    return "".join(_LATEX_SPECIAL_CHARS.get(c, c) for c in text)
+
+
+def _custom_title_page_header() -> str:
+    """LaTeX that fully replaces \\maketitle with a hand-laid-out title
+    page: title, author, TITLE_PAGE_IMAGE, then edition, in that order.
+
+    Pandoc's own default template builds the title page from \\title/
+    \\author/\\date plus a \\subtitle hack that APPENDS the subtitle text
+    directly onto \\@title (so it always prints wherever \\@title itself
+    is used, immediately after the title) -- that structure can't put
+    the edition AFTER the author/image without rewriting \\maketitle
+    entirely, so this bypasses \\@title/\\@author/\\subtitle altogether
+    and hard-codes TITLE/AUTHOR/EDITION as literal (escaped) text
+    instead. -M title=/-M author= are still passed to pandoc separately
+    for the PDF's pdftitle/pdfauthor metadata, which is unrelated to
+    this visual layout.
+
+    An absolute path is used for the image deliberately -- pandoc's CWD
+    for the actual build is out_dir, not BOOK_DIR, so a path relative to
+    BOOK_DIR would resolve wrong once handed to LaTeX as a raw
+    \\includegraphics argument (unlike Markdown image links, which
+    _rewrite_image_links() already handles separately).
+
+    The image line is omitted (not a failed build) if TITLE_PAGE_IMAGE
+    isn't actually there.
+    """
+    image_line = ""
+    if os.path.isfile(TITLE_PAGE_IMAGE):
+        image_line = f"    \\includegraphics[width=0.85\\textwidth]{{{TITLE_PAGE_IMAGE}}}\\par\n"
+    else:
+        print(f"Note: {TITLE_PAGE_IMAGE} not found -- title page will have no image.", file=sys.stderr)
+
+    return (
+        "\\usepackage{graphicx}\n"
+        "\\usepackage{xcolor}\n"
+        "\\makeatletter\n"
+        "\\renewcommand{\\maketitle}{%\n"
+        "  \\begin{titlepage}\n"
+        "  \\pagecolor{black}\n"
+        "  \\color{white}\n"
+        "  \\begin{center}\n"
+        "    \\vspace*{2cm}\n"
+        f"    {{\\LARGE {_latex_escape(TITLE)} \\par}}\n"
+        "    \\vspace{4em}\n"
+        f"    {{\\large {_latex_escape(AUTHOR)} \\par}}\n"
+        "    \\vspace{3em}\n"
+        f"{image_line}"
+        "    \\vfill\n"
+        f"    {{\\large {_latex_escape(EDITION)} \\par}}\n"
+        "    \\vspace*{2cm}\n"
+        "  \\end{center}\n"
+        "  \\end{titlepage}\n"
+        "  \\pagecolor{white}\n"
+        "  \\color{black}\n"
+        "}\n"
+        "\\makeatother\n"
+    )
+
 
 def _ordered_source_files():
-    """dedication -> about_the_author -> chapter-01..22 (sorted,
-    zero-padded so this is also numeric order) -> the three appendices,
-    alphabetically. outline.md is excluded on purpose -- see module
-    docstring."""
+    """dedication -> about_the_author -> ai_use_statement ->
+    chapter-01..22 (sorted, zero-padded so this is also numeric order)
+    -> the three appendices, alphabetically. outline.md is excluded on
+    purpose -- see module docstring."""
     chapters = sorted(
         f for f in os.listdir(BOOK_DIR)
         if f.startswith("chapter-") and f.endswith(".md")
@@ -60,7 +139,7 @@ def _ordered_source_files():
         f for f in os.listdir(BOOK_DIR)
         if f.startswith("appendix-") and f.endswith(".md")
     )
-    return ["dedication.md", "about_the_author.md"] + chapters + appendices
+    return ["dedication.md", "about_the_author.md", "ai_use_statement.md"] + chapters + appendices
 
 
 def _rewrite_image_links(content: str, out_dir: str) -> str:
@@ -113,6 +192,11 @@ def render_pdf(md_path: str, out_dir: str, pdf_engine: str) -> bool:
     with a "Missing character" warning instead of failing loudly.
     """
     pdf_path_abs = os.path.abspath(os.path.join(out_dir, "omen-book.pdf"))
+    header_path = os.path.join(out_dir, "_pandoc-header.tex")
+    with open(header_path, "w", encoding="utf-8") as f:
+        f.write(_CODE_WRAP_HEADER)
+        f.write(_custom_title_page_header())
+
     cmd = [
         "pandoc",
         os.path.basename(md_path),
@@ -125,7 +209,8 @@ def render_pdf(md_path: str, out_dir: str, pdf_engine: str) -> bool:
         "-V", "mainfont=DejaVu Serif",
         "-V", "monofont=DejaVu Sans Mono",
         "-M", f"title={TITLE}",
-        "-M", f"author={AUTHOR}",
+        "-M", f"author={AUTHOR}",  # PDF pdftitle/pdfauthor metadata only -- the visual title page comes from _custom_title_page_header()
+        "--include-in-header", os.path.basename(header_path),
     ]
     try:
         subprocess.run(cmd, check=True, cwd=os.path.abspath(out_dir))
@@ -145,6 +230,8 @@ def render_pdf(md_path: str, out_dir: str, pdf_engine: str) -> bool:
             file=sys.stderr,
         )
         return False
+    finally:
+        os.remove(header_path)
     print(f"Wrote {pdf_path_abs}")
     return True
 
