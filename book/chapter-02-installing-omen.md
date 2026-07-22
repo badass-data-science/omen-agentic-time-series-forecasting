@@ -267,6 +267,42 @@ Chapter 1, showing up for the first time with a real result attached —
 and it's the *last* time in this book you'll see a series this small
 treated as anything other than a wiring test.
 
+One tool from that listing above is worth a quick, honest note before
+moving on, precisely because this book never actually uses it again:
+`generate_synthetic_data`. Every dataset from here forward is built by
+this book's own `generate_book_datasets.py`, which calls the same
+underlying generator directly for exact, seeded, reproducible control
+over trend/seasonality/noise parameters — a level of control this
+tool's simpler `out_path`/`n_days` interface doesn't expose. But if
+*you're* following along without a series of your own to point at,
+this is the tool that gets you one.
+
+**Prompt:**
+> I don't have my own series handy yet. Generate 90 days of synthetic
+> demand data to a CSV so I can try the other tools on something real.
+
+**What Comes Back** (a real result):
+
+```json
+{
+  "status": "ok",
+  "written_to": "/tmp/ts_data.csv",
+  "n_rows": 90,
+  "start_date": "2024-01-01",
+  "end_date": "2024-03-30"
+}
+```
+
+**What It Means:** A real 90-day series — trend, weekly and yearly
+seasonality, noise, a few injected anomalies, per the tool's own
+docstring — now sits on disk at a path every other `ts-analyst` tool
+can load directly. It's a genuinely useful on-ramp for exactly one
+situation: you want to kick the tires on this toolkit before you have
+real data of your own to bring to it. Once you do have real data, or
+once a specific example needs specific, reproducible parameters the way
+this entire book does, this tool has done its job and the rest of the
+pipeline takes it from here.
+
 ## What's Next
 
 The plumbing works. Chapter 3 puts it to actual use: real data, a real
