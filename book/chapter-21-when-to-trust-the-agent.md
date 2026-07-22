@@ -31,8 +31,8 @@ real, with a real reference back to where it happened:
   `revoke_autonomous_mode`** (Chapter 19): a second, independent gate,
   demonstrated live to flip from refusal to success to refusal again,
   purely by what a file on disk said at the moment of the call.
-- **`well_calibrated`** interval-coverage checks (Chapters 9, 14, 16):
-  a fixed tolerance band around nominal confidence, the same threshold
+- **`well_calibrated`** interval-coverage checks (Chapters 9, 16): a
+  fixed tolerance band around nominal confidence, the same threshold
   logic mirrored identically across `ts-forecaster` and `ts-monitor` on
   purpose (see `AGENTS.md`).
 - **`residuals_look_like_white_noise`** (Ljung-Box, Chapters 9-10): a

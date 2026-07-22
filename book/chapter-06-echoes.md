@@ -123,8 +123,34 @@ where this series stops being "significant" by the formal test — it
 keeps drifting down rather than snapping to zero or oscillating in a
 clean seasonal spike pattern. That slow, smooth decay is itself a
 diagnostic: it's the classic signature of a series that hasn't been
-freed of its own trend yet, which should sound familiar, because Chapter
-4 already told you this exact series is non-stationary.
+freed of its own trend yet — the same kind of persistence Chapter 4
+found on Death-Ray Revenue, though worth being precise that Chapter 4
+never actually tested *this* series. It's worth checking directly rather
+than assuming the family resemblance settles it.
+
+**What Comes Back** (a real result, `check_stationarity` run on this
+exact dry-cleaning series for the first time):
+
+```json
+{
+  "adf_p_value": 0.293, "adf_is_likely_stationary": false,
+  "kpss_p_value": 0.1, "kpss_is_likely_stationary": true,
+  "interpretation": "ADF and KPSS disagree: ADF fails to reject a unit root (non-stationary) but KPSS fails to reject stationarity. This combination is often inconclusive -- both tests can have limited power on short or borderline series; treat stationarity as genuinely uncertain rather than picking one test's verdict over the other."
+}
+```
+
+**What It Means:** Not the clean, one-sided verdict the ACF's slow decay
+alone might have led you to expect. ADF and KPSS genuinely disagree here
+— exactly Chapter 4's "investigate further" case, not its "both tests
+agree" one. That's a real, useful tension to sit with rather than
+smooth over: the ACF's shape is telling you something true about this
+series' persistence, and the formal stationarity tests are telling you
+something true about the genuine uncertainty in classifying that
+persistence definitively. Neither reading cancels the other out — a
+series can show strong, slowly-decaying autocorrelation *and* have an
+ambiguous formal stationarity verdict at the same time, and both facts
+are worth carrying forward rather than picking whichever one tells a
+tidier story.
 
 It gets more interesting — and more honest — when you go looking for the
 PACF's usual companion signature. For a textbook AR(1) process, PACF is
@@ -135,22 +161,21 @@ particular series returns values that are not just uninformative, they're
 valid `[-1, 1]` range entirely. That's not a bug in the reasoning, and it
 doesn't mean the tool is broken. It means the underlying recursion PACF
 estimation depends on becomes numerically unstable on a series this
-persistent and this close to a unit root — which is, once again, exactly
-the finding Chapter 4 already handed you, showing up a third time in a
-third completely different tool. Differencing this series first (the
-technique Chapter 10 covers properly) doesn't just make SARIMA's job
-easier; it's what makes a clean, trustworthy PACF reading possible at
-all. Consider this chapter's version of a running joke: every diagnostic
-in Part II keeps independently discovering the same fact about
-Death-Ray-Revenue-style trending data, and every one of them is telling
-you the same thing to do about it.
+persistent — a third, independent diagnostic (after the ACF's slow decay
+and the ADF/KPSS disagreement itself) all pointing at the same
+underlying property, even without a single tidy up-or-down verdict to
+hang it on. Differencing this series first (the technique Chapter 10
+covers properly) doesn't just make SARIMA's job easier; it's what makes
+a clean, trustworthy PACF reading possible at all.
 
 ## What's Next
 
-You've now watched the same series get flagged as non-stationary
-(Chapter 4), seasonal with a trend confound (Chapter 5), and highly
-persistent to the point of breaking a diagnostic that assumes
-stationarity (this chapter). Chapter 7 asks a different kind of
-question about a series — not "does it have structure," but "did
-something specific and unusual happen to it," and it's where anomaly and
-changepoint detection finally enter the book.
+You've now watched the same series produce a genuinely ambiguous formal
+stationarity verdict (this chapter), a trend confound in its seasonality
+detection (Chapter 5), and a slowly-decaying ACF with a numerically
+broken PACF beyond lag 1 (also this chapter) — three diagnostics, three
+different angles, no single one of them settling the question alone.
+Chapter 7 asks a different kind of question about a series — not "does
+it have structure," but "did something specific and unusual happen to
+it," and it's where anomaly and changepoint detection finally enter the
+book.

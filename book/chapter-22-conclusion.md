@@ -41,8 +41,9 @@ turned a `90%` coverage estimate on ten real days into an honest
 `[59.58%, 98.21%]`, that caught a real party night at `z=-9.05` while
 also, honestly, flagging an unrelated marginal miss at `z=-3.72` with no
 story behind it at all, and that found an ordinary, expected trend
-producing a "large" Cohen's d indistinguishable, by a fixed threshold
-alone, from a small nuisance blip.
+producing a "large" Cohen's d (`1.45`) that a fixed threshold alone
+couldn't distinguish from a genuine incident's even larger one
+(`11.91`).
 
 `ts-retrain` isn't "swap in the better model" — it's the layer that
 rejected a real, positive `3.07%` improvement for falling short of a
