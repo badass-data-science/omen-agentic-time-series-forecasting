@@ -84,6 +84,45 @@ def mojito_inventory_clean() -> pd.DataFrame:
     return df
 
 
+def mojito_inventory_month2_actuals() -> pd.DataFrame:
+    """Chapter 16's 'one month later' real observations: 30 days
+    (2024-07-01 to 2024-07-30, picking up exactly where
+    mojito_inventory_clean() ends) continuing the same trend/weekly/
+    yearly formula, with independently-seeded noise (seed=142, not a
+    continuation of mojito_inventory()'s own rng stream) and one
+    manually injected -90 draw-down on 2024-07-15 -- the "product
+    testing event" that monitoring has to distinguish from a systematic
+    forecast miss."""
+    t = np.arange(182, 212)
+    trend = 200.0 + 0.15 * t
+    weekly = 30.0 * np.sin(2 * np.pi * t / 7.0)
+    yearly = 50.0 * np.sin(2 * np.pi * t / 365.25)
+    rng = np.random.default_rng(142)
+    noise = rng.normal(0, 10.0, size=30)
+    values = trend + weekly + yearly + noise
+
+    dates = pd.date_range("2024-07-01", periods=30, freq="D")
+    df = pd.DataFrame({"date": dates, "value": values})
+    df.loc[14, "value"] -= 90.0  # 2024-07-15, the party
+    df["value"] = df["value"].clip(lower=0)
+    return df
+
+
+def mad_degenerate_edge_case() -> pd.DataFrame:
+    """Chapter 16's constructed edge case: 10 days of actuals paired
+    (in the chapter text) with a forecast whose residuals are
+    [0,0,0,0,0,0,5,-5,100,-3] -- 6 identical zero residuals (>= half),
+    which drives the residual-outlier check's median absolute deviation
+    to exactly 0 and masks the genuine 100-unit miss entirely (modified
+    z-score 0.0 for every point, verified live against the real tool).
+    This CSV holds only the ACTUAL values; the forecast dict is
+    constructed directly in the chapter/smoke test since
+    compare_forecast_to_actuals takes it as a literal argument, not a
+    second CSV."""
+    dates = pd.date_range("2024-08-01", periods=10, freq="D")
+    return pd.DataFrame({"date": dates, "value": [100.0] * 6 + [100.0, 100.0, 100.0, 100.0]})
+
+
 def mojito_inventory_constant() -> pd.DataFrame:
     """Chapter 3's zero-variance edge case: a week where the mojito
     count never changed, to show the honest null/null confidence
@@ -209,6 +248,8 @@ DATASETS = {
     "grumbling_level": grumbling_level,
     "mojito_inventory": mojito_inventory,
     "mojito_inventory_clean": mojito_inventory_clean,
+    "mojito_inventory_month2_actuals": mojito_inventory_month2_actuals,
+    "mad_degenerate_edge_case": mad_degenerate_edge_case,
     "mojito_inventory_constant": mojito_inventory_constant,
     "deathray_revenue": deathray_revenue,
     "deathray_revenue_slow_month": deathray_revenue_slow_month,
