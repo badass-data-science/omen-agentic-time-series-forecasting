@@ -1,4 +1,6 @@
-# Omen
+# Omen - An Agentic Time Series Forecasting Platform
+
+![noir-image](book/title-page-image.png)
 
 *Status: Alpha — hand-verified, not yet CI-enforced. The test suite
 (161 tests) is real and the book's worked examples were checked against
