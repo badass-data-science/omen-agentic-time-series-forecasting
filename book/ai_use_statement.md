@@ -1,3 +1,3 @@
 # AI Use Statement
 
-Only the most depraved of individuals would write a book about time series forecasting. Collaborating with an LLM to do so only adds to the debauchery!
+Only the most depraved of individuals write books about time series forecasting. Collaborating with LLMs to do so only completes the debauchery!
