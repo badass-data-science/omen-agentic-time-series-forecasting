@@ -1,5 +1,3 @@
-import pandas as pd
-
 from omen.data_prep import generate_synthetic_series
 from omen.monitor.monitor_tools import (
     compute_metrics,

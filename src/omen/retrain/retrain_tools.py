@@ -35,6 +35,7 @@ authorized autonomous mode.
 import json
 import os
 from datetime import datetime, timezone
+from typing import Callable, Optional
 
 DEFAULT_MANIFEST_FILENAME = "deployment_manifest.json"
 DEFAULT_AUTONOMOUS_MODE_FILENAME = "autonomous_mode.json"
@@ -42,7 +43,7 @@ DEFAULT_AUTONOMOUS_MODE_FILENAME = "autonomous_mode.json"
 _MODEL_TYPES = ("naive", "ets", "sarima", "gbt")
 
 
-def _manifest_path_for(csv_path: str, manifest_path: str = None) -> str:
+def _manifest_path_for(csv_path: str, manifest_path: Optional[str] = None) -> str:
     """Default manifest location: alongside the series CSV, unless an
     explicit path is given."""
     if manifest_path:
@@ -51,7 +52,7 @@ def _manifest_path_for(csv_path: str, manifest_path: str = None) -> str:
     return os.path.join(directory, DEFAULT_MANIFEST_FILENAME)
 
 
-def _autonomous_mode_path_for(csv_path: str, autonomous_mode_path: str = None) -> str:
+def _autonomous_mode_path_for(csv_path: str, autonomous_mode_path: Optional[str] = None) -> str:
     """Default autonomous-mode-record location: alongside the series CSV,
     unless an explicit path is given. Deliberately a SEPARATE file from
     the deployment manifest, not a field within it -- authorization and
@@ -67,8 +68,8 @@ def _autonomous_mode_path_for(csv_path: str, autonomous_mode_path: str = None) -
 def authorize_autonomous_mode(
     csv_path: str,
     authorized_by: str,
-    note: str = None,
-    autonomous_mode_path: str = None,
+    note: Optional[str] = None,
+    autonomous_mode_path: Optional[str] = None,
 ) -> dict:
     """Record that autonomous (unattended) retraining is authorized for
     this specific series. Call this ONLY after a human has explicitly
@@ -102,7 +103,7 @@ def authorize_autonomous_mode(
     return {"status": "ok", "written_to": path, "record": record}
 
 
-def revoke_autonomous_mode(csv_path: str, autonomous_mode_path: str = None) -> dict:
+def revoke_autonomous_mode(csv_path: str, autonomous_mode_path: Optional[str] = None) -> dict:
     """Remove any autonomous-mode authorization record for this series.
     After this, execute_redeploy(..., autonomous=True) calls for this
     series will refuse until authorize_autonomous_mode is called again.
@@ -117,7 +118,7 @@ def revoke_autonomous_mode(csv_path: str, autonomous_mode_path: str = None) -> d
     return {"status": "ok", "removed": None, "note": "No authorization record existed for this series."}
 
 
-def check_autonomous_mode(csv_path: str, autonomous_mode_path: str = None) -> dict:
+def check_autonomous_mode(csv_path: str, autonomous_mode_path: Optional[str] = None) -> dict:
     """Read whatever authorize_autonomous_mode last recorded for this
     series. Returns {"authorized": False, ...} -- NOT an error -- when
     nothing has been recorded, since "not authorized" is the default,
@@ -141,7 +142,7 @@ def record_deployment(
     params: dict,
     backtest_metrics: dict,
     horizon: int,
-    manifest_path: str = None,
+    manifest_path: Optional[str] = None,
 ) -> dict:
     """Persist a record of what's currently deployed: model type, params,
     the backtest metrics (from ts-forecaster) that justified deploying it,
@@ -166,7 +167,7 @@ def record_deployment(
     return {"status": "ok", "written_to": path, "manifest": manifest}
 
 
-def load_deployment_manifest(csv_path: str, manifest_path: str = None) -> dict:
+def load_deployment_manifest(csv_path: str, manifest_path: Optional[str] = None) -> dict:
     """Read back whatever record_deployment last wrote for this series.
     Returns an explicit error dict (not an exception) if nothing has been
     recorded yet, since "nothing deployed" is an expected, valid state
@@ -350,8 +351,8 @@ def execute_redeploy(
     autonomous: bool = False,
     date_col: str = "date",
     value_col: str = "value",
-    manifest_path: str = None,
-    autonomous_mode_path: str = None,
+    manifest_path: Optional[str] = None,
+    autonomous_mode_path: Optional[str] = None,
 ) -> dict:
     """Actually perform a redeploy: retrain `model_type` on the full series
     with `params` (delegating to the matching
@@ -444,7 +445,7 @@ def execute_redeploy(
 
     df = load_series(csv_path, date_col, value_col)
 
-    dispatch = {
+    dispatch: dict[str, Callable[..., dict]] = {
         "naive": forecast_tools.forecast_naive,
         "ets": forecast_tools.forecast_ets,
         "sarima": forecast_tools.forecast_sarima,

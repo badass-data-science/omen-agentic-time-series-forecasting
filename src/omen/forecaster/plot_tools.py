@@ -14,6 +14,7 @@ from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+from fastmcp.tools.tool import ToolResult
 
 from omen.plotting import render_plot
 
@@ -25,7 +26,7 @@ def plot_backtest(
     lower: Optional[list] = None,
     upper: Optional[list] = None,
     out_path: Optional[str] = None,
-):
+) -> ToolResult:
     """Plot actual vs. predicted values over a backtest holdout, with a
     shaded prediction-interval band if lower/upper bounds are supplied.
 
@@ -35,13 +36,13 @@ def plot_backtest(
     every model has an interval (e.g. fit_gradient_boosted_trees's
     backtest has none); when omitted, only the two lines are drawn.
     """
-    actuals = np.asarray(actuals, dtype=float)
-    predicted = np.asarray(predicted, dtype=float)
-    x = np.arange(1, len(actuals) + 1)
+    actuals_arr = np.asarray(actuals, dtype=float)
+    predicted_arr = np.asarray(predicted, dtype=float)
+    x = np.arange(1, len(actuals_arr) + 1)
 
     fig, ax = plt.subplots(figsize=(8, 4.5))
-    ax.plot(x, actuals, label="Actual", color="black", linewidth=1.5, marker="o", markersize=3)
-    ax.plot(x, predicted, label=f"{model_name} (predicted)", color="tab:blue", linewidth=1.5, marker="o", markersize=3)
+    ax.plot(x, actuals_arr, label="Actual", color="black", linewidth=1.5, marker="o", markersize=3)
+    ax.plot(x, predicted_arr, label=f"{model_name} (predicted)", color="tab:blue", linewidth=1.5, marker="o", markersize=3)
 
     has_interval = lower is not None and upper is not None
     if has_interval:
@@ -55,10 +56,10 @@ def plot_backtest(
     ax.legend(loc="best", fontsize=8)
     fig.tight_layout()
 
-    return render_plot(fig, out_path=out_path, n_points_plotted=len(actuals), interval_shown=has_interval)
+    return render_plot(fig, out_path=out_path, n_points_plotted=len(actuals_arr), interval_shown=has_interval)
 
 
-def plot_rolling_origin(origins: list, out_path: Optional[str] = None):
+def plot_rolling_origin(origins: list, out_path: Optional[str] = None) -> ToolResult:
     """Plot per-origin MAPE across a rolling_origin_backtest's walk-forward
     origins, with a shaded band showing the mean +/- one std across
     origins -- makes cross-origin instability (a model whose accuracy
@@ -100,7 +101,7 @@ def plot_rolling_origin(origins: list, out_path: Optional[str] = None):
     return render_plot(fig, out_path=out_path, n_origins_plotted=len(successful), mape_pct_mean=round(mean, 4), mape_pct_std=round(std, 4))
 
 
-def plot_search_sarima_orders(top_candidates: list, out_path: Optional[str] = None):
+def plot_search_sarima_orders(top_candidates: list, out_path: Optional[str] = None) -> ToolResult:
     """Plot AICc by candidate SARIMA order as a bar chart, so a razor-thin
     margin between the top candidates (which a table of decimals can
     hide) is visually obvious.

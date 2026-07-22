@@ -43,7 +43,6 @@ def test_plot_backtest_no_interval(sample_df):
 
 def test_plot_backtest_with_interval_and_out_path(sample_df, tmp_path):
     fit = fit_ets(sample_df, holdout_size=30)
-    n = len(fit["holdout_actuals"])
     lower = [v - 5 for v in fit["holdout_predicted"]]
     upper = [v + 5 for v in fit["holdout_predicted"]]
     out_path = str(tmp_path / "backtest.png")

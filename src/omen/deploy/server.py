@@ -12,6 +12,7 @@ Run over stdio (how OpenClaw will launch it), after `pip install -e .`:
 """
 
 from typing import Optional
+from fastmcp.tools.tool import ToolResult
 
 from fastmcp import FastMCP
 
@@ -298,7 +299,7 @@ def plot_forecast(
     out_path: Optional[str] = None,
     date_col: str = "date",
     value_col: str = "value",
-):
+) -> ToolResult:
     """Plot a series' history plus a deployed forecast_* result's own
     trajectory, with a shaded interval band wherever the forecast points
     carry lower/upper bounds. Returns the image INLINE (rendered directly
@@ -325,7 +326,7 @@ def plot_forecast(
     return _plot_forecast(df, forecast, out_path=out_path)
 
 
-def main():
+def main() -> None:
     """Entry point for the `ts-deploy-server` console script."""
     mcp.run()  # defaults to stdio transport, which is what OpenClaw expects
 

@@ -1035,10 +1035,10 @@ book's arc from "look before leaping" through "should you even redeploy."
   open-ended note
   a book about *forecasting* — not fortune-telling — should end on.
 - A short "where the toolkit itself goes next" section, pulled honestly
-  from Omen's own real, currently-open items (no CI pipeline yet, no
-  expiry on autonomous-mode grants, PyPI publishing still pending) rather
-  than invented future features — modeling, one last time, the book's own
-  running lesson about not overclaiming certainty.
+  from Omen's own real, currently-open items (no expiry on autonomous-mode
+  grants, PyPI publishing still pending) rather than invented future
+  features — modeling, one last time, the book's own running lesson about
+  not overclaiming certainty.
 
 **Sample prompts:**
 - "Summarize everything you now know about this series across all five

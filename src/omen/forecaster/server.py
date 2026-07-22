@@ -12,6 +12,7 @@ Run over stdio (how OpenClaw will launch it), after `pip install -e .`:
 """
 
 from typing import Optional
+from fastmcp.tools.tool import ToolResult
 
 from fastmcp import FastMCP
 
@@ -461,7 +462,7 @@ def plot_backtest(
     lower: Optional[list] = None,
     upper: Optional[list] = None,
     out_path: Optional[str] = None,
-):
+) -> ToolResult:
     """Plot actual vs. predicted values over a backtest holdout, with a
     shaded prediction-interval band if lower/upper bounds are supplied
     -- a visual complement to diebold_mariano_test's exact numbers, not
@@ -486,7 +487,7 @@ def plot_backtest(
 
 
 @mcp.tool()
-def plot_rolling_origin(origins: list, out_path: Optional[str] = None):
+def plot_rolling_origin(origins: list, out_path: Optional[str] = None) -> ToolResult:
     """Plot per-origin MAPE across a rolling_origin_backtest's walk-forward
     origins, with a shaded band showing the mean +/- one std -- makes
     cross-origin instability visually obvious rather than requiring a
@@ -503,7 +504,7 @@ def plot_rolling_origin(origins: list, out_path: Optional[str] = None):
 
 
 @mcp.tool()
-def plot_search_sarima_orders(top_candidates: list, out_path: Optional[str] = None):
+def plot_search_sarima_orders(top_candidates: list, out_path: Optional[str] = None) -> ToolResult:
     """Plot AICc by candidate SARIMA order as a bar chart, so a razor-thin
     margin between top candidates (easy to miss in a table of decimals)
     is visually obvious. Returns the plot as an inline image plus a
@@ -519,7 +520,7 @@ def plot_search_sarima_orders(top_candidates: list, out_path: Optional[str] = No
     return _plot_search_sarima_orders(top_candidates, out_path=out_path)
 
 
-def main():
+def main() -> None:
     """Entry point for the `ts-forecaster-server` console script."""
     mcp.run()  # defaults to stdio transport, which is what OpenClaw expects
 

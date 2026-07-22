@@ -10,6 +10,8 @@ withhold the most recent data to score against real values. Here there is
 nothing to score against -- the output is a forecast to actually use.
 """
 
+from typing import Any, Optional
+
 import numpy as np
 import pandas as pd
 from scipy.stats import norm as _norm
@@ -32,7 +34,7 @@ def _future_dates(df: pd.DataFrame, horizon: int) -> pd.DatetimeIndex:
     return pd.date_range(start=df["date"].iloc[-1], periods=horizon + 1, freq=freq)[1:]
 
 
-def _format_forecast(dates, values, lower=None, upper=None, cap: int = 60):
+def _format_forecast(dates: Any, values: Any, lower: Any = None, upper: Any = None, cap: int = 60) -> tuple:
     """Turn parallel arrays into a list of {date, forecast, lower?, upper?}
     dicts. If longer than `cap`, truncates to the first/last few and notes
     how many were omitted, so a long horizon doesn't blow up the agent's
@@ -56,7 +58,7 @@ def _format_forecast(dates, values, lower=None, upper=None, cap: int = 60):
     return rows, truncated
 
 
-def _aicc(aic: float, n: int, k: int):
+def _aicc(aic: float, n: int, k: int) -> Optional[float]:
     """Corrected AIC (Hurvich & Tsai, 1989) for small samples -- same
     formula and rationale as ts-forecaster's model_tools.py::_aicc,
     duplicated here (same pattern as _build_lag_features below) so this
@@ -70,7 +72,7 @@ def _aicc(aic: float, n: int, k: int):
     return round(aic + (2 * k * (k + 1)) / denom, 2)
 
 
-def _check_forecast_plausibility(df: pd.DataFrame, forecast_values, horizon: int) -> dict:
+def _check_forecast_plausibility(df: pd.DataFrame, forecast_values: Any, horizon: int) -> dict:
     """Automates the "does this trajectory look plausible" eyeball check
     that ts-deploy's SKILL.md Step 3 otherwise leaves entirely to the
     agent's judgment. Compares the forecast's implied change (endpoint vs.
@@ -94,7 +96,7 @@ def _check_forecast_plausibility(df: pd.DataFrame, forecast_values, horizon: int
     forecast_endpoint = float(forecast_values[-1])
     endpoint_change = forecast_endpoint - last_observed
 
-    result = {
+    result: dict = {
         "forecast_endpoint_change": round(endpoint_change, 4),
         "historical_min": round(float(values.min()), 4),
         "historical_max": round(float(values.max()), 4),
@@ -164,10 +166,10 @@ def _check_forecast_plausibility(df: pd.DataFrame, forecast_values, horizon: int
 def _fit_naive_values(df: pd.DataFrame, horizon: int, seasonal_period: int, method: str, confidence_level: float) -> dict:
     dates = _future_dates(df, horizon)
     last_value = df["value"].iloc[-1]
-    values_arr = df["value"].values
+    values_arr = df["value"].to_numpy(dtype=float)
 
     if method == "seasonal_naive" and len(df) >= seasonal_period:
-        tail = df["value"].iloc[-seasonal_period:].values
+        tail = df["value"].iloc[-seasonal_period:].to_numpy(dtype=float)
         reps = int(np.ceil(horizon / seasonal_period))
         point = np.tile(tail, reps)[:horizon]
         # In-sample SEASONAL differences (y_t - y_{t-m}) are this method's own
@@ -310,16 +312,16 @@ def forecast_ets(
 
 
 def _fit_sarima_values(
-    df: pd.DataFrame, horizon: int, order, seasonal_order, confidence_level: float
+    df: pd.DataFrame, horizon: int, order: Optional[list], seasonal_order: Optional[list], confidence_level: float
 ) -> dict:
-    order = tuple(order) if order else (1, 1, 1)
-    seasonal_order = tuple(seasonal_order) if seasonal_order else (1, 1, 1, 7)
+    order_tuple = tuple(order) if order else (1, 1, 1)
+    seasonal_order_tuple = tuple(seasonal_order) if seasonal_order else (1, 1, 1, 7)
 
     # Single-column DataFrame, not a Series -- avoids statsmodels' deprecated
     # in-place ndarray.shape= reshape (NumPy 2.5+ DeprecationWarning), which
     # only triggers for 1-D endog. See forecaster/model_tools.py::fit_sarima.
     model = SARIMAX(
-        df[["value"]], order=order, seasonal_order=seasonal_order, enforce_stationarity=False, enforce_invertibility=False
+        df[["value"]], order=order_tuple, seasonal_order=seasonal_order_tuple, enforce_stationarity=False, enforce_invertibility=False
     )
     fit = model.fit(disp=False)
 
@@ -334,8 +336,8 @@ def _fit_sarima_values(
         "lower": lower,
         "upper": upper,
         "dates": dates,
-        "order": order,
-        "seasonal_order": seasonal_order,
+        "order": order_tuple,
+        "seasonal_order": seasonal_order_tuple,
         "aic": float(fit.aic),
         "aicc": _aicc(float(fit.aic), len(df), len(fit.params)),
         "bic": float(fit.bic),
@@ -345,8 +347,8 @@ def _fit_sarima_values(
 def forecast_sarima(
     df: pd.DataFrame,
     horizon: int = 30,
-    order: list = None,
-    seasonal_order: list = None,
+    order: Optional[list] = None,
+    seasonal_order: Optional[list] = None,
     confidence_level: float = 0.95,
 ) -> dict:
     """Retrain SARIMA on the FULL series and forecast `horizon` steps
@@ -391,7 +393,7 @@ def _build_lag_features(df: pd.DataFrame, lags: list) -> pd.DataFrame:
 def _fit_gbt_values(
     df: pd.DataFrame,
     horizon: int,
-    lags: list,
+    lags: Optional[list],
     n_estimators: int,
     max_depth: int,
     learning_rate: float,
@@ -451,12 +453,18 @@ def _fit_gbt_values(
             [history, pd.DataFrame({"date": [current_date], "value": [point_pred]})], ignore_index=True
         )
 
+    point_arr = np.array(point_preds)
     lower_arr = np.array(lower_preds)
     upper_arr = np.array(upper_preds)
     # Independently-fit quantile models can cross (lower > upper),
     # especially with limited data -- guard against a physically
     # nonsensical interval before returning it.
     lower_arr, upper_arr = np.minimum(lower_arr, upper_arr), np.maximum(lower_arr, upper_arr)
+    # The point model is ALSO independently fit (squared-error loss, not
+    # quantile loss) -- nothing mathematically ties it to the quantile
+    # models, so it can legitimately fall outside their own interval.
+    # Same guard-don't-refit philosophy as the crossing fix above.
+    lower_arr, upper_arr = np.minimum(lower_arr, point_arr), np.maximum(upper_arr, point_arr)
 
     point_importances = {
         col: round(float(imp), 4) for col, imp in zip(feature_cols, point_model.feature_importances_)
@@ -474,10 +482,11 @@ def _fit_gbt_values(
     # n_bootstrap=0 is a legitimate, cheap opt-out (e.g. forecast_ensemble's
     # internal GBT fit uses it -- ensemble results never surface per-model
     # feature importances at all, so paying for the CI there is pure waste).
+    importances: dict[str, dict[str, Any]]
     if n_bootstrap > 0:
         rng = np.random.default_rng(seed)
         n_rows = len(feat)
-        boot_samples = {col: [] for col in feature_cols}
+        boot_samples: dict[str, list[float]] = {col: [] for col in feature_cols}
         for _ in range(n_bootstrap):
             idx = rng.integers(0, n_rows, size=n_rows)
             boot_model = GradientBoostingRegressor(
@@ -521,7 +530,7 @@ def _fit_gbt_values(
 def forecast_gradient_boosted_trees(
     df: pd.DataFrame,
     horizon: int = 30,
-    lags: list = None,
+    lags: Optional[list] = None,
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
@@ -589,8 +598,8 @@ def forecast_ensemble(
     df: pd.DataFrame,
     model_types: list,
     horizon: int = 30,
-    weights: list = None,
-    model_params: dict = None,
+    weights: Optional[list] = None,
+    model_params: Optional[dict] = None,
     confidence_level: float = 0.95,
 ) -> dict:
     """Combine two or more of this layer's own forecasts into a single
@@ -716,7 +725,8 @@ def forecast_ensemble(
         alpha = 1 - confidence_level
         z = float(_norm.ppf(1 - alpha / 2))
         combined_variance = np.zeros(horizon)
-        for (lo, up), weight in zip(interval_pairs, weights):
+        non_null_pairs = [iv for iv in interval_pairs if iv is not None]
+        for (lo, up), weight in zip(non_null_pairs, weights):
             sigma_i = (np.asarray(up, dtype=float) - np.asarray(lo, dtype=float)) / (2 * z)
             combined_variance += (weight**2) * (sigma_i**2)
         combined_sigma = np.sqrt(combined_variance)

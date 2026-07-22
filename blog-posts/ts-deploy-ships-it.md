@@ -50,7 +50,6 @@ Nobody had ever called any `forecast_*` tool with a one- or two-row series befor
 
 - **The ensemble's independence assumption stays unaddressed, on purpose.** Estimating the actual correlation between two models' errors would require exactly the kind of backtest ground truth Layer 3 doesn't have — that's Layer 2's job, not this one's. A future version that accepts an optional empirical correlation estimate *from* a Layer 2 comparison, rather than assuming independence blindly, would be a real improvement, but it's a genuine design question about how far a "pure function of its own inputs" tool should reach into another layer's output, not a quick fix.
 - **GBT's interval still doesn't know about its own compounding-error risk.** The quantile-regression interval described above is evaluated fresh at each recursive step against that step's own features — it doesn't widen the way a proper multi-step interval would to reflect the fact that step 20 is standing on the shoulders of nineteen previous guesses. A residual-bootstrap simulation of the whole recursive path, closer to how `forecast_ets` already derives its own interval, is the obvious next attempt, and a materially harder one to get right.
-- **No CI pipeline yet**, same unfinished business as every other layer in this project — it's been true since the introductory post and remains true here.
 
 ## Conclusion
 
