@@ -35,6 +35,21 @@ package.
   alternative is now backed by a real, code-checked authorization record
   rather than only a prose contract.
 
+## Learn more
+
+- **`book/`** -- *Forecasting for Supervillains*, a complete 22-chapter
+  e-book (plus glossary, tool reference, and further-reading appendices)
+  teaching time series forecasting through this toolkit, one concept per
+  chapter, each worked example run for real against the live MCP servers
+  rather than hand-typed. `book/examples/generate_book_datasets.py`
+  regenerates every dataset the book uses, deterministically, so its
+  numbers are reproducible rather than just asserted. Start at
+  `book/outline.md` or jump straight to `book/chapter-01-*.md`.
+- **`blog-posts/`** -- shorter, punchier write-ups covering the same
+  five layers, one post per layer plus an introductory overview.
+- **`prompts/testing-and-learning-prompts.md`** -- ready-to-use prompts
+  across all five layers for hands-on practice with your own data.
+
 ## Project layout
 
 ```
@@ -82,10 +97,20 @@ omen/
 │   ├── test_deploy_tools.py
 │   ├── test_monitor_tools.py
 │   └── test_retrain_tools.py
-└── blog-posts/                    # draft write-ups about this project, not part of the package
-    ├── introducing-omen.md
-    ├── ts-analyst-gets-a-statistics-degree.md
-    └── ts-forecaster-shows-its-work.md
+├── blog-posts/                    # draft write-ups about this project, not part of the package
+│   ├── introducing-omen.md
+│   ├── ts-analyst-gets-a-statistics-degree.md
+│   ├── ts-forecaster-shows-its-work.md
+│   ├── ts-deploy-ships-it.md
+│   ├── ts-monitor-learns-to-doubt-good-news.md
+│   └── ts-retrain-checks-its-papers.md
+├── prompts/                       # ready-to-use prompts for testing/learning each layer
+│   └── testing-and-learning-prompts.md
+└── book/                          # "Forecasting for Supervillains" e-book, not part of the package
+    ├── outline.md
+    ├── chapter-01-introducing-omen-and-agentic-ai.md ... chapter-22-conclusion.md
+    ├── appendix-a-glossary.md, appendix-b-tool-reference.md, appendix-c-further-reading.md
+    └── examples/generate_book_datasets.py  # regenerates every dataset the book uses
 ```
 
 ## What changed from the earlier ad-hoc layout
