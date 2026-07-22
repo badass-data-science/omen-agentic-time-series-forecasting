@@ -42,9 +42,17 @@ import sys
 BOOK_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 TITLE = "Agentic Time Series Forecasting for Supervillains"
-AUTHOR = "Emily Marie Williams"
+EDITION = "0th Edition"
+AUTHOR = "Emily Marie Williams, author of Omen"
 
 IMAGE_LINK_RE = re.compile(r"(!\[[^\]]*\]\()([^)\s]+)(\))")
+
+# Pandoc's code blocks (Shaded/Highlighting, via fancyvrb) don't wrap long
+# lines by default -- a JSON example wider than the page margin just runs
+# off the edge and gets cut off. fvextra's breaklines/breakanywhere fixes
+# this (see pandoc's own manual on the topic); there's no equivalent
+# -M/-V metadata flag for it, so it has to go in via --include-in-header.
+_LATEX_HEADER = "\\usepackage{fvextra}\n\\fvset{breaklines=true,breakanywhere=true}\n"
 
 
 def _ordered_source_files():
@@ -113,6 +121,10 @@ def render_pdf(md_path: str, out_dir: str, pdf_engine: str) -> bool:
     with a "Missing character" warning instead of failing loudly.
     """
     pdf_path_abs = os.path.abspath(os.path.join(out_dir, "omen-book.pdf"))
+    header_path = os.path.join(out_dir, "_pandoc-header.tex")
+    with open(header_path, "w", encoding="utf-8") as f:
+        f.write(_LATEX_HEADER)
+
     cmd = [
         "pandoc",
         os.path.basename(md_path),
@@ -125,7 +137,9 @@ def render_pdf(md_path: str, out_dir: str, pdf_engine: str) -> bool:
         "-V", "mainfont=DejaVu Serif",
         "-V", "monofont=DejaVu Sans Mono",
         "-M", f"title={TITLE}",
+        "-M", f"subtitle={EDITION}",
         "-M", f"author={AUTHOR}",
+        "--include-in-header", os.path.basename(header_path),
     ]
     try:
         subprocess.run(cmd, check=True, cwd=os.path.abspath(out_dir))
@@ -145,6 +159,8 @@ def render_pdf(md_path: str, out_dir: str, pdf_engine: str) -> bool:
             file=sys.stderr,
         )
         return False
+    finally:
+        os.remove(header_path)
     print(f"Wrote {pdf_path_abs}")
     return True
 
