@@ -100,7 +100,7 @@ Here's the gotcha this chapter promised, demonstrated rather than just asserted.
 
 **What It Means, and Why It Matters:** The single globally strongest frequency now has a period of `155.0` — which is not a coincidence, it's the **entire length of the series**. A strong, sustained trend behaves, spectrally, like an extremely long, slow cycle, and a periodogram cannot tell "genuinely repeats every three years" apart from "just kept going up the whole time" on the evidence of one series alone. The tool knows this is a live risk and reports `dominant_period_in_reported_range: false` plus an explicit warning in `interpretation` — this result is correctly *not* letting the trend masquerade as seasonality.
 
-Here's the exact same plot on the steep-trend series, and this is the single clearest illustration of the trap in the whole chapter:
+`ts-analyst__plot_periodogram` again, this time on the steep-trend series, and this is the single clearest illustration of the trap in the whole chapter:
 
 ![Periodogram of the steep-trend dry-cleaning series showing the global peak far outside the plausible range, with a much smaller in-range candidate marked separately](examples/images/drycleaning_bills_steep_periodogram.png)
 
