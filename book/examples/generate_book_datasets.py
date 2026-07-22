@@ -280,6 +280,18 @@ def power_consumption() -> pd.DataFrame:
     return df
 
 
+def self_destruct_timer() -> pd.DataFrame:
+    """Chapter 19: 45 days of Self-Destruct Countdown Timer Adjustments,
+    a modest, gently declining series. This chapter is about who's
+    allowed to authorize execute_redeploy, not about forecasting this
+    series well -- it exists mainly as a real csv_path for the
+    authorization/redeploy sequence to run against."""
+    return generate_synthetic_series(
+        n_days=45, seed=42, base_level=90.0, trend_per_day=-0.3,
+        weekly_amplitude=2.0, yearly_amplitude=0.0, noise_std=1.5,
+    )
+
+
 def minion_overtime() -> pd.DataFrame:
     """Chapter 11: 400 days of Minion Overtime Hours, with a strong
     weekly cycle (weekend cover) and a milder yearly one (year-end
@@ -314,6 +326,7 @@ DATASETS = {
     "interpol_attention": interpol_attention,
     "interpol_attention_shifted": interpol_attention_shifted,
     "power_consumption": power_consumption,
+    "self_destruct_timer": self_destruct_timer,
     "minion_overtime": minion_overtime,
 }
 
