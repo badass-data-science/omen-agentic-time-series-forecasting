@@ -90,7 +90,7 @@ three genuinely different real questions this book has already answered
 three genuinely different real ways, depending on which layer is meant:
 
 - As a **Layer 2 model-selection** question — "does SARIMA still beat
-  the alternatives on a fresh backtest" — Chapter 12's real
+  the alternatives on a fresh backtest" — Chapter 15's real
   Diebold-Mariano result says ETS significantly beats SARIMA on
   Death-Ray Revenue (`p=0.006`).
 - As a **Layer 4 production-monitoring** question — "is the currently

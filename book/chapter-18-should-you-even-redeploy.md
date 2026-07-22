@@ -36,8 +36,12 @@ narrative sounds, can't be talked into anything.
 > flattened growth. Does it clear the redeploy threshold against what's
 > currently deployed?
 
-The currently-deployed model is real: Chapter 15's ETS(add, mul, 7),
-recorded via `record_deployment` at `5.5511%` MAPE (CI `[4.699, 6.5239]`).
+The currently-deployed model is real: the same ETS(add, mul, 7)
+configuration Chapter 9 found well-calibrated and Chapter 15's DM-test
+search confirmed as the outright winner against every other real
+candidate — refit fresh here to get precise current numbers for the
+deployment record, `record_deployment` at `5.5511%` MAPE (CI `[4.699,
+6.5239]`).
 
 **What Comes Back** (a real result — the same ETS configuration, freshly
 refit on the series extended through the rival's price war):
