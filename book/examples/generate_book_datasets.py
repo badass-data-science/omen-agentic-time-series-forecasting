@@ -261,6 +261,23 @@ def interpol_attention_shifted() -> pd.DataFrame:
     return df
 
 
+def interpol_attention_train() -> pd.DataFrame:
+    """Chapter 17's pre-escalation training history: the first 83 of
+    interpol_attention()'s 91 weeks -- what a deployed ETS model would
+    have been backtested/deployed against before the real +300 shift
+    (interpol_attention_shifted()'s last 8 weeks) happened. Feeds
+    recommend_retraining's real 2.40% backtest MAPE and retrain_now
+    verdict. Round-trips through CSV text first (see
+    mojito_inventory_clean's docstring for why this matters for exact
+    byte-for-byte reproduction)."""
+    import io
+    buf = io.StringIO()
+    interpol_attention().to_csv(buf, index=False)
+    buf.seek(0)
+    df = pd.read_csv(buf, parse_dates=["date"])
+    return df.iloc[:83].reset_index(drop=True)
+
+
 def power_consumption() -> pd.DataFrame:
     """Chapter 7: 250 days of Secret Lab(tm) Power Consumption, with a
     real injected +500 single-day spike (the death ray misfire, day
@@ -326,6 +343,7 @@ DATASETS = {
     "drycleaning_bills_steep_trend": drycleaning_bills_steep_trend,
     "interpol_attention": interpol_attention,
     "interpol_attention_shifted": interpol_attention_shifted,
+    "interpol_attention_train": interpol_attention_train,
     "power_consumption": power_consumption,
     "self_destruct_timer": self_destruct_timer,
     "minion_overtime": minion_overtime,

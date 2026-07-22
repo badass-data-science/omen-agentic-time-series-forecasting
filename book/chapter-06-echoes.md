@@ -128,6 +128,11 @@ found on Death-Ray Revenue, though worth being precise that Chapter 4
 never actually tested *this* series. It's worth checking directly rather
 than assuming the family resemblance settles it.
 
+**Prompt:**
+> The ACF's slow decay looks like the same non-stationary signature
+> Chapter 4 found on a different series. Don't assume it — run
+> `check_stationarity` on this dry-cleaning series directly.
+
 **What Comes Back** (a real result, `check_stationarity` run on this
 exact dry-cleaning series for the first time):
 

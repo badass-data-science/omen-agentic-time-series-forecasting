@@ -26,7 +26,13 @@ seasonal_naive vs gbt:      p=0.0315  significant, favors gbt
 naive vs ets:                p=0.0021  significant, favors ets
 naive vs sarima:             p=0.0019  significant, favors sarima
 sarima vs ets:                p=0.0060  significant, favors ets
+seasonal_naive vs ets:        p=0.0009  significant, favors ets
 ```
+
+(Two more pairs — naive-vs-seasonal_naive and SARIMA-vs-seasonal_naive
+— were already established in Chapter 12; all ten possible pairs among
+these five candidates have now, between the two chapters, actually been
+run.)
 
 **What It Means:** Every single pair, across all five real candidates
 built up over Chapters 8 through 11, comes back statistically
@@ -36,8 +42,9 @@ setup for this chapter's demonstration. That's not what the real test
 found: ETS beats SARIMA outright, at `p=0.006`. On this series, with
 these candidates, there simply isn't a legitimate close call to point
 to. ETS(add, mul, 7) — Chapter 9's well-calibrated multiplicative
-model — beats everything else it was tested against. The rigorous,
-data-driven answer, followed all the way through, is: deploy ETS alone.
+model — beats everything else it was tested against, every single pair
+checked. The rigorous, data-driven answer, followed all the way
+through, is: deploy ETS alone.
 
 That's a genuinely useful thing to know before touching this chapter's
 main tool at all, and it reframes what this chapter actually needs to
