@@ -55,6 +55,15 @@ Mid-month, an unplanned "product testing event" — a party — drew down the la
 
 **What It Means, Part Three — the Finding Worth Not Skipping Past:** The outlier check flagged a *second* day too: July 30, the very last day of the elapsed horizon, with a residual of `-36.93` and a modified z-score of `-3.72` — just past the threshold, nowhere near as dramatic as the party day's `-9.05`. There's no known event behind this one. It's simply the forecast's error having grown, unremarkably, toward the far end of the horizon — the ordinary kind of miss a fixed 30-day-out forecast is expected to accumulate, that happened to land just past this particular statistical threshold. This is worth sitting with: not every flagged date comes with a tidy explanation attached, and treating "flagged as an outlier" as synonymous with "found the special event" would have been a mistake here. `metrics_excluding_outliers` excludes *both* days, which is exactly correct mechanically — but reading that improved `3.94%` MAPE as "the model is fine except for one known incident" would overstate the case. Some of what's being excluded is just an unremarkable single low draw over toward the edge of the horizon, not a second incident requiring its own explanation.
 
+**Prompt:**
+> Plot the full month's forecast against what actually happened.
+
+**What Comes Back** (a real render, `ts-monitor__plot_forecast_vs_actuals` on the same forecast and the full month of real observations):
+
+![The mojito SARIMA forecast's trajectory and interval band, with the real July observations overlaid — a sharp downward spike on July 15 breaks well outside the band, and a smaller miss is visible on the last day of the month](examples/images/mojito_forecast_vs_actuals.png)
+
+**What It Means:** The party is visible without reading a single number — a single point punching clean through the interval band on July 15, exactly where the `-9.05` modified z-score said it would be. The July 30 miss is there too, real but genuinely smaller, a modest gap between the actual line and the forecast rather than a dramatic break — visually consistent with Part Three's point that not every flagged day deserves equal alarm. This is the honest use case for a plot like this one: it can't tell you a residual is `9.05` modified-z-scores away from the median, but it can tell you, at a glance, that two specific days are worth asking about and the other twenty-eight aren't — which is exactly the triage step before you go read the exact numbers, not a replacement for reading them.
+
 ## A Real, Deliberately Constructed Failure Mode
 
 The residual-outlier check's own documentation names a specific, non-hypothetical limitation: if half or more of a month's residuals are *exactly* identical, the median absolute deviation the check is built on can collapse to exactly zero — and when it does, every point's modified z-score collapses to zero along with it, regardless of how extreme any single remaining residual actually is. Worth confirming this really happens rather than taking the docstring's word for it.

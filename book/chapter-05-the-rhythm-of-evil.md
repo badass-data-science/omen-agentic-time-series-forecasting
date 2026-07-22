@@ -27,6 +27,12 @@ Before searching for a period, it's worth seeing what a decomposition looks like
 
 **What It Means:** Both `trend_strength` and `seasonal_strength` are on a 0–1 scale, and both came back close to 1 here — this series really is mostly explained by "it's slowly growing" plus "it swells every autumn," with only `0.0021` of the variance left over as genuine noise. That's an honest, clean result for synthetic data built with exactly those two ingredients. Real accounts-payable data won't usually look this tidy — but when it doesn't, these same two numbers tell you plainly how much of the mess is *actually* unexplained, rather than leaving you to eyeball a chart and guess.
 
+`ts-analyst__plot_seasonal_decomposition` renders exactly this split — observed series, trend, seasonal, and residual stacked so you can see what `0.99`/`1.00`/`0.0021` actually look like, not just read them:
+
+![Additive decomposition of dry-cleaning bills into observed, trend, seasonal, and residual components](examples/images/drycleaning_bills_decomposition.png)
+
+Look at the residual panel at the bottom: small, scattered, no visible pattern left in it — which is exactly what a `residual_variance_share` of `0.0021` should look like on a chart. If that panel still showed an obvious wave or drift, that would be a real contradiction worth chasing down — the JSON fields are what actually got computed; the plot is only a faster way to see what they already established, never a second, independent opinion.
+
 There's a catch buried in that prompt, though, and it's the catch this chapter exists to fix: it assumed a 52-week period. Where would that number have come from, if nobody already knew to expect a Halloween pattern?
 
 ## Finding the Period Instead of Guessing It
@@ -58,6 +64,12 @@ There's a catch buried in that prompt, though, and it's the catch this chapter e
 
 **What It Means:** Without being told anything about Halloween, the tool found a dominant cycle at `51.67` weeks — as close to 52 as a periodogram built from finite, noisy weekly data is going to land — and that single candidate accounts for `73.8%` of the total spectral power in the series. The runner-up candidates are nowhere close (`0.6%` and below), so this isn't a photo finish.
 
+`ts-analyst__plot_periodogram` draws the curve `detect_seasonality_period` searched, with the dominant period marked directly on it:
+
+![Periodogram of dry-cleaning bills showing a single sharp peak near period 52](examples/images/drycleaning_bills_periodogram.png)
+
+One sharp, unmistakable spike near `52`, dwarfing everything else on the curve — this is what `73.8%` of total spectral power concentrated in a single candidate actually looks like, and it's a much faster way to confirm "this isn't a photo finish" than scanning five decimal numbers in `top_candidate_periods`. Because the true dominant period here also happens to land inside the plausible range, the global-strongest marker and the top-in-range marker coincide, so the plot only shows one line — the second marker only appears distinctly once those two markers disagree, which is exactly what happens next.
+
 The mechanism behind this is a **periodogram**: a decomposition of the series into how much of its variance is explained by cycles of every possible period, the same underlying idea as a Fourier transform applied to time series data. `is_significant_periodicity: true` comes from a formal test on top of that periodogram — **Fisher's g-test** (1929), which asks whether the single strongest candidate frequency is stronger than you'd expect from pure noise alone, not just "is it the biggest number in the list." A p-value of essentially zero here means: no, this isn't noise producing a plausible-looking peak by chance.
 
 ## The Trap: When the Trend Wins the Periodogram
@@ -87,6 +99,12 @@ Here's the gotcha this chapter promised, demonstrated rather than just asserted.
 ```
 
 **What It Means, and Why It Matters:** The single globally strongest frequency now has a period of `155.0` — which is not a coincidence, it's the **entire length of the series**. A strong, sustained trend behaves, spectrally, like an extremely long, slow cycle, and a periodogram cannot tell "genuinely repeats every three years" apart from "just kept going up the whole time" on the evidence of one series alone. The tool knows this is a live risk and reports `dominant_period_in_reported_range: false` plus an explicit warning in `interpretation` — this result is correctly *not* letting the trend masquerade as seasonality.
+
+Here's the exact same plot on the steep-trend series, and this is the single clearest illustration of the trap in the whole chapter:
+
+![Periodogram of the steep-trend dry-cleaning series showing the global peak far outside the plausible range, with a much smaller in-range candidate marked separately](examples/images/drycleaning_bills_steep_periodogram.png)
+
+Now the two markers split apart. The red dashed line — the global strongest frequency — sits all the way out at `155`, off at the edge where a period equal to the entire series length lives, nowhere near the modest bump the green dotted line marks inside the actual plausible range. On the clean series a moment ago, the true annual cycle *was* the tallest peak on the whole curve; here, the tallest peak on the whole curve is the trend, and the real seasonal signal is reduced to a minor, unremarkable ripple by comparison — visible proof of the "sufficiently dominant trend can corrupt a seasonality search" finding below, not just an assertion of it.
 
 But look closely at what happened to the *rest* of the candidate list. With the gentler trend, the true ~52-week cycle stood out clearly even among the in-range candidates. With the steep trend, none of the top five in-range candidates is anywhere near 52 weeks anymore — the trend distorted the whole periodogram badly enough to bury the real signal even within the "sane" range, not just at the very top. The honest lesson here is a bit more demanding than "ignore the top result if it's out of range": a sufficiently dominant trend can corrupt a seasonality search more thoroughly than that one safeguard alone can catch. This is exactly why Chapter 4's stationarity check belongs *before* this chapter's seasonality search in any real workflow, not after it — a series this non-stationary should generally be differenced first, precisely so its trend stops competing with its seasonality for the periodogram's attention.
 

@@ -31,6 +31,14 @@ A **naive** forecast just repeats the last observed value, forever. A **seasonal
 
 **What It Means:** Flat naive wins here — `17.46%` MAPE against seasonal-naive's `19.98%` — and it's worth pausing on *why*, because it's not simply "flat naive is generally better." `seasonal_period_assumed: 7` was never actually established for this series. Nothing in Chapter 4's work on Death-Ray Revenue found a 7-week cycle — that's just the tool's default. Chapter 1 already told you the rule this violates: carry Layer 1's findings forward into Layer 2 rather than accepting an unexamined default. Repeating "whatever happened 7 weeks ago" on a series that's mostly just trending upward means anchoring your forecast to an older, systematically *lower* point — worse than anchoring to the most recent value, precisely because the series keeps climbing. An unjustified seasonal assumption didn't just fail to help here; it actively hurt.
 
+`ts-forecaster__plot_backtest`, run on each baseline's real holdout arrays from the result above, makes the shape of that mistake visible instead of just numerical:
+
+![Naive baseline vs. actual Death-Ray Revenue over the 30-week holdout](examples/images/ch08_naive_backtest.png)
+
+![Seasonal-naive baseline vs. actual Death-Ray Revenue over the same holdout](examples/images/ch08_seasonal_naive_backtest.png)
+
+Flat naive's line sits flush against the last training value and never moves — it doesn't need to be right about the future, just steady, and steady turns out to be the better bet here. Seasonal-naive's line visibly saws up and down, repeating the same seven-day pattern from a week that was already lower than where the series has climbed to by the time each forecast point lands — you can *see* the systematic under-prediction the prose above described, not just read the MAPE gap that resulted from it.
+
 ## The Bootstrap CI Is Doing More Work Than It Looks Like
 
 Look again at the two MAPE confidence intervals: naive's is `[14.53%, 20.28%]`; seasonal-naive's is `[17.17%, 22.82%]`. The point estimates (`17.46` vs `19.98`) look like a clean, decisive win. The intervals tell a less tidy story — they overlap substantially, across almost the entire `17.17`–`20.28` range. A 30-point holdout's error estimate has real sampling uncertainty of its own, and these two intervals overlapping is a warning sign worth taking seriously: it's not yet safe to conclude, from this alone, that naive would *reliably* beat seasonal-naive on a different 30-week stretch of similar data.

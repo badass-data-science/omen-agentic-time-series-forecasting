@@ -50,6 +50,12 @@ SARIMA is where the notation this book has been building toward finally gets a n
 
 Look instead at what this search's own `interpretation` flagged on its own: the top two candidates, `(1,1,2)` at AICc `546.52` and `(2,1,2)` at AICc `547.12`, are separated by less than a single point — a margin the tool itself calls out as close enough to warrant a proper significance test rather than trusting the ranking blind. That's Chapter 12's job, not this chapter's, and this search result is exactly the kind of situation it exists for.
 
+`ts-forecaster__plot_search_sarima_orders`, run on this exact real search result, makes that margin obvious at a glance rather than something you have to notice by comparing decimals:
+
+![AICc by candidate SARIMA order — the top two bars are nearly the same height, the rest clearly worse](examples/images/ch10_sarima_search.png)
+
+The y-axis here is deliberately zoomed to the candidates' actual spread rather than starting at zero — starting at zero would visually flatten exactly the near-tie this plot exists to surface. The gap between `(1,1,2)` and the third-place `(0,1,2)` is unmistakable; the gap between first and second place barely registers as a gap at all.
+
 ## Verifying the Winner Properly
 
 `search_sarima_orders` deliberately doesn't crown a winner and hand it to you pre-approved — its own top candidates report only a stripped-down `backtest_metrics` summary, not the full picture. Confirming the choice means calling `fit_sarima` directly on it.

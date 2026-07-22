@@ -50,6 +50,17 @@ Here is the detail worth dwelling on, because it's a mistake that's easy to make
 
 Worked out with the real numbers above: using the correct non-missing count of 177 gives an interval width of about 8.51. Using the raw row count of 182 instead — the mistake — gives a width of about 8.39. That's a small difference here, because only 5 of 182 days were missing. It would not stay small on a series with real gaps — a data feed that drops a third of its days, say, during an infrastructure outage — and the direction of the error is always the same: **more missing data, silently treated as if it weren't missing, always makes the reported interval too confident.** Omen's `basic_stats` uses the correct non-missing count specifically to avoid this, and now you know why that was a deliberate choice, not an accident of which function happened to be convenient to call.
 
+It's worth actually looking at those five missing days rather than just knowing the count. `ts-analyst__plot_series` renders the raw series with any gaps shown as real breaks in the line, not smoothed over:
+
+**Prompt:**
+> Plot the raw mojito inventory series so I can see where "the incident" actually happened.
+
+**What Comes Back** (a real image, rendered inline):
+
+![Mojito inventory series with five missing days visible as gaps in the line](examples/images/mojito_inventory_series.png)
+
+**What It Means:** Five real breaks in the line, not five points quietly interpolated into a smooth curve — the plot shows exactly what `n_missing_values: 5` already told you, just easier to spot at a glance than a number in a JSON field. That's the whole job of every plotting tool in this book: the picture never claims anything the numbers haven't already established, it just makes an established finding faster to see. If this plot ever showed a smooth, gap-free line despite `basic_stats` reporting missing values, that would be a bug worth reporting, not a reason to trust the picture over the number.
+
 ## When There's Nothing to Be Unsure About
 
 One more edge case worth seeing with your own eyes before this chapter moves on, because it looks like a bug the first time you encounter it and is actually the tool being scrupulously honest. Imagine a week where the mojito count genuinely never changed — a suspiciously calm week, inventory-wise:

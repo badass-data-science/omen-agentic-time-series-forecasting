@@ -57,6 +57,15 @@ One consequence worth flagging explicitly: the `aicc` this layer reports is **no
 
 **What It Means:** This book's outline expected the naive floor to be the honest, dramatically-widest interval of the three — the textbook "admit you know nothing" baseline. That's not what actually happened here. ETS's *simulated* interval is more than twice as wide as naive's analytic one by day 30, and nearly five times wider than SARIMA's. It's worth understanding why rather than just noting it: naive's interval formula scales a single fixed residual standard deviation by `sqrt(horizon)` — smooth, bounded growth by construction. ETS's interval comes from actually simulating hundreds of future paths forward through a model with its own trend and seasonal dynamics, and letting those paths' own spread at day 30 define the interval — which can genuinely diverge much further than a simple textbook scaling formula would, especially for a model whose components (as Chapter 9 already found, on a different series) aren't necessarily well-calibrated to begin with. SARIMA's analytic interval, by contrast, comes out narrowest — not because it's more careful, but because it's a direct property of this specific fitted state-space model's own math on this specific series. None of the three interval-construction strategies is inherently the most honest one. Which is widest is an empirical question, answered fresh every time, not something to assume in advance from which model sounds simplest.
 
+**Prompt:**
+> Plot the deployed SARIMA forecast against the mojito series' own history.
+
+**What Comes Back** (a real render, `ts-deploy__plot_forecast` on the exact SARIMA forecast above):
+
+![Secret Lab™ mojito inventory: 182 days of history followed by a 30-day SARIMA forecast with its analytic prediction interval shaded around it](examples/images/mojito_sarima_forecast.png)
+
+**What It Means:** This is the same day-30 numbers from the table above, just drawn instead of tabulated — the history's own weekly wobble, the forecast picking up roughly where it left off, and SARIMA's comparatively narrow interval band hugging the trajectory rather than ballooning outward the way ETS's would. A picture doesn't tell you anything the JSON didn't already say more precisely; what it adds is the thing a table of four numbers can't: an immediate, gut-level sense of whether this trajectory looks like a plausible continuation of the lab's mojito habits, which is exactly the judgment call `plausibility_check` exists to formalize and this image exists to make faster to form an opinion about before reading that field.
+
 ## The Recursive Forecast, Compared at Two Horizons
 
 **Prompt:**

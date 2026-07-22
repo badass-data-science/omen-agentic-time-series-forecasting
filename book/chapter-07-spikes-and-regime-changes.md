@@ -47,6 +47,12 @@ The robust version swaps in a **rolling median and median absolute deviation (MA
 
 This isn't a story about the robust detector being free of tradeoffs, though — worth being honest about the rest of that output. It also flagged two *additional* days (April 27th and May 11th) that the classic detector never mentioned, both well short of the spike's own magnitude. Being less bluntable by outliers cuts both ways: a MAD-based local baseline can also be tight enough, during an ordinarily quiet stretch, to flag an ordinary bit of noise as unusual by comparison. This isn't a flaw to paper over — it's the actual, honest cost of the fix, and deciding whether that cost is acceptable for a given series is a real judgment call, not something either detector makes for you.
 
+`ts-analyst__plot_anomalies` marks the robust detector's three flagged points directly on the series:
+
+![Power consumption series with three anomalies flagged by the robust detector: one dramatic spike and two smaller points](examples/images/power_consumption_anomalies.png)
+
+One point towers over everything else on the chart — April 10th, exactly as dramatic to the eye as its `27.887` score suggested it should be. The other two flagged points, by contrast, barely register visually against the ordinary noise around them; they're real, correctly-flagged departures from a tight local baseline, but nothing about them would catch your attention if the plot weren't marking them for you. That gap between "obviously anomalous by eye" and "anomalous by the numbers, but easy to miss without help" is exactly the honest tradeoff the paragraph above just described, made visible rather than just argued.
+
 ## Finding the Regime Change
 
 Neither anomaly detector, notice, said anything about the Lab's newly annexed equipment permanently raising the baseline. That's not a miss — it's not what they were built to look for. For that, this chapter needs a genuinely different tool.
@@ -76,6 +82,12 @@ Neither anomaly detector, notice, said anything about the Lab's newly annexed eq
 ```
 
 **What It Means:** One real changepoint, found exactly where the shift actually happened — May 30th, not April 10th. The mean level moved from `214.14` to `286.995`, a Cohen's d of `2.0` (a large effect by conventional standards), with a p-value of `0.002`. Just as importantly: the detector did **not** flag April 10th's spike as a changepoint. That single wild day, however dramatic in isolation, didn't represent a lasting shift in the series' baseline — it was gone the next day — and a good changepoint detector needs to see that difference clearly, not treat every large deviation as evidence of the same kind of event.
+
+`ts-analyst__plot_changepoints` shades the series on either side of the real break:
+
+![Power consumption series with a single changepoint marked on May 30th, segments shaded differently before and after](examples/images/power_consumption_changepoints.png)
+
+This is the same series as the anomaly plot above, and it's worth looking at both side by side: April 10th's spike, so visually dominant in the first plot, doesn't even get a mark here — correctly, since it's a single point, not a lasting shift. What this plot marks instead is something the anomaly plot couldn't have shown you at all: two visibly different baselines, a calmer one on the left of the dashed line and a noticeably higher one on the right, the kind of shift that's genuinely hard to spot day-to-day but obvious once a full stretch on either side is shaded and compared.
 
 Under the hood, this uses **binary segmentation** with a standardized CUSUM (cumulative sum) statistic to locate candidate breaks, and a **permutation test** — rather than a closed-form formula — to assign each candidate a p-value. A permutation test works by repeatedly shuffling the series' own values, recomputing the same CUSUM statistic on each shuffle, and asking how often a shuffle produces something at least as extreme as what the real, unshuffled data produced. It's exact by construction (no distributional assumption to get subtly wrong), at the cost of needing many resamples — Omen runs 500 by default, seeded for reproducibility, so re-running this exact check gives you the exact same p-value back every time.
 

@@ -36,6 +36,12 @@ One constraint worth knowing before running it: it needs at least `holdout_size 
 
 **What It Means:** The headline number — `4.04%` mean MAPE — looks excellent, competitive with the best single-window results from Chapters 9 and 10. It is also, on its own, misleading. MAPE ranges from `0.86%` at the most recent origin all the way up to `8.77%` two origins earlier — a nearly ten-fold spread — and the tool's own instability check agrees: a relative spread (coefficient of variation) of `0.79` clears its `0.5` threshold for flagging real cross-origin instability, not just noise. This is exactly the scenario this chapter's third learning objective warns about: a good average can sit directly on top of a genuinely unstable model, and the average alone will never tell you that.
 
+`ts-forecaster__plot_rolling_origin`, run on this exact real result, turns that table into something you can see instead of having to trace through five rows by hand:
+
+![Per-origin MAPE across the 5-origin rolling backtest, with the mean +/- 1 std band shaded](examples/images/ch13_rolling_origin.png)
+
+The middle bar breaking above the shaded band, on both sides of it, is the whole finding in one glance — a model whose accuracy visibly swings depending on which stretch of the series you happened to test it against, not a smooth trend with one outlier easily explained away.
+
 ## An Honest Look at *Why*, Without Forcing a Tidy Story
 
 This book's outline originally planned a specific narrative for this instability — a bidding war driving one window's numbers unusually good, a publicized malfunction driving another unusually bad. That's not what's actually in this series; Death-Ray Revenue's data was never built with either event, and pretending otherwise here would mean writing fiction into a chapter about respecting what a real backtest actually shows you.

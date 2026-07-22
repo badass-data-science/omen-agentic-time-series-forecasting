@@ -22,6 +22,12 @@ Interpol Attention Level is a weekly "heat" index the Secret Lab™ tracks about
 
 **What It Means:** `drift_detected: true`, and — worth pausing on this — `mean_shift_cohens_d: 1.45` isn't a marginal effect size. By the conventional textbook bins (small ≈ 0.2, medium ≈ 0.5, large ≈ 0.8), `1.45` is comfortably **large**. This is worth being honest about, because it complicates a tempting assumption: that an ordinary, well-understood trend should only ever produce a small, easily-dismissed effect size, while a real problem produces a large one. That assumption is false, demonstrated with real numbers, on real data. A perfectly ordinary, fully-expected trend — nothing anomalous about it at all — can by itself produce a large Cohen's d. The effect size here is doing exactly what it's supposed to: correctly reporting that these two windows really are quite different from each other. It says nothing about *why* they're different, and "why" is precisely the judgment call this book keeps insisting a human or agent make, not the test.
 
+**What Comes Back** (a real render, `ts-monitor__plot_drift` on the same unmodified series and windows):
+
+![The reference window's and recent window's value distributions side by side, with a real Cohen's d of 1.45 annotated — the recent window is visibly shifted higher, entirely from the ongoing trend](examples/images/interpol_drift_plain.png)
+
+**What It Means:** The two distributions really do look different — recent values sit visibly higher than the reference ones, no overlap trick or squinting required. That's real, and it's real precisely *because* it's just a trend continuing, which is the whole point this chapter is building toward: a picture this clean can still be describing something entirely mundane.
+
 ## The Real Contrast That Actually Distinguishes Them
 
 If ordinary trend alone produces a large effect size, what does an actual incident look like by comparison? A believable one: a botched heist becomes public, and Interpol's attention spikes hard over the following two months, on top of the trend that was already there.
@@ -33,6 +39,12 @@ If ordinary trend alone produces a large effect size, what does an actual incide
 ```
 
 **What It Means:** `11.91`, against the plain trend's `1.45` — nearly an **eight-fold** jump, both nominally "large" by the same textbook bins that already called the boring trend large. This is the actual lesson, sharper than the outline originally planned: effect size doesn't cleanly sort into "boring" and "alarming" using a fixed cutoff table borrowed from a statistics textbook. What it *does* do is give you a genuine magnitude scale — and reading it comparatively, against what this specific series' own ordinary behavior already produces, tells you far more than checking whether it clears some universal threshold. `1.45` being this series' new normal, `11.91` is not.
+
+**What Comes Back** (the same `plot_drift` render, on the escalation-shifted series):
+
+![The same reference-vs-recent distribution comparison on the escalation-shifted series, with a real Cohen's d of 11.91 annotated — the recent window's distribution is shifted so far right the two barely overlap at all](examples/images/interpol_drift_shifted.png)
+
+**What It Means:** Set this next to the plain trend's plot above and the difference is immediate — the earlier pair had a real but modest gap between two still-overlapping distributions; this pair barely touches. That visual gap is the `1.45`-versus-`11.91` finding made physical, and it's exactly the kind of side-by-side comparison a bare `drift_detected: true` boolean, shown once, could never communicate — you need to have seen what "ordinary" looks like on this same series first, which is why both images exist together rather than either one alone.
 
 ## Distinguishing a Blip from Something Sustained — With a Real Limit of Its Own
 
@@ -56,6 +68,15 @@ If ordinary trend alone produces a large effect size, what does an actual incide
 ```
 
 **What It Means:** This is the right conclusion, and it's arrived at correctly — "persistent" is exactly what an ongoing trend genuinely is, month after month, not a false alarm. But run the identical check on the *escalation*-shifted version of the series, and something worth noticing happens: the first four checks come back **numerically identical** (`3.03`, `2.43`, `1.92`, `1.36` — none of them touch the shifted weeks at all), and only the final, most-recent check jumps to `11.91`. `n_flagged` is `5/5` either way — `persistent_drift: true` in both cases, because the ordinary trend alone was already enough to trip every single window, before any incident happened at all. The binary persistence verdict, read alone, cannot tell these two series apart. What can is the per-check *trajectory* sitting right next to it: four checks holding steady in a familiar range, then one sudden, sharp break from the pattern. `rolling_drift_check`'s real value here turned out to be different from — and arguably more useful than — the single persistent-vs-isolated question it was built to answer: read alongside its own per-check detail, it can localize *roughly when* something new started, layered on top of a trend that was already going to trip the alarm regardless.
+
+**Prompt:**
+> Plot the rolling drift check's per-window trajectory on the plain series.
+
+**What Comes Back** (a real render, `ts-monitor__plot_rolling_drift` on the five checks above):
+
+![Cohen's d across five walk-forward drift checks on the plain trending series, all five flagged, the values drifting down from about 3.0 to about 1.4 across the walk](examples/images/interpol_rolling_drift.png)
+
+**What It Means:** This is the plot the previous paragraph's argument actually needed — five bars, all past the flagged threshold, gently declining rather than climbing. On this unmodified series that's the whole story: no bar breaks from the pattern the way the escalation-series version would (not shown here, but easy to predict from the numbers already given: four bars in this same declining range, then one sharp jump). That contrast — a smooth trajectory versus one that suddenly isn't — is exactly the kind of shape a reader can register in half a second from a bar chart and would have to reconstruct by hand from five separate JSON numbers otherwise.
 
 ## Turning This Into a Decision
 
