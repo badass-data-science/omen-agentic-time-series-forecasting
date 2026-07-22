@@ -150,6 +150,30 @@ def deathray_revenue() -> pd.DataFrame:
     return _weekly_resample(daily)
 
 
+def deathray_revenue_rival() -> pd.DataFrame:
+    """Chapter 18: deathray_revenue()'s first 500 days, extended by 150
+    more -- a rival supervillain's price war flattening trend_per_day
+    from 6.0 to 1.5 starting day 500, with independently-seeded noise
+    (seed=242) for the new days. 91 weeks total after resampling."""
+    original = generate_synthetic_series(
+        n_days=500, seed=42, base_level=2000.0, trend_per_day=6.0,
+        weekly_amplitude=150.0, yearly_amplitude=100.0, noise_std=120.0,
+    )
+    t_ext = np.arange(500, 650)
+    level_at_500 = 2000.0 + 6.0 * 500
+    trend_ext = level_at_500 + 1.5 * (t_ext - 500)
+    weekly_ext = 150.0 * np.sin(2 * np.pi * t_ext / 7.0)
+    yearly_ext = 100.0 * np.sin(2 * np.pi * t_ext / 365.25)
+    rng = np.random.default_rng(242)
+    noise_ext = rng.normal(0, 120.0, size=150)
+    values_ext = np.clip(trend_ext + weekly_ext + yearly_ext + noise_ext, 0, None)
+    dates_ext = pd.date_range(original["date"].iloc[-1] + pd.Timedelta(days=1), periods=150, freq="D")
+    ext_df = pd.DataFrame({"date": dates_ext, "value": values_ext})
+
+    daily = pd.concat([original, ext_df], ignore_index=True)
+    return _weekly_resample(daily)
+
+
 def deathray_revenue_slow_month() -> pd.DataFrame:
     """Chapter 8's MAPE-vs-MAE demonstration: a shorter, supplementary
     Death-Ray Revenue series where four consecutive weeks of exactly $0
@@ -283,6 +307,7 @@ DATASETS = {
     "mad_degenerate_edge_case": mad_degenerate_edge_case,
     "mojito_inventory_constant": mojito_inventory_constant,
     "deathray_revenue": deathray_revenue,
+    "deathray_revenue_rival": deathray_revenue_rival,
     "deathray_revenue_slow_month": deathray_revenue_slow_month,
     "drycleaning_bills": drycleaning_bills,
     "drycleaning_bills_steep_trend": drycleaning_bills_steep_trend,
