@@ -8,10 +8,11 @@ pandoc. `outline.md` is deliberately excluded: it's this project's internal
 planning document, never reader-facing, and was never part of the book
 itself.
 
-Reading order is: dedication.md, about_the_author.md, chapter-01 through
-chapter-22 (sorted by filename, which sorts correctly since every chapter
-number is zero-padded), then appendix-a, appendix-b, appendix-c
-(alphabetical, which is also their intended reading order).
+Reading order is: dedication.md, about_the_author.md,
+ai_use_statement.md, chapter-01 through chapter-22 (sorted by filename,
+which sorts correctly since every chapter number is zero-padded), then
+appendix-a, appendix-b, appendix-c (alphabetical, which is also their
+intended reading order).
 
 Every chapter links its images with a path relative to this directory's
 parent (e.g. `examples/images/ch08_naive_backtest.png`, written as if the
@@ -56,10 +57,10 @@ _LATEX_HEADER = "\\usepackage{fvextra}\n\\fvset{breaklines=true,breakanywhere=tr
 
 
 def _ordered_source_files():
-    """dedication -> about_the_author -> chapter-01..22 (sorted,
-    zero-padded so this is also numeric order) -> the three appendices,
-    alphabetically. outline.md is excluded on purpose -- see module
-    docstring."""
+    """dedication -> about_the_author -> ai_use_statement ->
+    chapter-01..22 (sorted, zero-padded so this is also numeric order)
+    -> the three appendices, alphabetically. outline.md is excluded on
+    purpose -- see module docstring."""
     chapters = sorted(
         f for f in os.listdir(BOOK_DIR)
         if f.startswith("chapter-") and f.endswith(".md")
@@ -68,7 +69,7 @@ def _ordered_source_files():
         f for f in os.listdir(BOOK_DIR)
         if f.startswith("appendix-") and f.endswith(".md")
     )
-    return ["dedication.md", "about_the_author.md"] + chapters + appendices
+    return ["dedication.md", "about_the_author.md", "ai_use_statement.md"] + chapters + appendices
 
 
 def _rewrite_image_links(content: str, out_dir: str) -> str:
