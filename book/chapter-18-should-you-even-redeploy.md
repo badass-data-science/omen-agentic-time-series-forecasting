@@ -6,6 +6,28 @@ A rival supervillain has entered the death-ray rental market, undercutting price
 
 Every deterministic gate in this book so far — `recommend_retraining`'s four verdicts, `execute_redeploy`'s `confirmed=True` requirement — exists for the same reason Chapter 1 named on page one: consequential actions get deterministic gates, open-ended reasoning gets agent judgment. "Should we redeploy" sits squarely on the consequential side. Redeploying isn't free — it resets `ts-monitor`'s baseline, restarts the clock on calibration checks that need real elapsed time to mean anything (Chapter 16's Wilson score intervals were already wide at 10 days; every redeploy starts that clock over), and swaps a model whose behavior in production is at least partially known for one that isn't yet. An agent asked "does this candidate look better" in freeform judgment could talk itself into redeploying on a coin-flip-sized improvement, especially with a plausible-sounding rival-supervillain story attached to justify it. A fixed threshold, applied the same way regardless of how compelling the narrative sounds, can't be talked into anything.
 
+## Read the Deployment Record Before Comparing Anything
+
+Before retraining a candidate at all, it's worth asking a more basic question first: what does the manifest actually say is deployed right now, rather than trusting memory of an earlier chapter's result.
+
+**Prompt:**
+> Before retraining anything, show me what's currently recorded as deployed for the death-ray revenue series.
+
+**What Comes Back** (a real result, read back from the manifest `ts-retrain__record_deployment` wrote after Chapter 9's ETS(add, mul, 7) fit):
+
+```json
+{
+  "model": "ets",
+  "params": {"trend": "add", "seasonal": "mul", "seasonal_period": 7, "damped_trend": false},
+  "backtest_metrics": {
+    "mape_pct": 5.5511, "mape_pct_ci_lower": 4.699, "mape_pct_ci_upper": 6.5239
+  },
+  "horizon": 30
+}
+```
+
+**What It Means:** `ts-retrain__load_deployment_manifest` does no comparison and no judgment of its own — it just answers "what's actually on file," which is exactly the kind of question worth asking directly instead of assuming. This confirms the deployed model really is Chapter 9's ETS(add, mul, 7) fit, at the same `5.5511%` MAPE this chapter is about to compare candidates against — not a stale or misremembered number. Skipping this step and just trusting "I think ETS is still deployed" is precisely the kind of unverified assumption this book has warned against since Chapter 1; here, the state to verify happens to live in a small JSON file instead of a statistical estimate, but the discipline is the same one.
+
 ## The Real Retrain, and a Genuinely Honest Answer
 
 **Prompt:**

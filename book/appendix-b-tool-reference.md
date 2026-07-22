@@ -26,6 +26,7 @@ Every MCP tool this book actually called, grouped by layer, in the order each la
 
 | Tool | What it does | Chapter(s) |
 |---|---|---|
+| `holdout_split_summary` | Reports the train/test date ranges for a given holdout size, without fitting anything — the recommended first sanity check before any backtest. | 8 |
 | `fit_naive_baselines` | Backtests flat and seasonal naive forecasts — the floor every real model has to beat. | 8 |
 | `fit_ets` | Backtests exponential smoothing (Holt-Winters), with AIC/AICc, residual diagnostics, and interval coverage. | 9 |
 | `fit_sarima` | Backtests SARIMA at a specified `(p,d,q)(P,D,Q,s)` order, with the same diagnostics as `fit_ets`. | 10 |
