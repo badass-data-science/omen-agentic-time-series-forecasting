@@ -50,17 +50,58 @@ Here is the single idea this whole book keeps circling back to, so it's worth st
 
 "Should this model actually replace the one currently running in production?" is a different kind of question, and Omen deliberately does *not* leave it to an agent's mood. It's answered by a small, boring, reproducible function instead — same inputs, same answer, every time, no exceptions for how confident the agent happens to sound that day. You'll meet this function by name in Part V (`compare_candidate_to_deployed`), and you'll meet its even stricter sibling — the one tool in the entire toolkit allowed to actually change a live deployment (`execute_redeploy`), which refuses to run at all without an explicit, human-or-explicitly-authorized `confirmed=True` — in the same part of the book. If you remember nothing else from this chapter, remember that this line exists on purpose, and that a well-designed agentic tool draws it somewhere too, even if it isn't Omen.
 
+## Why Every Answer Comes Back as JSON, Not Prose
+
+One detail is easy to skim past the first time you see it, and important enough to slow down for: every single result in this book — every one of the hundreds of "What Comes Back" blocks in the chapters ahead — is written in a format called **JSON**, not in a sentence. That's not a stylistic tic of this book. It's a load-bearing part of what makes an agentic tool trustworthy in the first place, and if you've never worked with JSON before, it's worth understanding properly before you see your first real example in Chapter 3.
+
+**JSON** stands for JavaScript Object Notation, which tells you where it came from and almost nothing about why it matters here — it long ago outgrew JavaScript and became the closest thing computing has to a universal, plain-text way of writing down structured data. The rules are few enough to hold in your head all at once:
+
+- Curly braces `{ }` mark an **object** — an unordered bag of `"name": value` pairs, exactly the way a labeled measurement goes with its label.
+- Square brackets `[ ]` mark an **array** — an ordered list of values, used whenever a result is a sequence of things rather than one thing (a list of daily forecasts, for instance, rather than a single number).
+- Every value has one of a small handful of unambiguous types: a **string** in double quotes (`"D"`, `"2024-01-01"`), a bare **number** (`182`, `244.351`), `true` or `false`, or the literal `null` — which means, explicitly and unambiguously, *there is genuinely no value here*, not "zero," not "unknown," not "didn't feel like computing it."
+
+Put those pieces together and a JSON object looks like this:
+
+```json
+{
+  "n_observations": 182,
+  "mean": 244.351,
+  "mean_ci_lower": 240.19,
+  "mean_ci_upper": 248.513,
+  "n_missing_values": 0
+}
+```
+
+Five labeled values, each with a type that isn't in question, nested inside one object. That's the entire syntax. There is no ambiguity left to resolve about what `244.351` refers to, because it's sitting right next to the label `"mean"` that says so — not three sentences later in a paragraph, not implied by context.
+
+**Why an agent needs this, specifically.** Go back to the freeform-code failure mode from earlier in this chapter: a general-purpose model improvising `pandas` code from memory, with nothing checking its work. The version of that same failure mode at the *output* stage would look like this — a tool that answers in a sentence instead of a structured result: *"The mean inventory level was approximately 244 units, with a 95% confidence interval running from about 240 to roughly 249."* A human reads that sentence just fine. An agent that needs to *act* on it — compare it against a threshold, pass it to the next tool call, decide whether a number is inside or outside an interval — first has to re-parse ordinary English back into numbers, guessing where in the sentence each value lives. Phrase it slightly differently on the next call ("roughly 244, give or take about four and a half units either way") and that ad-hoc parsing can silently break, even though nothing about the underlying finding changed at all. This is exactly the kind of improvisation Chapter 1 already told you not to trust an LLM with — except now it would be happening on the way *out* of a tool, not just on the way in.
+
+JSON closes that gap. `"mean_ci_lower"` is always spelled the same way, always holds a number or `null`, on every call, in every layer, forever. An agent doesn't have to interpret Omen's output — it just reads the field by name, the same way a spreadsheet formula reads a cell by its address. That's what "typed tool" from earlier in this chapter actually cashes out to at the moment a result comes back: the *shape* of the answer is promised in advance, and JSON is the concrete, checkable form that promise takes. A prose summary can always drift; a field named the same thing every time cannot.
+
+This also explains a habit you'll see in nearly every chapter from here on: this book always shows you the *real* JSON a tool actually returned, not a paraphrase of it. That's not pedantry. Reading the raw structured result — the exact field names, the exact `null`s, the exact nesting — is precisely the discipline an agent is supposed to apply every time, and the book holds itself to the same standard it's teaching you to expect from Omen.
+
 ## A Preview, Not Yet an Answer
 
-Chapter 3 is where you'll actually load data and get real numbers back. This chapter is deliberately too early for that — but it's worth showing you the *shape* of what's coming, so "typed tool" stops being an abstraction. Every Omen tool returns a small, structured result. Here, for instance, is what you'll eventually be reading when you ask `ts-analyst__basic_stats` about the mojito inventory series from the opening of this chapter:
+Chapter 3 is where you'll actually load data and get real numbers back. This chapter is deliberately too early for that — but it's worth showing you the *shape* of what's coming, now that the format itself is no longer a mystery. Every Omen tool returns a small JSON object. Here, for instance, is the shape of what you'll eventually be reading when you ask `ts-analyst__basic_stats` about the mojito inventory series from the opening of this chapter — field names only, real numbers still one chapter away:
 
-```
-n_observations, start_date, end_date, inferred_frequency,
-n_missing_values, mean, mean_ci_lower, mean_ci_upper,
-confidence_level, std, min, max
+```json
+{
+  "n_observations": ...,
+  "start_date": ...,
+  "end_date": ...,
+  "inferred_frequency": ...,
+  "n_missing_values": ...,
+  "mean": ...,
+  "mean_ci_lower": ...,
+  "mean_ci_upper": ...,
+  "confidence_level": ...,
+  "std": ...,
+  "min": ...,
+  "max": ...
+}
 ```
 
-Notice `mean_ci_lower` and `mean_ci_upper` sitting right there next to `mean`. That's not decoration. It's the toolkit's first small example of a rule that holds everywhere in Omen, in every layer, without exception: **never report a number without also reporting how sure you are of it.** You'll see that rule again in Chapter 3 with real numbers attached, and then again, in progressively less gentle forms, for the rest of the book.
+Notice `mean_ci_lower` and `mean_ci_upper` sitting right there next to `mean`, each one a plain, unambiguous field rather than a clause buried in a sentence. That's not decoration. It's the toolkit's first small example of a rule that holds everywhere in Omen, in every layer, without exception: **never report a number without also reporting how sure you are of it.** You'll see that rule again in Chapter 3 with real numbers attached, and then again, in progressively less gentle forms, for the rest of the book.
 
 ## What's Next
 
