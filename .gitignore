@@ -29,3 +29,12 @@ htmlcov/
 *.csv
 !tests/**/*.csv
 deployment_manifest*.json
+
+# graphify: machine-specific bookkeeping and re-buildable cache, not
+# durable artifacts -- graph.json/GRAPH_REPORT.md/graph.html/manifest.json
+# and .graphify_labels.json ARE committed (see AGENTS.md or ask before
+# re-running with --update).
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/cost.json
+graphify-out/cache/
