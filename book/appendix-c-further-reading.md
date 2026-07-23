@@ -16,7 +16,7 @@ The academic sources Omen's own methods are actually drawn from — not a genera
 
 **Hurvich, C. M., & Tsai, C.-L. (1989).** "Regression and Time Series Model Selection in Small Samples." *Biometrika*. The small-sample correction behind every `aicc` value this book reported, from Ch. 9 onward.
 
-**Hyndman, R. J., & Athanasopoulos, G.** *Forecasting: Principles and Practice* (any edition; freely available at otexts.com/fpp3). The standard reference for the naive-forecast interval formulas behind `fit_naive_baselines` and `forecast_naive`, and for the trend/seasonal strength heuristic behind `seasonal_decomposition_summary` -- also a genuinely good general forecasting textbook beyond what this book's own scope covers. Ch. 5, Ch. 8, Ch. 14.
+**Hyndman, R. J., & Athanasopoulos, G.** *Forecasting: Principles and Practice* (any edition; freely available at otexts.com/fpp3). The standard reference for the naive-forecast interval formulas behind `fit_naive_baselines` and `forecast_naive`, and for the trend/seasonal strength heuristic behind `seasonal_decomposition_summary` -- also a good general forecasting textbook beyond what this book's own scope covers. Ch. 5, Ch. 8, Ch. 14.
 
 **Diebold, F. X., & Mariano, R. S. (1995).** "Comparing Predictive Accuracy." *Journal of Business & Economic Statistics*. The paired significance test behind `diebold_mariano_test`, and the mechanism behind two of this book's most consequential real findings (Ch. 8 and Ch. 10's open questions, both resolved in Ch. 12).
 
@@ -30,6 +30,6 @@ The academic sources Omen's own methods are actually drawn from — not a genera
 
 **`blog-posts/`** — the companion post series covering this same five-layer arc in shorter form, one post per layer plus the project's original introductory post. A faster read to hand someone, or to revisit a layer's core ideas without a full chapter's worth of detail.
 
-**`prompts/testing-and-learning-prompts.md`** — sixty-plus ready-to-use prompts across all five layers, written for exactly the kind of hands-on practice Chapter 20 asked you to do with your own material. Chapter 20's "Your Turn" exercise draws directly from this file.
+**`prompts/testing-and-learning-prompts.md`** — sixty-plus ready-to-use prompts across all five layers, written for the kind of hands-on practice Chapter 20 asked you to do with your own material. Chapter 20's "Your Turn" exercise draws directly from this file.
 
 **`AGENTS.md`** — the project's own internal design log, denser and less narrated than this book, written for whoever extends Omen's code next rather than for a first read. The most current source of truth on the toolkit's actual behavior, including anything this book's real-verified numbers might drift from as the project keeps evolving after this book's own writing.

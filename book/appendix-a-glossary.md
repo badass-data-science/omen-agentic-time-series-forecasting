@@ -4,11 +4,11 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **ACF (autocorrelation function).** How correlated a series is with a lagged copy of itself, at each lag. Ch. 6.
 
+**ADF test (Augmented Dickey-Fuller).** A hypothesis test whose null hypothesis is "this series has a unit root" (is non-stationary) — rejecting it is evidence *for* stationarity. Ch. 4.
+
 **AIC (Akaike Information Criterion).** A model-fit statistic that penalizes added parameters — lower is better — used to compare candidate models without a held-out test set. Ch. 9.
 
 **AICc.** AIC with a small-sample correction (Hurvich & Tsai, 1989) that grows more important as the parameter count approaches the training sample size; can diverge meaningfully from plain AIC on the backtest window sizes this book used throughout. Ch. 9, Ch. 10.
-
-**ADF test (Augmented Dickey-Fuller).** A hypothesis test whose null hypothesis is "this series has a unit root" (is non-stationary) — rejecting it is evidence *for* stationarity. Ch. 4.
 
 **AR / MA (autoregressive / moving-average).** The two building blocks SARIMA's `p` and `q` orders count: an AR term predicts from the series' own past *values*; an MA term predicts from past *forecast errors*. Ch. 6, Ch. 10.
 
@@ -62,7 +62,7 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **Naive / seasonal-naive baseline.** The simplest possible forecasts — repeat the last value forever, or repeat the last full seasonal cycle — that every real model has to beat to justify its own complexity. Ch. 8.
 
-**One-step-ahead vs. recursive multi-step evaluation.** Whether a backtest scores a model against true lagged values at every point (easier) or against the model's own earlier predictions feeding forward (harder, allows compounding error) — a distinction this book found genuinely easy to conflate by accident. Ch. 11, Ch. 14.
+**One-step-ahead vs. recursive multi-step evaluation.** Whether a backtest scores a model against true lagged values at every point (easier) or against the model's own earlier predictions feeding forward (harder, allows compounding error) — a distinction this book found easy to conflate by accident. Ch. 11, Ch. 14.
 
 **PACF (partial autocorrelation function).** Like the ACF, but with the correlation at intermediate lags controlled for — used alongside the ACF to reason about a SARIMA model's `p`/`q` orders. Ch. 6.
 

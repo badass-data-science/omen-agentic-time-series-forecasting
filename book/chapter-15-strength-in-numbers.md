@@ -1,6 +1,6 @@
 # Chapter 15: Strength in Numbers? — Ensembling Multiple Models
 
-Chapter 12 left a specific promise hanging: that a real, honest occasion for ensembling would eventually show up, once two candidates turned out to be genuinely, statistically indistinguishable rather than one just looking slightly better on paper. This chapter goes looking for that occasion on Death-Ray Revenue, using the exact tool built for exactly that — the Diebold-Mariano test — before touching `forecast_ensemble` at all. What it finds changes the chapter's plan.
+Chapter 12 left a specific promise hanging: that a real, honest occasion for ensembling would eventually show up, once two candidates turned out to be genuinely, statistically indistinguishable rather than one just looking slightly better on paper. This chapter goes looking for that occasion on Death-Ray Revenue, using the tool built for exactly that — the Diebold-Mariano test — before touching `forecast_ensemble` at all. What it finds changes the chapter's plan.
 
 ## Looking for the Legitimate Occasion, and Not Finding One
 
@@ -24,11 +24,11 @@ seasonal_naive vs ets:        p=0.0009  significant, favors ets
 
 **What It Means:** Every single pair, across all five real candidates built up over Chapters 8 through 11, comes back statistically significant. This book's own outline expected SARIMA and ETS specifically to land in a genuine statistical tie here — the natural setup for this chapter's demonstration. That's not what the real test found: ETS beats SARIMA outright, at `p=0.006`. On this series, with these candidates, there simply isn't a legitimate close call to point to. ETS(add, mul, 7) — Chapter 9's well-calibrated multiplicative model — beats everything else it was tested against, every single pair checked. The rigorous, data-driven answer, followed all the way through, is: deploy ETS alone.
 
-That's a genuinely useful thing to know before touching this chapter's main tool at all, and it reframes what this chapter actually needs to teach. Rather than force a manufactured tie, the more honest — and more useful — lesson is what happens when you ensemble anyway, in the absence of that justification, and see the real cost with real numbers.
+That's a useful thing to know before touching this chapter's main tool at all, and it reframes what this chapter actually needs to teach. Rather than force a manufactured tie, the more honest — and more useful — lesson is what happens when you ensemble anyway, in the absence of that justification, and see the real cost with real numbers.
 
 ## The Arithmetic, Verified Exactly
 
-Before that, one piece of pure math worth confirming with a real tool call rather than trusting on faith: combining two **identical** components at equal weight should narrow the interval by a factor of exactly `1/√2`, under the variance-combination formula's independence assumption. `sqrt(0.5² · σ² + 0.5² · σ²) = σ · sqrt(0.5) = σ/√2` — simple enough to check by hand, and worth checking against the real tool rather than just trusting the algebra in isolation.
+Before that, one piece of pure math to confirm with a real tool call rather than trusting on faith: combining two **identical** components at equal weight should narrow the interval by a factor of exactly `1/√2`, under the variance-combination formula's independence assumption. `sqrt(0.5² · σ² + 0.5² · σ²) = σ · sqrt(0.5) = σ/√2` — simple enough to check by hand, and checked below against the real tool rather than just trusted on the algebra alone.
 
 **What Comes Back** (a real result, SARIMA fit twice with identical parameters, deliberately, deterministic analytic interval so no simulation randomness can blur the comparison):
 
@@ -39,7 +39,7 @@ Ratio:                           0.7071068...
 1/√2:                            0.7071068...
 ```
 
-**What It Means:** Exact, to the precision the tool reports. This is the mechanism working precisely as designed, on real output — narrowing an interval by combining a model with an exact literal copy of itself is the cleanest possible demonstration that this isn't a bug or a modeling artifact, just the direct arithmetic consequence of assuming independent errors. It's worth noting this exactness relied on picking SARIMA specifically for the demonstration: ETS's interval is built from simulated paths (Chapter 9), and two "identical" ETS components in the same ensemble call each run their own separate, unseeded simulation — close to but not exactly matching each other, which would have blurred this particular arithmetic check without actually changing the underlying principle.
+**What It Means:** Exact, to the precision the tool reports. This is the mechanism working precisely as designed, on real output — narrowing an interval by combining a model with an exact literal copy of itself is the cleanest possible demonstration that this isn't a bug or a modeling artifact, just the direct arithmetic consequence of assuming independent errors. This exactness relied on picking SARIMA specifically for the demonstration: ETS's interval is built from simulated paths (Chapter 9), and two "identical" ETS components in the same ensemble call each run their own separate, unseeded simulation — close to but not exactly matching each other, which would have blurred this particular arithmetic check without actually changing the underlying principle.
 
 ## Ensembling the Wrong Reason, With Real Numbers
 
@@ -54,7 +54,7 @@ ETS solo:       forecast 44,426.57   interval [42,787.12, 46,088.66]  width  3,3
 Ensemble (0.5/0.5): forecast 43,257.19  interval [39,352.74, 47,161.65]  width  7,808.92
 ```
 
-**What It Means:** This is the real cost of ensembling in a candidate the data has already told you is worse, made concrete rather than asserted. Two things happen, both real, both quantifiable. First, the point forecast: it moves away from ETS's own, more-accurate `44,426.57` toward a blended `43,257.19`, pulled in the direction of the significantly worse model. Second, and more strikingly, the interval: ETS alone is confident, `3,301.54` wide; SARIMA alone is nearly five times less confident, `15,213.77` wide. The equal-weighted combination comes out at `7,808.92` — narrower than SARIMA's own interval, yes, but more than double ETS's. Averaging in a less accurate, less certain model didn't just risk diluting accuracy in the abstract — it mechanically dragged a genuinely well-calibrated interval wider, in trade for nothing this book's own DM test says you should want. This is what "a way to paper over a candidate that should have been rejected outright" actually looks like on real output, not just as a warning in the abstract.
+**What It Means:** This is the real cost of ensembling in a candidate the data has already told you is worse, made concrete rather than asserted. Two things happen, both real, both quantifiable. First, the point forecast: it moves away from ETS's own, more-accurate `44,426.57` toward a blended `43,257.19`, pulled in the direction of the significantly worse model. Second, and more strikingly, the interval: ETS alone is confident, `3,301.54` wide; SARIMA alone is nearly five times less confident, `15,213.77` wide. The equal-weighted combination comes out at `7,808.92` — narrower than SARIMA's own interval, yes, but more than double ETS's. Averaging in a less accurate, less certain model didn't just risk diluting accuracy in the abstract — it mechanically dragged a well-calibrated interval wider, in trade for nothing this book's own DM test says you should want. This is what "a way to paper over a candidate that should have been rejected outright" actually looks like on real output, not just as a warning in the abstract.
 
 ## The Independence Assumption Was Never Really True
 

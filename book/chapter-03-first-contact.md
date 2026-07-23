@@ -6,15 +6,15 @@ The whiteboard is gone. In its place, six months of daily mojito inventory count
 
 A time series is not just "a list of numbers." It's a list of numbers with two properties that matter enormously and get taken for granted constantly: the numbers are **ordered**, and each one is attached to a **specific point in time**. Shuffle a spreadsheet of quarterly sales figures and you've destroyed information a model would otherwise use. Every tool in Omen, starting right here in Layer 1, assumes this ordering is meaningful and intact.
 
-It's also worth being precise about *what kind* of number `basic_stats` is about to hand you. The average of the 182 mojito counts you actually observed is a **sample statistic** — a fact about this specific stretch of six months. It is not the same thing as the Secret Lab™'s "true, long-run average daily mojito consumption," which is a **population** quantity you can never observe directly, only estimate. The gap between those two things is exactly what a confidence interval is for, and it's the first real statistical idea this book teaches, on purpose, before anything harder.
+It's also important to be precise about *what kind* of number `basic_stats` is about to hand you. The average of the 182 mojito counts you actually observed is a **sample statistic** — a fact about this specific stretch of six months. It is not the same thing as the Secret Lab™'s "true, long-run average daily mojito consumption," which is a **population** quantity you can never observe directly, only estimate. The gap between those two things is what a confidence interval is for, and it's the first real statistical idea this book teaches, on purpose, before anything harder.
 
 ## What Omen Actually Expects From Your CSV
 
-Before loading anything of your own, it's worth knowing exactly what happens to a CSV the moment you point a tool at it, rather than treating `csv_path` as a black box. Every tool in this book that takes real data — not just this chapter's `basic_stats` — funnels through the same loader, and its rules are short enough to know by heart.
+Before loading anything of your own, here's exactly what happens to a CSV the moment you point a tool at it, rather than treating `csv_path` as a black box. Every tool in this book that takes real data — not just this chapter's `basic_stats` — funnels through the same loader, and its rules are short enough to know by heart.
 
 A CSV needs exactly two columns that matter: one holding a date, one holding a value. By default the loader looks for columns literally named `date` and `value`; if yours are named something else — `day` and `mojitos`, say — pass `date_col="day"` and `value_col="mojitos"` and the loader renames them internally before anything else happens. Any *other* columns your CSV happens to have — a `region` column, a `notes` column, whatever your export tool bolted on — are silently dropped, not merged in or complained about. That's deliberate: Omen's tools only ever reason about one series at a time, so extra columns are simply not its problem to solve.
 
-Two more things happen automatically, verified directly rather than assumed: **rows get sorted by date before anything else runs**, so a CSV exported in the wrong order (newest-first, or genuinely scrambled) is silently corrected, not a source of hidden bugs. Real check, real CSV with `date` deliberately out of order:
+Two more things happen automatically, verified directly rather than assumed: **rows get sorted by date before anything else runs**, so a CSV exported in the wrong order (newest-first, or scrambled) is silently corrected, not a source of hidden bugs. Real check, real CSV with `date` deliberately out of order:
 
 ```json
 [{"date": "2024-01-01", "value": 10}, {"date": "2024-01-02", "value": 12}, {"date": "2024-01-03", "value": 9}]
@@ -22,9 +22,9 @@ Two more things happen automatically, verified directly rather than assumed: **r
 
 fed in as `2024-01-02, 2024-01-03, 2024-01-01` — loads back out in the correct order shown above, every time, no flag required.
 
-Now the two ways this can genuinely go wrong, both checked for real rather than guessed at:
+Now the two ways this can go wrong, both checked for real rather than guessed at:
 
-**Wrong column names produce a real `KeyError`, not a friendly message.** Point the loader at a CSV whose columns are actually named `day`/`count` without telling it so via `date_col`/`value_col`, and you get exactly this, verbatim:
+**Wrong column names produce a real `KeyError`, not a friendly message.** Point the loader at a CSV whose columns are actually named `day`/`count` without telling it so via `date_col`/`value_col`, and you get this, verbatim:
 
 ```
 KeyError: 'date'
@@ -64,7 +64,7 @@ Four fields to read before you even get to the mean: `n_observations` (182 rows)
 
 ## How Much Do You Actually Trust That Average?
 
-The mean daily mojito count over these six months was 244.061. The `mean_ci_lower`/`mean_ci_upper` pair — `[239.807, 248.316]` — is a 95% confidence interval on that number, and it's worth understanding exactly what it's built from, because the same construction reappears constantly for the rest of this book, always for the same reason.
+The mean daily mojito count over these six months was 244.061. The `mean_ci_lower`/`mean_ci_upper` pair — `[239.807, 248.316]` — is a 95% confidence interval on that number, built from a construction that reappears constantly for the rest of this book, always for the same reason.
 
 The formula is the one you may already remember from an introductory statistics course: a **Student's t** interval,
 
@@ -78,7 +78,7 @@ Here is the detail worth dwelling on, because it's a mistake that's easy to make
 
 Worked out with the real numbers above: using the correct non-missing count of 177 gives an interval width of about 8.51. Using the raw row count of 182 instead — the mistake — gives a width of about 8.39. That's a small difference here, because only 5 of 182 days were missing. It would not stay small on a series with real gaps — a data feed that drops a third of its days, say, during an infrastructure outage — and the direction of the error is always the same: **more missing data, silently treated as if it weren't missing, always makes the reported interval too confident.** Omen's `basic_stats` uses the correct non-missing count specifically to avoid this, and now you know why that was a deliberate choice, not an accident of which function happened to be convenient to call.
 
-It's worth actually looking at those five missing days rather than just knowing the count. `ts-analyst__plot_series` renders the raw series with any gaps shown as real breaks in the line, not smoothed over:
+Look at those five missing days directly rather than just knowing the count. `ts-analyst__plot_series` renders the raw series with any gaps shown as real breaks in the line, not smoothed over:
 
 **Prompt:**
 > Plot the raw mojito inventory series so I can see where "the incident" actually happened.
