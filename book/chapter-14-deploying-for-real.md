@@ -34,6 +34,36 @@ df["value"] = df["value"].interpolate(method="linear")
 # n_missing: 5 -> 0
 ```
 
+Don't just trust that comment, though — load the cleaned result back through Omen itself and check:
+
+**Prompt:**
+> Load the cleaned mojito inventory series and confirm there are no missing values left.
+
+**What Comes Back** (a real result):
+
+```json
+{
+  "n_observations": 182,
+  "start_date": "2024-01-01",
+  "end_date": "2024-06-30",
+  "inferred_frequency": "D",
+  "n_missing_values": 0,
+  "mean": 244.351,
+  "mean_ci_lower": 240.19,
+  "mean_ci_upper": 248.513,
+  "confidence_level": 0.95,
+  "std": 28.451,
+  "min": 162.776,
+  "max": 293.309
+}
+```
+
+`n_missing_values: 0`, confirmed by the same tool that would have caught it if the interpolation had missed something. Notice the mean also shifted slightly, from Chapter 3's `244.061` to `244.351` — a real, if tiny, consequence of replacing five `NaN` gaps with interpolated values rather than just excluding them, worth knowing about rather than being surprised by later. And the plot, gap-free for the first time in this book:
+
+![Mojito inventory series, gaps now filled by linear interpolation -- compare directly against Chapter 3's version with five visible breaks](examples/images/mojito_inventory_clean_series.png)
+
+Compare this directly against Chapter 3's own plot of the same series: the same overall shape, but every one of those five breaks in the line is gone, replaced by a straight interpolated segment bridging each gap. That's the visual confirmation that this is genuinely the series this chapter is about to deploy from, not still the broken one from the opening mistake above.
+
 Every result for the rest of this chapter runs against this cleaned series. This connects back to something Chapter 1 said in the abstract — carry earlier layers' findings forward — and makes it concrete: Layer 1's `basic_stats` output for this exact series isn't just informational, it's a checklist item that has to be resolved before Layer 3 can be trusted with the same data.
 
 ## Full-Series Refit: Why No Holdout This Time

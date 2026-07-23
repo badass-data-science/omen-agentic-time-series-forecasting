@@ -22,7 +22,35 @@ Because the nulls point in opposite directions, running both and reading them to
 
 ## Meet Death-Ray Revenue
 
-**Death-Ray Revenue** — weekly income from renting out the Secret Lab™'s death ray to other operations that would rather lease world-ending hardware than build their own — is this book's first deliberately non-stationary series. Reputation compounds, rental rates have climbed accordingly, and the series has been trending upward for well over a year now. It's introduced here and comes back repeatedly through Part III as the flagship "let's actually build a model for this" example.
+**Death-Ray Revenue** — weekly income from renting out the Secret Lab™'s death ray to other operations that would rather lease world-ending hardware than build their own — is this book's first deliberately non-stationary series. Reputation compounds, rental rates have climbed accordingly, and the series has been trending upward for well over a year now. It's introduced here and comes back repeatedly through Part III as the flagship "let's actually build a model for this" example — worth getting properly acquainted with before the first real test runs against it.
+
+**Prompt:**
+> Load the death-ray revenue series and give me the basics before we test anything.
+
+**What Comes Back** (a real result, 70 weeks):
+
+```json
+{
+  "n_observations": 70,
+  "start_date": "2024-01-08",
+  "end_date": "2025-05-05",
+  "inferred_frequency": "W-MON",
+  "n_missing_values": 0,
+  "mean": 24701.716,
+  "mean_ci_lower": 23270.056,
+  "mean_ci_upper": 26133.375,
+  "confidence_level": 0.95,
+  "std": 6004.235,
+  "min": 14739.478,
+  "max": 35322.395
+}
+```
+
+Weekly data (`inferred_frequency: "W-MON"`, not daily), no missing values, a mean of roughly $24,700/week ranging from about $14,700 up to $35,300. None of that tells you *how* it moves from the low end to the high end, though — a mean and a range are consistent with a series that wanders unpredictably just as much as one that climbs steadily. That's exactly what a plot settles at a glance:
+
+![Death-Ray Revenue, 70 weeks, a clear sustained upward trend](examples/images/deathray_revenue_series.png)
+
+Now the shape actually seen, not just implied by a wide min/max: a clean, sustained climb from around $15,000 to around $35,000 over about a year and a half, without ever seriously reversing. That's the visual version of "this looks non-stationary" — the next section makes it a rigorous, real test rather than an eyeball judgment.
 
 **Prompt:**
 > Is the death-ray revenue series stationary? If ADF and KPSS disagree, what should I do about it?

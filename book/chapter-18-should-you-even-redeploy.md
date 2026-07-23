@@ -31,6 +31,34 @@ Before retraining a candidate at all, it's worth asking a more basic question fi
 ## The Real Retrain, and a Genuinely Honest Answer
 
 **Prompt:**
+> Load the death-ray revenue series extended through the rival's price war, and give me the basics before retraining anything.
+
+**What Comes Back** (a real result, 91 weeks — Chapter 4's original 70 weeks plus 21 more covering the price war):
+
+```json
+{
+  "n_observations": 91,
+  "start_date": "2024-01-08",
+  "end_date": "2025-09-29",
+  "inferred_frequency": "W-MON",
+  "n_missing_values": 0,
+  "mean": 27215.625,
+  "mean_ci_lower": 25758.043,
+  "mean_ci_upper": 28673.206,
+  "confidence_level": 0.95,
+  "std": 6998.851,
+  "min": 14739.478,
+  "max": 36572.074
+}
+```
+
+Same starting point as Chapter 4's series, 21 more weeks tacked on the end. The mean and max both crept up from Chapter 4's numbers, which alone doesn't say whether growth is continuing normally or actually slowing:
+
+![Death-Ray Revenue extended through the rival's price war -- the same climb as Chapter 4, visibly flattening in the final weeks](examples/images/deathray_revenue_rival_series.png)
+
+Compare this directly against Chapter 4's own plot: the same steep climb for the first 70 weeks, then a visibly flatter slope over the final stretch — the rival's price war, seen directly rather than inferred from a monitoring alert. That flattening is exactly what the rest of this chapter is about deciding what to do with.
+
+**Prompt:**
 > Retrain ETS on the extended series, now that rival competition has flattened growth. Does it clear the redeploy threshold against what's currently deployed?
 
 The currently-deployed model is real: the same ETS(add, mul, 7) configuration Chapter 9 found well-calibrated and Chapter 15's DM-test search confirmed as the outright winner against every other real candidate — refit fresh here to get precise current numbers for the deployment record, `record_deployment` at `5.5511%` MAPE (CI `[4.699, 6.5239]`).

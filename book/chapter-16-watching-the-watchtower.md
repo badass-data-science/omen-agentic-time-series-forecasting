@@ -2,6 +2,34 @@
 
 A deployed forecast is a claim about the future, and Chapter 14 shipped one for Secret Lab™ Mojito Inventory a month ago: SARIMA, 30 days out, default order, real prediction intervals attached. A month has now passed. Real observations exist for every one of those 30 forecasted dates. This chapter opens `ts-monitor` for the first time and asks the only question that actually matters once a forecast has had time to be tested by reality: was it right?
 
+**Prompt:**
+> Load the real July observations -- the month that's now elapsed since deployment -- and give me the basics before comparing anything.
+
+**What Comes Back** (a real result, 30 days):
+
+```json
+{
+  "n_observations": 30,
+  "start_date": "2024-07-01",
+  "end_date": "2024-07-30",
+  "inferred_frequency": "D",
+  "n_missing_values": 0,
+  "mean": 214.563,
+  "mean_ci_lower": 204.68,
+  "mean_ci_upper": 224.447,
+  "confidence_level": 0.95,
+  "std": 26.469,
+  "min": 143.95,
+  "max": 258.062
+}
+```
+
+Thirty real days, no gaps, averaging around 215 units. On its own, plotted raw, before any comparison against the deployed forecast:
+
+![Real July mojito inventory observations, 30 days -- one sharp downward dip visible partway through the month](examples/images/mojito_inventory_month2_actuals_series.png)
+
+One dip stands out immediately, well before any forecast-comparison tool gets involved — worth keeping in mind as this chapter's checkpoints unfold, since it's the same event the residual-outlier check below is going to name explicitly.
+
 ## The First Checkpoint, Ten Days In
 
 **Prompt:**
@@ -67,6 +95,34 @@ Mid-month, an unplanned "product testing event" — a party — drew down the la
 ## A Real, Deliberately Constructed Failure Mode
 
 The residual-outlier check's own documentation names a specific, non-hypothetical limitation: if half or more of a month's residuals are *exactly* identical, the median absolute deviation the check is built on can collapse to exactly zero — and when it does, every point's modified z-score collapses to zero along with it, regardless of how extreme any single remaining residual actually is. Worth confirming this really happens rather than taking the docstring's word for it.
+
+**Prompt:**
+> Load the constructed 10-day actuals series for this edge case and give me the basics.
+
+**What Comes Back** (a real result):
+
+```json
+{
+  "n_observations": 10,
+  "start_date": "2024-08-01",
+  "end_date": "2024-08-10",
+  "inferred_frequency": "D",
+  "n_missing_values": 0,
+  "mean": 100.0,
+  "mean_ci_lower": null,
+  "mean_ci_upper": null,
+  "confidence_level": 0.95,
+  "std": 0.0,
+  "min": 100.0,
+  "max": 100.0
+}
+```
+
+`std: 0.0`, `mean_ci_lower`/`mean_ci_upper` both `null` — the same honest zero-variance signature Chapter 3's flat mojito week produced. This series is a dead-flat line at exactly 100:
+
+![Ten days of constructed actuals, perfectly flat at 100 -- the residuals against this series are what drives the MAD-collapse failure mode below](examples/images/mad_degenerate_edge_case_series.png)
+
+The *actuals* being perfectly flat isn't itself the failure mode — it's what's about to happen once these are compared against a forecast that's mostly, but not entirely, exactly right on top of them. That comparison is next.
 
 **What Comes Back** (a real result, on a constructed 10-point case: six residuals of exactly `0`, plus residuals of `5`, `-5`, `-3`, and one genuinely enormous miss of `100`):
 

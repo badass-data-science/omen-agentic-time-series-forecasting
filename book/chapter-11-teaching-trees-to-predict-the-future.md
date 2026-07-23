@@ -6,6 +6,34 @@ Everything so far in Part III has fit a model built specifically for time series
 
 **Minion Overtime Hours**, logged daily, has two real drivers behind it: a strong day-of-week pattern (weekend shifts need actual minion oversight the automated systems can't be fully trusted with alone), and a real, if subtler, year-end scramble as annual villainy quotas start looming. 400 days of history are on hand — enough to give a tree-based model something to actually learn from.
 
+**Prompt:**
+> Load the minion overtime series and give me the basics.
+
+**What Comes Back** (a real result, 400 days):
+
+```json
+{
+  "n_observations": 400,
+  "start_date": "2024-01-01",
+  "end_date": "2025-02-03",
+  "inferred_frequency": "D",
+  "n_missing_values": 0,
+  "mean": 10.063,
+  "mean_ci_lower": 9.705,
+  "mean_ci_upper": 10.421,
+  "confidence_level": 0.95,
+  "std": 3.641,
+  "min": 1.103,
+  "max": 18.343
+}
+```
+
+Just over a year of daily hours, averaging about 10 per day, ranging from just over 1 to just over 18. A mean and a range don't say anything about *why* it swings that widely, though — which is exactly what this chapter's two claimed drivers predict, and what the plot below should already hint at before a single feature gets engineered:
+
+![Minion Overtime Hours, 400 days, a visible weekly rhythm with a milder year-end climb](examples/images/minion_overtime_series.png)
+
+A dense, regular weekly sawtooth is visible even at this zoomed-out scale — the day-of-week pattern this chapter's about to ask a tree model to find on its own. Whether the subtler year-end effect is *also* visible by eye here, or whether it's the kind of signal that needs the feature-importance numbers below to surface at all, is worth deciding for yourself before reading on.
+
 ## Forecasting as a Feature-Engineering Problem
 
 Gradient-boosted trees don't know anything about time. To use one for forecasting, the series has to be reframed as an ordinary supervised learning table: for each day, build features describing what's already known (the value 1, 7, and 14 days ago; the day of the week; the calendar month; a running time index), and set the target to that day's actual value. The model then learns, the same way it would for any other tabular regression problem, which of those features actually help predict the target.

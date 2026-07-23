@@ -6,6 +6,34 @@ Not everything worth flagging in a series is a pattern. Sometimes something just
 
 **Secret Lab™ Power Consumption**, tracked daily in kilowatt-hours, has two separate incidents buried in it this chapter is going to find. Once, the death ray misfired during a routine test and drew an enormous, one-day surge of power before the safety interlocks caught it. Later, entirely unrelated, the Lab annexed a rival operation's smaller lair — along with all of its power-hungry legacy equipment — and baseline consumption has run permanently higher ever since. One of these is a spike. The other is a regime change. This chapter's two detector families exist because those are not the same thing.
 
+**Prompt:**
+> Load the power consumption series and give me the basics.
+
+**What Comes Back** (a real result, 250 days):
+
+```json
+{
+  "n_observations": 250,
+  "start_date": "2024-01-01",
+  "end_date": "2024-09-06",
+  "inferred_frequency": "D",
+  "n_missing_values": 0,
+  "mean": 243.282,
+  "mean_ci_lower": 236.957,
+  "mean_ci_upper": 249.607,
+  "confidence_level": 0.95,
+  "std": 50.774,
+  "min": 173.001,
+  "max": 725.731
+}
+```
+
+Two hundred fifty daily readings, no gaps, a mean around 243 kWh — but a max of `725.731`, more than triple the mean. That gap between "typical" and "maximum observed" is worth actually seeing before either detector below tries to explain it:
+
+![Secret Lab power consumption, 250 days -- one dramatic spike, and a subtler permanent step up in the baseline later on](examples/images/power_consumption_series.png)
+
+Both incidents are visible here, side by side, once you know to look: one unmistakable single-day tower well above everything else, and — easy to miss on a first look, precisely because it's not a tower — a point partway through where the whole baseline appears to step up and stay there. That's not a coincidence of the plotting; it's the whole reason this chapter needs two different kinds of detector, not one.
+
 ## Finding the Spike, Two Ways
 
 **Prompt:**

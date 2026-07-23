@@ -147,6 +147,12 @@ basic_stats result:
 
 **What It Means:** The connection works — nine real tools came back from a real subprocess, and a real number came back for the mean. But look at that confidence interval: `[2.98, 5.82]`, on a mean of `4.4`. That's not a narrow, reassuring band. It's most of the entire observed range, because five data points is nowhere near enough to pin down a population mean with any real precision, and `basic_stats` is not going to pretend otherwise just because you asked it nicely. This is the same "never report a number without also reporting how sure you are" rule from Chapter 1, showing up for the first time with a real result attached — and it's the *last* time in this book you'll see a series this small treated as anything other than a wiring test.
 
+Worth actually looking at those five points rather than just trusting the summary — `ts-analyst__plot_series` renders exactly what `basic_stats` just summarized:
+
+![The 5-point Weekly Grumbling Level smoke test series, plotted raw](examples/images/grumbling_level_series.png)
+
+Five points, a gentle rise from 3 to 6, nothing more — which is precisely the point. There's no hidden shape a summary statistic could be smoothing over here; the plot and the JSON are describing the exact same five numbers two different ways, and for a series this small, seeing both at once is the fastest way to trust that the tool didn't just make up a plausible-looking mean.
+
 One tool from that listing above is worth a quick, honest note before moving on, precisely because this book never actually uses it again: `generate_synthetic_data`. Every dataset from here forward is built by this book's own `generate_book_datasets.py`, which calls the same underlying generator directly for exact, seeded, reproducible control over trend/seasonality/noise parameters — a level of control this tool's simpler `out_path`/`n_days` interface doesn't expose. But if *you're* following along without a series of your own to point at, this is the tool that gets you one.
 
 **Prompt:**

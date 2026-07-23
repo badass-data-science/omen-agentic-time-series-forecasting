@@ -27,6 +27,12 @@ Before any backtest, it's worth confirming what "holdout" actually means for thi
 
 **What It Means:** `ts-forecaster__holdout_split_summary` doesn't fit or backtest anything — it just answers "what would `holdout_size=30` actually carve this series into," so a bad assumption gets caught before it's buried inside a fitted model's output. Here it confirms the split is sane: 40 training weeks, a full 30-week test window, no overlap, dates in the expected order. On a shorter series, or a holdout size that's too large relative to the data, this is where you'd catch it — an empty or tiny `train_range`, or a `n_train` too small to fit anything meaningful — before spending a real model fit finding out the hard way. This is the SKILL's own recommended first move, before `fit_naive_baselines` or anything else in this chapter runs.
 
+Worth a reminder of the shape of what's actually being split, since Chapter 4 is a few chapters back now:
+
+![Death-Ray Revenue, 70 weeks, a clear sustained upward trend](examples/images/deathray_revenue_series.png)
+
+The same climb from about $15,000 to about $35,000 over roughly a year and a half. Everything this chapter backtests holds out the most recent 30 of those weeks — the flattest, highest-value stretch on the right of this same picture — and asks two trivial baselines to predict it.
+
 ## Backtesting Death-Ray Revenue's Floor
 
 **Prompt:**
@@ -69,6 +75,34 @@ It's worth being precise about what this observation does and doesn't prove. Eye
 ## When MAPE Looks Fine and MAE Is Screaming
 
 One more real scenario worth seeing before this chapter moves on, because it's a failure mode a quick glance at MAPE alone will not catch. Imagine a stretch where death-ray bookings didn't just slow down — they stopped entirely for a month, after a rival's legal team sent a strongly-worded cease-and-desist over a licensing dispute.
+
+**Prompt:**
+> Load this shorter supplementary revenue series -- the one with the licensing freeze -- and give me the basics.
+
+**What Comes Back** (a real result, 48 weeks):
+
+```json
+{
+  "n_observations": 48,
+  "start_date": "2024-01-08",
+  "end_date": "2024-12-02",
+  "inferred_frequency": "W-MON",
+  "n_missing_values": 0,
+  "mean": 19160.882,
+  "mean_ci_lower": 17198.421,
+  "mean_ci_upper": 21123.343,
+  "confidence_level": 0.95,
+  "std": 6758.491,
+  "min": 0.0,
+  "max": 27871.526
+}
+```
+
+A shorter, supplementary series — not the same 70-week Death-Ray Revenue from the rest of this chapter, a separate 48-week one built specifically for this scenario. The `min` of exactly `0.0` is the tell:
+
+![Death-Ray Revenue with a four-week revenue freeze visible as a flat run at zero near the end of the series](examples/images/deathray_revenue_slow_month_series.png)
+
+Four consecutive weeks flat at zero, near the end of an otherwise ordinary trending series — visible proof the freeze isn't a data artifact or a single dropped value, but a real, sustained stretch of no revenue at all sitting inside what's about to become the backtest holdout.
 
 **What Comes Back** (real result, on a shorter supplementary series with four consecutive weeks of exactly `$0` revenue sitting inside a 10-week holdout):
 

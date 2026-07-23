@@ -2,6 +2,34 @@
 
 Interpol Attention Level is a weekly "heat" index the Secret Lab™ tracks about its own operation — how much scrutiny the world's law enforcement agencies are currently paying it. Ambition being what it is, this number has been climbing, steadily, for nearly two years, entirely on its own, with no single incident behind the climb. That ordinary fact turns out to be exactly the shape that exposes a real blind spot in `detect_data_drift`.
 
+**Prompt:**
+> Load the Interpol attention series and give me the basics.
+
+**What Comes Back** (a real result, 91 weeks):
+
+```json
+{
+  "n_observations": 91,
+  "start_date": "2024-01-08",
+  "end_date": "2025-09-29",
+  "inferred_frequency": "W-MON",
+  "n_missing_values": 0,
+  "mean": 483.251,
+  "mean_ci_lower": 452.321,
+  "mean_ci_upper": 514.181,
+  "confidence_level": 0.95,
+  "std": 148.515,
+  "min": 231.045,
+  "max": 694.115
+}
+```
+
+Nearly two years of weekly readings, no gaps, climbing from a minimum around 231 to a maximum around 694 — already a strong hint of the trend the rest of this chapter is built around. Seen directly, rather than inferred from a min/max spread:
+
+![Interpol Attention Level, 91 weeks, a steady, unbroken upward climb with no single incident visible anywhere in it](examples/images/interpol_attention_series.png)
+
+An ordinary, unbroken climb — no visible jump, no single day that looks like an incident. That's worth holding onto going into the next section: everything that follows about this series being flagged as "drift" is being flagged on exactly this shape, nothing more dramatic than steady, expected growth.
+
 ## An Ordinary Trend, Flagged as Drift
 
 **Prompt:**
@@ -31,6 +59,34 @@ Interpol Attention Level is a weekly "heat" index the Secret Lab™ tracks about
 ## The Real Contrast That Actually Distinguishes Them
 
 If ordinary trend alone produces a large effect size, what does an actual incident look like by comparison? A believable one: a botched heist becomes public, and Interpol's attention spikes hard over the following two months, on top of the trend that was already there.
+
+**Prompt:**
+> Load the escalation version of the series -- the one with the real incident added -- and give me the basics.
+
+**What Comes Back** (a real result, same 91 weeks, only the final 8 changed):
+
+```json
+{
+  "n_observations": 91,
+  "start_date": "2024-01-08",
+  "end_date": "2025-09-29",
+  "inferred_frequency": "W-MON",
+  "n_missing_values": 0,
+  "mean": 509.625,
+  "mean_ci_lower": 467.982,
+  "mean_ci_upper": 551.268,
+  "confidence_level": 0.95,
+  "std": 199.957,
+  "min": 231.045,
+  "max": 994.115
+}
+```
+
+Same start, same minimum — but the maximum jumped from 694 to 994, and the overall spread (`std`) grew by a third. Seen directly:
+
+![The same Interpol Attention series with a real +300 escalation added to its final 8 weeks -- a visible step up right at the end, on top of the same ongoing trend](examples/images/interpol_attention_shifted_series.png)
+
+Compare this against the plain series' plot a moment ago: the same steady climb for most of the series, then a real, visible step up right at the end — exactly the shape a genuine incident riding on top of an ongoing trend should look like, and visually distinct from the plain trend's smooth, uninterrupted climb.
 
 **What Comes Back** (a real result, the same 8-vs-26-week check, on a version of the series with a flat `+300` shift added to its most recent 8 weeks):
 
@@ -83,7 +139,30 @@ If ordinary trend alone produces a large effect size, what does an actual incide
 **Prompt:**
 > Given everything above — real degradation, real drift — what does `recommend_retraining` actually suggest doing next?
 
-A real deployed model exists for this series: ETS, backtested on the first 83 weeks at `2.40%` MAPE. Checked against the 8 weeks that include the real escalation:
+A real deployed model exists for this series: ETS, backtested on the first 83 weeks at `2.40%` MAPE. Worth loading that exact training history before trusting the number:
+
+**What Comes Back** (a real result, 83 weeks — everything before the real escalation happened):
+
+```json
+{
+  "n_observations": 83,
+  "start_date": "2024-01-08",
+  "end_date": "2025-08-04",
+  "inferred_frequency": "W-MON",
+  "n_missing_values": 0,
+  "mean": 464.042,
+  "mean_ci_lower": 433.197,
+  "mean_ci_upper": 494.886,
+  "confidence_level": 0.95,
+  "std": 141.259,
+  "min": 231.045,
+  "max": 678.038
+}
+```
+
+![The pre-escalation training history alone -- the same ordinary climb, stopping 8 weeks before the real incident](examples/images/interpol_attention_train_series.png)
+
+The last 8 weeks — the ones containing the real escalation — are deliberately absent from both this JSON and this plot: this is exactly what a model deployed *before* the incident happened would actually have been backtested and trained against, nothing more. Checked against the 8 weeks that include the real escalation:
 
 ```json
 {

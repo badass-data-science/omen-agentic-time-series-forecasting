@@ -6,6 +6,34 @@ Every operation has a rhythm to it, whether or not anyone in charge has ever bot
 
 **Henchman Costume Dry-Cleaning Bills** — weekly spend on getting the corps' public-appearance costumes properly pressed and de-scorched — swells every autumn, as Halloween-adjacent public appearances multiply and every costume in inventory needs attention at once. It also creeps up slowly year over year, for the mundane reason that the henchman roster keeps growing. Three years of weekly totals are on hand, and this chapter asks Omen to find the autumn pattern on its own, rather than being told in advance to look for a 52-week cycle.
 
+**Prompt:**
+> Load the dry-cleaning bills series and give me the basics.
+
+**What Comes Back** (a real result, 155 weeks):
+
+```json
+{
+  "n_observations": 155,
+  "start_date": "2024-01-08",
+  "end_date": "2026-12-21",
+  "inferred_frequency": "W-MON",
+  "n_missing_values": 0,
+  "mean": 3246.499,
+  "mean_ci_lower": 3048.601,
+  "mean_ci_upper": 3444.396,
+  "confidence_level": 0.95,
+  "std": 1247.187,
+  "min": 920.024,
+  "max": 5686.286
+}
+```
+
+Three full years of weekly data, no gaps, averaging around $3,250/week but ranging all the way from $920 to $5,686 — a wide enough range that it's worth actually seeing the shape behind it before assuming why:
+
+![Henchman Costume Dry-Cleaning Bills, 155 weeks, a repeating annual swell riding on top of a gradual upward creep](examples/images/drycleaning_bills_series.png)
+
+Two things visible at a glance, both of which the rest of this chapter is about proving rather than eyeballing: a clear repeating swell roughly once a year, and a gentle overall climb underneath it. Which of those two effects is doing more of the work — the seasonal swell or the creeping trend — is exactly what decomposition and periodogram search settle next, numerically rather than by squinting at a chart.
+
 ## Additive Decomposition, First
 
 Before searching for a period, it's worth seeing what a decomposition looks like once you already know roughly where to look. An **additive decomposition** splits a series into three pieces that are assumed to simply add together: `value = trend + seasonal + residual`. The trend component captures the slow drift; the seasonal component captures the repeating pattern at whatever period you specify; the residual is whatever's left over once both are removed — ideally not much.
@@ -75,6 +103,34 @@ The mechanism behind this is a **periodogram**: a decomposition of the series in
 ## The Trap: When the Trend Wins the Periodogram
 
 Here's the gotcha this chapter promised, demonstrated rather than just asserted. The dry-cleaning series above was generated with a *modest* trend — the henchman roster growing gradually. What happens if the roster grows much faster instead — say, after an aggressive recruitment drive triples headcount over the same three years?
+
+**Prompt:**
+> Load the same dry-cleaning series, but regenerated with a 10x steeper trend, and give me the basics before we search for seasonality again.
+
+**What Comes Back** (a real result, same 155 weeks, same seasonal pattern, only the trend changed):
+
+```json
+{
+  "n_observations": 155,
+  "start_date": "2024-01-08",
+  "end_date": "2026-12-21",
+  "inferred_frequency": "W-MON",
+  "n_missing_values": 0,
+  "mean": 13622.599,
+  "mean_ci_lower": 12609.604,
+  "mean_ci_upper": 14635.594,
+  "confidence_level": 0.95,
+  "std": 6384.086,
+  "min": 2650.992,
+  "max": 24532.788
+}
+```
+
+Same 155 weeks, same underlying autumn pattern — but the mean roughly quadrupled (about $3,250/week to about $13,600/week) and the range widened dramatically (up to $24,500 now, versus $5,700 before). What that actually looks like:
+
+![The same dry-cleaning series with a 10x steeper trend -- the annual swell is now visually dwarfed by the climb](examples/images/drycleaning_bills_steep_trend_series.png)
+
+Compare this directly against the plot two sections back: the same repeating autumn pattern is technically still in there, but it's now a minor ripple riding on top of a trend steep enough to dominate the picture by eye. That's the visual preview of exactly the failure mode this section is about to demonstrate numerically — a periodogram search that can't tell "a real repeating cycle" apart from "a trend so strong it looks like one very long cycle."
 
 **What Comes Back** (real output, same series regenerated with a 10x-steeper underlying trend, searched over the same plausible seasonal range of 10–60 weeks):
 

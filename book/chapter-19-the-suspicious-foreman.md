@@ -2,6 +2,34 @@
 
 Every self-respecting evil lair has a self-destruct countdown, and every self-respecting self-destruct countdown occasionally needs its timing adjusted — reset after a false alarm, extended during "routine maintenance," whatever the plot demands. The question this chapter exists to answer has nothing to do with forecasting: has anyone actually authorized the lab's systems to make that adjustment on their own, or does it require a human hand on the button, every single time, no exceptions? `execute_redeploy` is the one tool in this entire toolkit that changes anything real, and this chapter runs its guardrails for real, end to end.
 
+Worth a quick, honest look at the series itself before diving into confirmation mechanics, even though — unlike almost every other series in this book — how well it forecasts is not the point here:
+
+**Prompt:**
+> Load the self-destruct countdown timer adjustments series and give me the basics.
+
+**What Comes Back** (a real result, 45 days):
+
+```json
+{
+  "n_observations": 45,
+  "start_date": "2024-01-01",
+  "end_date": "2024-02-14",
+  "inferred_frequency": "D",
+  "n_missing_values": 0,
+  "mean": 83.474,
+  "mean_ci_lower": 82.143,
+  "mean_ci_upper": 84.805,
+  "confidence_level": 0.95,
+  "std": 4.43,
+  "min": 74.031,
+  "max": 92.476
+}
+```
+
+![Self-Destruct Countdown Timer Adjustments, 45 days, a modest, gently declining series](examples/images/self_destruct_timer_series.png)
+
+A modest, unremarkable, gently declining series — deliberately so. This chapter exists purely to give the confirmation/authorization machinery below a real `csv_path` to run `execute_redeploy` against, not to demonstrate a forecast worth trusting; the series' own shape is genuinely incidental to everything that follows.
+
 ## Step One: Refuse By Default
 
 **Prompt:**

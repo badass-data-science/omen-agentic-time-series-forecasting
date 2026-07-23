@@ -112,6 +112,12 @@ One more edge case worth seeing with your own eyes before this chapter moves on,
 
 `mean_ci_lower` and `mean_ci_upper` both come back `null` — not `200.0` and `200.0`, not some fabricated hairline-width interval. This is correct. With zero observed variance, the standard error formula from the previous section divides by zero, and rather than paper over that with a made-up answer, the tool refuses to answer at all. Get comfortable seeing `null` in Omen's output and reading it as *"there is a real reason this can't be computed honestly,"* not as a bug to work around. You'll see this exact pattern — a deliberate `null` instead of a fabricated number — recur throughout this book, and every single time, it will mean the same thing.
 
+A plot makes the same point even faster than the JSON does:
+
+![The flat, zero-variance mojito week -- a perfectly flat line at 200](examples/images/mojito_inventory_constant_series.png)
+
+A dead-flat line. There's nothing subtle to squint at here — that's exactly why `mean_ci_lower`/`mean_ci_upper` coming back `null` is the honest answer and not a bug: a perfectly flat line has no variance for a confidence interval to be built from, and the picture makes that visually obvious in a way the number 0.0 alone doesn't quite land.
+
 ## What's Next
 
 You now know how to load a series and ask the gentlest possible question about it: on average, what does this look like, and how sure are we? Chapter 4 asks a harder question about the same kind of data — not "what's the average," but "does this series even *have* a stable average to begin with, or is it wandering?" That's stationarity, and it's where this book stops being gentle.
