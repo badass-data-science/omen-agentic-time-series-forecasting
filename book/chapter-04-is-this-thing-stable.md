@@ -22,7 +22,35 @@ Because the nulls point in opposite directions, running both and reading them to
 
 ## Meet Death-Ray Revenue
 
-**Death-Ray Revenue** — weekly income from renting out the Secret Lab™'s death ray to other operations that would rather lease world-ending hardware than build their own — is this book's first deliberately non-stationary series. Reputation compounds, rental rates have climbed accordingly, and the series has been trending upward for well over a year now. It's introduced here and comes back repeatedly through Part III as the flagship "let's actually build a model for this" example.
+**Death-Ray Revenue** — weekly income from renting out the Secret Lab™'s death ray to other operations that would rather lease world-ending hardware than build their own — is this book's first deliberately non-stationary series. Reputation compounds, rental rates have climbed accordingly, and the series has been trending upward for well over a year now. It's introduced here and comes back repeatedly through Part III as the flagship "let's actually build a model for this" example — worth getting properly acquainted with before the first real test runs against it.
+
+**Prompt:**
+> Load the death-ray revenue series and give me the basics before we test anything.
+
+**What Comes Back** (a real result, 70 weeks):
+
+```json
+{
+  "n_observations": 70,
+  "start_date": "2024-01-08",
+  "end_date": "2025-05-05",
+  "inferred_frequency": "W-MON",
+  "n_missing_values": 0,
+  "mean": 24701.716,
+  "mean_ci_lower": 23270.056,
+  "mean_ci_upper": 26133.375,
+  "confidence_level": 0.95,
+  "std": 6004.235,
+  "min": 14739.478,
+  "max": 35322.395
+}
+```
+
+Weekly data (`inferred_frequency: "W-MON"`, not daily), no missing values, a mean of roughly $24,700/week ranging from about $14,700 up to $35,300. None of that tells you *how* it moves from the low end to the high end, though — a mean and a range are consistent with a series that wanders unpredictably just as much as one that climbs steadily. That's exactly what a plot settles at a glance:
+
+![Death-Ray Revenue, 70 weeks, a clear sustained upward trend](examples/images/deathray_revenue_series.png)
+
+Now the shape actually seen, not just implied by a wide min/max: a clean, sustained climb from around $15,000 to around $35,000 over about a year and a half, without ever seriously reversing. That's the visual version of "this looks non-stationary" — the next section makes it a rigorous, real test rather than an eyeball judgment.
 
 **Prompt:**
 > Is the death-ray revenue series stationary? If ADF and KPSS disagree, what should I do about it?
@@ -52,18 +80,22 @@ Because the nulls point in opposite directions, running both and reading them to
 }
 ```
 
-**What It Means:** No disagreement to referee this time — ADF and KPSS both land on non-stationary, which is the easy case in the table above, and exactly what you'd expect from a series with an obvious, sustained upward trend. An ADF p-value of `0.9971` is about as unambiguous as this test gets: there is essentially no evidence against the unit-root null. This series needs differencing (Chapter 10 shows you exactly how) before it's a reasonable candidate for a model that assumes stationarity.
+**What It Means:** No disagreement to referee this time — ADF and KPSS both land on non-stationary, which is the easy case in the table above, and what you'd expect from a series with an obvious, sustained upward trend. An ADF p-value of `0.9971` is about as unambiguous as this test gets: there is essentially no evidence against the unit-root null. This series needs differencing (Chapter 10 shows you exactly how) before it's a reasonable candidate for a model that assumes stationarity.
 
 ## The Effect Size Behind the Verdict
 
+Before the specific numbers, the general idea: **effect size** is a concept an introductory statistics course often skips even while spending weeks on p-values. A p-value only answers one narrow question: is this effect distinguishable from pure noise, given how much data happens to be on hand? It says nothing about *how big* the effect actually is. Given enough data, a tiny, practically irrelevant effect can produce an arbitrarily small p-value; given too little data, a large effect can fail to clear significance at all. An **effect size** is the second, independent number that answers the question a p-value can't: not "is this real," but "how much does it matter." That's why Omen reports one alongside essentially every test result in this book — sometimes a standardized measure like Cohen's d (Chapter 7, Chapter 17), sometimes a domain-specific quantity purpose-built for the test at hand, like the mean-reversion half-life below or KPSS's own statistic-to-critical-value ratio further down this chapter — specifically so a statistically significant finding and a practically important one never get mistaken for the same thing.
+
 A bare "non-stationary: true" would already be useful. But look at what else came back — `mean_reversion_lambda` and `mean_reversion_half_life_periods` — and this is where the chapter earns its subtitle.
 
-`mean_reversion_lambda` is the estimated speed at which the series pulls back toward its own mean, fit from the regression `Δy_t = λ·y_{t-1} + μ
-+ ε_t`. Here it's `-0.001116` — technically negative, technically implying *some* reversion — but look at its confidence interval: `[-0.022961, 0.020729]`. That interval comfortably straddles zero. In plain terms: the data cannot actually distinguish "reverts extremely slowly" from "doesn't revert at all," and reporting the point estimate alone, without that interval, would have implied a confidence the number doesn't earn.
+**Mean reversion** is the tendency of a series to drift back toward its own long-run average after moving away from it, rather than wandering off permanently. `mean_reversion_lambda` is the estimated *speed* of that pull-back, fit from the regression `Δy_t = λ·y_{t-1} + μ
++ ε_t`. Here it's `-0.001116` — technically negative, technically implying *some* reversion — but look at its confidence interval: `[-0.022961, 0.020729]`. That interval comfortably straddles zero. In plain terms: the data cannot distinguish "reverts extremely slowly" from "doesn't revert at all," and reporting the point estimate alone, without that interval, would have implied a confidence the number doesn't earn.
 
-This turns into something even more concrete once you convert it to a half-life — how many weeks it would take a deviation from the mean to shrink by half. The point estimate is `620.9 weeks` — just under twelve years. Its confidence interval is `[30.19, null]` — the upper bound is `null` specifically because `lambda`'s own interval reaches into non-negative territory, and a lambda of zero or higher implies a half-life of infinity. This is Omen refusing to report a fabricated finite number for "how long until this reverts" when the honest answer is "the data can't rule out *never*." A half-life measured in decades, with an upper bound of "possibly forever," is not information you can build a 30-day forecast around — which is exactly the point this chapter's introduction promised: **a series can clear statistical significance on paper while being practically useless for the timeframe you actually care about, and the effect size is the only place that shows up.**
+The opposite extreme is a **random walk** — a series with no memory of its own level, where each new value is just the previous one plus pure, unpredictable noise, so every deviation is permanent by construction. It's the exact non-stationary case ADF's null hypothesis and KPSS's alternative hypothesis are both written against (this chapter's "unit root" language above is another name for the same thing). It's also the reason naive's "just repeat the last value" baseline (Chapter 8) is, mathematically, the *correct* forecast for a true random walk rather than a lazy one: there's no real structure left to beat it with. A persistent trend, like this series, isn't a random walk itself, but shares the family resemblance ADF/KPSS are testing for — neither one reverts to a fixed mean on its own.
 
-One general caution worth carrying forward, even though this particular series is a smooth trend rather than a textbook random walk: for series that genuinely do have a unit root, this same `lambda` estimate is known to skew slightly negative in finite samples even when there's zero true reversion. That means a small negative lambda, on its own, is never proof of real mean-reversion — you always need the confidence interval and the ADF/KPSS verdict alongside it, exactly as this example just demonstrated.
+This turns into something even more concrete once you convert it to a half-life — how many weeks it would take a deviation from the mean to shrink by half. The point estimate is `620.9 weeks` — just under twelve years. Its confidence interval is `[30.19, null]` — the upper bound is `null` specifically because `lambda`'s own interval reaches into non-negative territory, and a lambda of zero or higher implies a half-life of infinity. This is Omen refusing to report a fabricated finite number for "how long until this reverts" when the honest answer is "the data can't rule out *never*." A half-life measured in decades, with an upper bound of "possibly forever," is not information you can build a 30-day forecast around — which is the point this chapter's introduction promised: **a series can clear statistical significance on paper while being practically useless for the timeframe you actually care about, and the effect size is the only place that shows up.**
+
+One general caution to carry forward, even though this particular series is a smooth trend rather than a textbook random walk: for series that truly have a unit root, this same `lambda` estimate is known to skew slightly negative in finite samples even when there's zero true reversion. That means a small negative lambda, on its own, is never proof of real mean-reversion — you always need the confidence interval and the ADF/KPSS verdict alongside it, as this example just demonstrated.
 
 ## Why KPSS Gets an Effect Size Too
 

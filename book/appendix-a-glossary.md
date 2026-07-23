@@ -4,11 +4,17 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **ACF (autocorrelation function).** How correlated a series is with a lagged copy of itself, at each lag. Ch. 6.
 
+**ADF test (Augmented Dickey-Fuller).** A hypothesis test whose null hypothesis is "this series has a unit root" (is non-stationary) — rejecting it is evidence *for* stationarity. Ch. 4.
+
 **AIC (Akaike Information Criterion).** A model-fit statistic that penalizes added parameters — lower is better — used to compare candidate models without a held-out test set. Ch. 9.
 
 **AICc.** AIC with a small-sample correction (Hurvich & Tsai, 1989) that grows more important as the parameter count approaches the training sample size; can diverge meaningfully from plain AIC on the backtest window sizes this book used throughout. Ch. 9, Ch. 10.
 
-**ADF test (Augmented Dickey-Fuller).** A hypothesis test whose null hypothesis is "this series has a unit root" (is non-stationary) — rejecting it is evidence *for* stationarity. Ch. 4.
+**AR / MA (autoregressive / moving-average).** The two building blocks SARIMA's `p` and `q` orders count: an AR term predicts from the series' own past *values*; an MA term predicts from past *forecast errors*. Ch. 6, Ch. 10.
+
+**Backtest / train-test split (holdout).** Fitting a model only on a series' training portion, then scoring it against a held-back test portion (the holdout) it never saw during fitting — the only honest way to estimate how a model performs on data it hasn't seen. Unlike a typical machine-learning split, a time-series holdout must be chronological (train on the past, hold out the most recent stretch) rather than a random shuffle, since forecasting is inherently about the future following the past. Ch. 8.
+
+**BIC (Bayesian Information Criterion).** A model-fit statistic like AIC — rewards fit, penalizes added parameters — but with a steeper per-parameter penalty that grows with sample size. Ch. 10.
 
 **Bootstrap confidence interval.** A confidence interval built by resampling the data with replacement many times and looking at the spread of a statistic across those resamples, rather than relying on a closed-form formula. Ch. 8.
 
@@ -38,6 +44,8 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **KPSS test (Kwiatkowski-Phillips-Schmidt-Shin).** A stationarity test whose null hypothesis is the *opposite* of the ADF test's — "this series is stationary" — making ADF/KPSS agreement or disagreement itself informative. Ch. 4.
 
+**KS statistic (Kolmogorov-Smirnov).** A test for whether two samples come from different distributions, using each sample's whole shape rather than just its mean — catches a spread or shape shift a t-test on the means alone would miss. Ch. 17.
+
 **Lag feature.** In a supervised-learning framing of forecasting, a feature built from a series' own past values (e.g., "the value 7 days ago") used to predict its future value. Ch. 11.
 
 **Ljung-Box test.** A test for whether a sequence of residuals still contains structure ("looks like white noise" is the desired failure to reject). Ch. 9.
@@ -48,11 +56,13 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **MAPE (mean absolute percentage error).** Average absolute error as a percentage of the actual value — undefined at an actual value of exactly zero, and excluded points are reported explicitly rather than silently dropped. Ch. 8.
 
+**Mean reversion.** The tendency of a series to drift back toward its own long-run average after moving away from it, rather than wandering off permanently — measured by `mean_reversion_lambda` (the estimated speed of the pull-back) and its derived half-life. Not to be confused with the unrelated "effect size" entries this same tool reports (KPSS-statistic-to-critical-value ratio); see Cohen's d above. Ch. 4.
+
 **Modified z-score.** A robust alternative to a standard z-score, built from the median and MAD instead of the mean and standard deviation (Iglewicz & Hoya, 1993) — degrades in a specific, documented way when half or more of the underlying values are identical. Ch. 7, Ch. 16.
 
 **Naive / seasonal-naive baseline.** The simplest possible forecasts — repeat the last value forever, or repeat the last full seasonal cycle — that every real model has to beat to justify its own complexity. Ch. 8.
 
-**One-step-ahead vs. recursive multi-step evaluation.** Whether a backtest scores a model against true lagged values at every point (easier) or against the model's own earlier predictions feeding forward (harder, allows compounding error) — a distinction this book found genuinely easy to conflate by accident. Ch. 11, Ch. 14.
+**One-step-ahead vs. recursive multi-step evaluation.** Whether a backtest scores a model against true lagged values at every point (easier) or against the model's own earlier predictions feeding forward (harder, allows compounding error) — a distinction this book found easy to conflate by accident. Ch. 11, Ch. 14.
 
 **PACF (partial autocorrelation function).** Like the ACF, but with the correlation at intermediate lags controlled for — used alongside the ACF to reason about a SARIMA model's `p`/`q` orders. Ch. 6.
 
@@ -63,6 +73,12 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 **Plausibility check.** An automated comparison of a forecast's implied change against a series' own historical distribution of changes — explicitly documented as a prompt for scrutiny, not a hypothesis test or a verdict. Ch. 14.
 
 **Prediction interval.** A range meant to contain a future observation with some stated probability — built differently by different model families in this book (ETS's simulated paths, SARIMA's analytic state-space formula, GBT's quantile regression), each with a different real failure mode. Notably absent from `fit_gradient_boosted_trees`'s own backtest (Ch. 11) — GBT only gets one once deployed (Ch. 14). Ch. 9, Ch. 10, Ch. 14.
+
+**Quantile regression.** A model trained to directly predict a specific percentile of the outcome (e.g. the 5th and 95th) rather than a single mean plus an assumed spread — the basis for GBT's prediction interval, and not derived from the same step-by-step process as a recursive point forecast. Ch. 14.
+
+**Random walk.** A series where each new value is the previous value plus pure, unpredictable noise, with no underlying level to pull it back toward — every deviation is permanent. The exact non-stationary case ADF's null hypothesis and KPSS's alternative hypothesis are both written against, and the reason a naive "repeat the last value" baseline is the mathematically correct forecast for one. Ch. 4, Ch. 8.
+
+**RMSE (root mean squared error).** Like MAE, an average forecast miss in the series' own units, but squares each miss before averaging — so it penalizes a few large misses harder than MAE does. Ch. 8.
 
 **Rolling-origin / walk-forward backtest.** Repeating a backtest at several different points in a series, walking backward, to measure whether a model's performance is stable across stretches rather than a property of one arbitrarily chosen holdout window. Ch. 13.
 

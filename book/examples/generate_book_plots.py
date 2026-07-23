@@ -30,15 +30,23 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from generate_book_datasets import (
+    grumbling_level,
     mojito_inventory,
     mojito_inventory_clean,
     mojito_inventory_month2_actuals,
+    mojito_inventory_constant,
+    mad_degenerate_edge_case,
     deathray_revenue,
+    deathray_revenue_rival,
+    deathray_revenue_slow_month,
     drycleaning_bills,
     drycleaning_bills_steep_trend,
     power_consumption,
     interpol_attention,
     interpol_attention_shifted,
+    interpol_attention_train,
+    self_destruct_timer,
+    minion_overtime,
 )
 
 from omen.analyst.plot_tools import (
@@ -75,6 +83,109 @@ def _mojito_sarima_forecast():
 def mojito_inventory_series(out_dir):
     """Chapter 3: the raw mojito series, gaps visible where 5 days are missing."""
     plot_series(mojito_inventory(), out_path=os.path.join(out_dir, "mojito_inventory_series.png"))
+
+
+def grumbling_level_series(out_dir):
+    """Chapter 2: the 5-point installation smoke test, plotted raw."""
+    plot_series(grumbling_level(), out_path=os.path.join(out_dir, "grumbling_level_series.png"))
+
+
+def mojito_inventory_constant_series(out_dir):
+    """Chapter 3: the zero-variance edge case -- a flat week, plotted raw."""
+    plot_series(mojito_inventory_constant(), out_path=os.path.join(out_dir, "mojito_inventory_constant_series.png"))
+
+
+def deathray_revenue_series(out_dir):
+    """Chapter 4 (reused 8-13, 15, 18): the flagship Death-Ray Revenue
+    series, plotted raw for the first time -- 70 weeks, strong upward
+    trend, no orientation plot existed for this series until now."""
+    plot_series(deathray_revenue(), out_path=os.path.join(out_dir, "deathray_revenue_series.png"))
+
+
+def drycleaning_bills_series(out_dir):
+    """Chapter 5: the raw dry-cleaning bills series, before decomposition
+    or periodogram analysis -- the annual cycle visible by eye."""
+    plot_series(drycleaning_bills(), out_path=os.path.join(out_dir, "drycleaning_bills_series.png"))
+
+
+def drycleaning_bills_steep_trend_series(out_dir):
+    """Chapter 5's gotcha variant: the same series with a 10x steeper
+    trend, plotted raw so the trend's visual dominance is obvious before
+    the periodogram trap is demonstrated."""
+    plot_series(drycleaning_bills_steep_trend(), out_path=os.path.join(out_dir, "drycleaning_bills_steep_trend_series.png"))
+
+
+def power_consumption_series(out_dir):
+    """Chapter 7: the raw power consumption series, spike and baseline
+    shift both visible by eye, before the anomaly/changepoint tools run."""
+    plot_series(power_consumption(), out_path=os.path.join(out_dir, "power_consumption_series.png"))
+
+
+def deathray_revenue_slow_month_series(out_dir):
+    """Chapter 8's MAPE-vs-MAE variant: the supplementary series with the
+    four-week revenue freeze, plotted raw so the flat-zero stretch is
+    visible before the metric comparison."""
+    plot_series(deathray_revenue_slow_month(), out_path=os.path.join(out_dir, "deathray_revenue_slow_month_series.png"))
+
+
+def minion_overtime_series(out_dir):
+    """Chapter 11: the raw Minion Overtime Hours series, weekly cycle
+    visible by eye, before feature engineering/GBT fitting begins."""
+    plot_series(minion_overtime(), out_path=os.path.join(out_dir, "minion_overtime_series.png"))
+
+
+def mojito_inventory_clean_series(out_dir):
+    """Chapter 14: the interpolated, deployment-ready mojito series on
+    its own -- no gaps left, distinct from mojito_inventory_series.png's
+    raw (gappy) version."""
+    plot_series(mojito_inventory_clean(), out_path=os.path.join(out_dir, "mojito_inventory_clean_series.png"))
+
+
+def mad_degenerate_edge_case_series(out_dir):
+    """Chapter 16's constructed MAD-degenerate example, plotted raw --
+    a flat run of actuals, the shape that later drives the residual
+    outlier check's MAD to exactly 0."""
+    plot_series(mad_degenerate_edge_case(), out_path=os.path.join(out_dir, "mad_degenerate_edge_case_series.png"))
+
+
+def mojito_inventory_month2_actuals_series(out_dir):
+    """Chapter 16's real month-2 actuals on their own -- distinct from
+    mojito_forecast_vs_actuals.png, which overlays them against the
+    deployed forecast rather than showing the actuals alone."""
+    plot_series(mojito_inventory_month2_actuals(), out_path=os.path.join(out_dir, "mojito_inventory_month2_actuals_series.png"))
+
+
+def interpol_attention_series(out_dir):
+    """Chapter 17: the raw Interpol Attention Level series, the ordinary
+    upward trend visible by eye before any drift check runs."""
+    plot_series(interpol_attention(), out_path=os.path.join(out_dir, "interpol_attention_series.png"))
+
+
+def interpol_attention_shifted_series(out_dir):
+    """Chapter 17's real escalation variant, plotted raw -- the +300
+    level shift in the final 8 weeks visible directly, distinct from
+    interpol_drift_shifted.png's distribution boxplot."""
+    plot_series(interpol_attention_shifted(), out_path=os.path.join(out_dir, "interpol_attention_shifted_series.png"))
+
+
+def interpol_attention_train_series(out_dir):
+    """Chapter 17's pre-escalation training history (first 83 of 91
+    weeks), plotted raw -- what a deployed model would have seen before
+    the real +300 shift happened."""
+    plot_series(interpol_attention_train(), out_path=os.path.join(out_dir, "interpol_attention_train_series.png"))
+
+
+def deathray_revenue_rival_series(out_dir):
+    """Chapter 18's rival-extended series, plotted raw -- the trend
+    visibly flattening in the final weeks where the price war begins."""
+    plot_series(deathray_revenue_rival(), out_path=os.path.join(out_dir, "deathray_revenue_rival_series.png"))
+
+
+def self_destruct_timer_series(out_dir):
+    """Chapter 19: the raw Self-Destruct Countdown Timer Adjustments
+    series -- a modest, gently declining series, plotted for orientation
+    even though this chapter isn't about forecasting it well."""
+    plot_series(self_destruct_timer(), out_path=os.path.join(out_dir, "self_destruct_timer_series.png"))
 
 
 def drycleaning_bills_decomposition(out_dir):
@@ -199,6 +310,22 @@ def interpol_rolling_drift(out_dir):
 
 PLOTS = {
     "mojito_inventory_series": mojito_inventory_series,
+    "grumbling_level_series": grumbling_level_series,
+    "mojito_inventory_constant_series": mojito_inventory_constant_series,
+    "deathray_revenue_series": deathray_revenue_series,
+    "drycleaning_bills_series": drycleaning_bills_series,
+    "drycleaning_bills_steep_trend_series": drycleaning_bills_steep_trend_series,
+    "power_consumption_series": power_consumption_series,
+    "deathray_revenue_slow_month_series": deathray_revenue_slow_month_series,
+    "minion_overtime_series": minion_overtime_series,
+    "mojito_inventory_clean_series": mojito_inventory_clean_series,
+    "mad_degenerate_edge_case_series": mad_degenerate_edge_case_series,
+    "mojito_inventory_month2_actuals_series": mojito_inventory_month2_actuals_series,
+    "interpol_attention_series": interpol_attention_series,
+    "interpol_attention_shifted_series": interpol_attention_shifted_series,
+    "interpol_attention_train_series": interpol_attention_train_series,
+    "deathray_revenue_rival_series": deathray_revenue_rival_series,
+    "self_destruct_timer_series": self_destruct_timer_series,
     "drycleaning_bills_decomposition": drycleaning_bills_decomposition,
     "drycleaning_bills_periodogram": drycleaning_bills_periodogram,
     "drycleaning_bills_steep_periodogram": drycleaning_bills_steep_periodogram,

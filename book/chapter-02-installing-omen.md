@@ -75,11 +75,11 @@ openclaw mcp tools ts-analyst
 
 Claude Code (the tool this book itself was drafted with, incidentally) registers MCP servers through its own configuration — either a project-level `.mcp.json` file using the same `command`/`args` shape shown above, or via `claude mcp add` from the command line. Because CLI flags are the part of any tool most likely to have changed by the time you're reading this, run `claude mcp add --help` for the exact current syntax rather than trusting a book to have it memorized correctly forever; the important, stable fact is that you're giving it the same information as everywhere else in this chapter — a name, a command, and (empty, here) arguments.
 
-Omen's `SKILL.md` files are written in a format OpenClaw consumes natively as a full agentic playbook. Claude Code doesn't necessarily read them the same way, but they remain genuinely useful reference material — point your agent at a specific layer's `SKILL.md` when you want it to follow that layer's documented workflow precisely (the four-step structure most of Omen's skills use, covered as you reach each layer in this book).
+Omen's `SKILL.md` files are written in a format OpenClaw consumes natively as a full agentic playbook. Claude Code doesn't necessarily read them the same way, but they remain useful reference material — point your agent at a specific layer's `SKILL.md` when you want it to follow that layer's documented workflow precisely (the four-step structure most of Omen's skills use, covered as you reach each layer in this book).
 
 ### Hermes, and Other MCP-Speaking Agent Frameworks
 
-Rather than guess at a specific proprietary configuration format for a platform this book can't screenshot with confidence, here's the honest version: **if Hermes — or any other agentic framework you're using — can launch a subprocess by command and arguments and speak MCP over stdio, the same three things from earlier in this chapter apply unchanged.** Register each of the five console scripts the same way you would for any other client. Consult that platform's own documentation for exactly where its configuration file lives and what key holds the server list; the *shape* of what goes in it is what this chapter has already taught you.
+Rather than guess at a specific proprietary configuration format for a platform this book can't screenshot with confidence, here's the honest version: **if Hermes — or any other agentic framework you're using — can launch a subprocess by command and arguments and speak MCP over stdio, the same three things from earlier in this chapter apply unchanged.** Register each of the five console scripts the same way you would for any other client. Consult that platform's own documentation for where its configuration file lives and what key holds the server list; the *shape* of what goes in it is what this chapter has already taught you.
 
 ### Generic MCP Clients (Claude Desktop and Others)
 
@@ -87,7 +87,7 @@ Several general-purpose AI assistants beyond the ones named above also speak MCP
 
 ## The Gotcha, Demonstrated Live
 
-Here is a failure this book's own author hit while first wiring up a real test against a live Omen server — worth narrating exactly as it happened, because it's the single most common installation problem, and it looks alarming right up until you know what it is.
+Here is a failure our heroine hit herself while first wiring up a real test against a live Omen server — narrated as it happened, because it's the single most common installation problem, and it looks alarming right up until you know what it is.
 
 The setup: a virtual environment, Omen installed into it with `pip install -e ".[all]"`, the console script confirmed present with `which ts-analyst-server`. Then, a client configuration pointing at the server by its bare command name:
 
@@ -104,7 +104,7 @@ directory: 'ts-analyst-server'
 
 Which is deeply confusing the first time you see it, because `ts-analyst-server` unquestionably *does* exist — `which ts-analyst-server` just said so, in the same terminal, thirty seconds earlier.
 
-Here's what's actually going on: when your agentic platform launches Omen's server, it's starting a **new subprocess**, and that subprocess does not automatically inherit the activated virtual environment's `PATH` the way your interactive terminal session does. The bare command name `ts-analyst-server` only resolves if the launching process's `PATH` includes your venv's `bin/` directory — and depending on exactly how your agentic platform spawns subprocesses, it may or may not.
+Here's what's actually going on: when your agentic platform launches Omen's server, it's starting a **new subprocess**, and that subprocess does not automatically inherit the activated virtual environment's `PATH` the way your interactive terminal session does. The bare command name `ts-analyst-server` only resolves if the launching process's `PATH` includes your venv's `bin/` directory — and depending on how your agentic platform spawns subprocesses, it may or may not.
 
 The fix is one line: use the **absolute path** to the installed console script instead of its bare name.
 
@@ -115,7 +115,7 @@ The fix is one line: use the **absolute path** to the installed console script i
 } } }
 ```
 
-Find that exact path with `which ts-analyst-server` while your venv is activated, and paste the result in verbatim. This one change resolves the overwhelming majority of "the tool obviously exists but the client can't find it" reports you'll run into across every platform in this chapter — OpenClaw's own configuration notes flag this exact fix for exactly this reason.
+Find that exact path with `which ts-analyst-server` while your venv is activated, and paste the result in verbatim. This one change resolves the overwhelming majority of "the tool obviously exists but the client can't find it" reports you'll run into across every platform in this chapter — OpenClaw's own configuration notes flag this exact fix for this reason.
 
 ## Proof of Life
 
@@ -147,6 +147,12 @@ basic_stats result:
 
 **What It Means:** The connection works — nine real tools came back from a real subprocess, and a real number came back for the mean. But look at that confidence interval: `[2.98, 5.82]`, on a mean of `4.4`. That's not a narrow, reassuring band. It's most of the entire observed range, because five data points is nowhere near enough to pin down a population mean with any real precision, and `basic_stats` is not going to pretend otherwise just because you asked it nicely. This is the same "never report a number without also reporting how sure you are" rule from Chapter 1, showing up for the first time with a real result attached — and it's the *last* time in this book you'll see a series this small treated as anything other than a wiring test.
 
+Look at those five points directly rather than just trusting the summary — `ts-analyst__plot_series` renders exactly what `basic_stats` just summarized:
+
+![The 5-point Weekly Grumbling Level smoke test series, plotted raw](examples/images/grumbling_level_series.png)
+
+Five points, a gentle rise from 3 to 6, nothing more — which is precisely the point. There's no hidden shape a summary statistic could be smoothing over here; the plot and the JSON are describing the exact same five numbers two different ways, and for a series this small, seeing both at once is the fastest way to trust that the tool didn't just make up a plausible-looking mean.
+
 One tool from that listing above is worth a quick, honest note before moving on, precisely because this book never actually uses it again: `generate_synthetic_data`. Every dataset from here forward is built by this book's own `generate_book_datasets.py`, which calls the same underlying generator directly for exact, seeded, reproducible control over trend/seasonality/noise parameters — a level of control this tool's simpler `out_path`/`n_days` interface doesn't expose. But if *you're* following along without a series of your own to point at, this is the tool that gets you one.
 
 **Prompt:**
@@ -164,7 +170,7 @@ One tool from that listing above is worth a quick, honest note before moving on,
 }
 ```
 
-**What It Means:** A real 90-day series — trend, weekly and yearly seasonality, noise, a few injected anomalies, per the tool's own docstring — now sits on disk at a path every other `ts-analyst` tool can load directly. It's a genuinely useful on-ramp for exactly one situation: you want to kick the tires on this toolkit before you have real data of your own to bring to it. Once you do have real data, or once a specific example needs specific, reproducible parameters the way this entire book does, this tool has done its job and the rest of the pipeline takes it from here.
+**What It Means:** A real 90-day series — trend, weekly and yearly seasonality, noise, a few injected anomalies, per the tool's own docstring — now sits on disk at a path every other `ts-analyst` tool can load directly. It's a useful on-ramp for exactly one situation: you want to kick the tires on this toolkit before you have real data of your own to bring to it. Once you do have real data, or once a specific example needs specific, reproducible parameters the way this entire book does, this tool has done its job and the rest of the pipeline takes it from here.
 
 ## What's Next
 

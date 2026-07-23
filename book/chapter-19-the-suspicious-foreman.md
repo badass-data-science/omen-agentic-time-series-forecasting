@@ -2,6 +2,34 @@
 
 Every self-respecting evil lair has a self-destruct countdown, and every self-respecting self-destruct countdown occasionally needs its timing adjusted — reset after a false alarm, extended during "routine maintenance," whatever the plot demands. The question this chapter exists to answer has nothing to do with forecasting: has anyone actually authorized the lab's systems to make that adjustment on their own, or does it require a human hand on the button, every single time, no exceptions? `execute_redeploy` is the one tool in this entire toolkit that changes anything real, and this chapter runs its guardrails for real, end to end.
 
+The series itself deserves a quick, honest look before diving into confirmation mechanics, even though — unlike almost every other series in this book — how well it forecasts is not the point here:
+
+**Prompt:**
+> Load the self-destruct countdown timer adjustments series and give me the basics.
+
+**What Comes Back** (a real result, 45 days):
+
+```json
+{
+  "n_observations": 45,
+  "start_date": "2024-01-01",
+  "end_date": "2024-02-14",
+  "inferred_frequency": "D",
+  "n_missing_values": 0,
+  "mean": 83.474,
+  "mean_ci_lower": 82.143,
+  "mean_ci_upper": 84.805,
+  "confidence_level": 0.95,
+  "std": 4.43,
+  "min": 74.031,
+  "max": 92.476
+}
+```
+
+![Self-Destruct Countdown Timer Adjustments, 45 days, a modest, gently declining series](examples/images/self_destruct_timer_series.png)
+
+A modest, unremarkable, gently declining series — deliberately so. This chapter exists purely to give the confirmation/authorization machinery below a real `csv_path` to run `execute_redeploy` against, not to demonstrate a forecast worth trusting; the series' own shape is incidental to everything that follows.
+
 ## Step One: Refuse By Default
 
 **Prompt:**
@@ -64,7 +92,7 @@ Retrying the exact same `execute_redeploy(confirmed=True, autonomous=True)` call
 }
 ```
 
-**What It Means:** Same call, same flags, different outcome — because the actual state on disk changed in between, not because anything about the request itself changed. `previous_deployment: null` is real too: this genuinely was the first deployment ever recorded for this series, and the tool says so plainly rather than fabricating a prior state. `authorized_by` matters here beyond being a label — `authorize_autonomous_mode` performs no judgment of its own about whether granting this was legitimate; it just persists a decision that already happened elsewhere, the same way `record_deployment` persists a deployment decision rather than making one. The provenance field exists so whoever reads this record back later — a human auditing what's authorized, or an agent checking before acting — has more to go on than a bare `true`.
+**What It Means:** Same call, same flags, different outcome — because the actual state on disk changed in between, not because anything about the request itself changed. `previous_deployment: null` is real too: this was the first deployment ever recorded for this series, and the tool says so plainly rather than fabricating a prior state. `authorized_by` matters here beyond being a label — `authorize_autonomous_mode` performs no judgment of its own about whether granting this was legitimate; it just persists a decision that already happened elsewhere, the same way `record_deployment` persists a deployment decision rather than making one. The provenance field exists so whoever reads this record back later — a human auditing what's authorized, or an agent checking before acting — has more to go on than a bare `true`.
 
 ## Step Four: Revoke It, and Watch the Refusal Come Back Immediately
 
@@ -90,7 +118,7 @@ Retrying `execute_redeploy(confirmed=True, autonomous=True)` a third time, immed
 
 ## Two Files, Not One, On Purpose
 
-Worth noticing directly: revoking autonomous-mode authorization did **not** touch the deployment manifest. The naive model from Step Three is still sitting there, still the recorded deployment, confirmed by Step Four's refusal happening for an entirely separate reason than "nothing is deployed." `record_deployment` writes to one file; `authorize_autonomous_mode` writes to a different one. This is a deliberate design choice, not an accident of two features built at different times: deployment and authorization are genuinely different concerns, with genuinely different lifecycles. A deployment should persist across an autonomous-mode revocation — the model that's live right now doesn't stop being live just because standing unattended permission was pulled. Bolting authorization onto the deployment manifest as one more field would have meant revoking one accidentally risked touching the other; keeping them as two separate files makes that kind of accidental coupling structurally impossible rather than merely discouraged.
+Notice directly: revoking autonomous-mode authorization did **not** touch the deployment manifest. The naive model from Step Three is still sitting there, still the recorded deployment, confirmed by Step Four's refusal happening for an entirely separate reason than "nothing is deployed." `record_deployment` writes to one file; `authorize_autonomous_mode` writes to a different one. This is a deliberate design choice, not an accident of two features built at different times: deployment and authorization are different concerns, with genuinely different lifecycles. A deployment should persist across an autonomous-mode revocation — the model that's live right now doesn't stop being live just because standing unattended permission was pulled. Bolting authorization onto the deployment manifest as one more field would have meant revoking one accidentally risked touching the other; keeping them as two separate files makes that kind of accidental coupling structurally impossible rather than merely discouraged.
 
 ## The Sane Default Requires No Setup At All
 
@@ -107,7 +135,7 @@ Worth noticing directly: revoking autonomous-mode authorization did **not** touc
 }
 ```
 
-**What It Means:** This succeeded immediately, with zero setup, despite autonomous-mode authorization having just been revoked. That's not an oversight — it's the point. Ordinary human-confirmed calls never consult the autonomous-mode file at all; a human's explicit "go ahead" in the current conversation *is* the complete authorization on its own, no standing record required. The autonomous-mode machinery exists specifically, and only, for the narrower unattended case — a real process running with no human turn to get a "go ahead" from at all. Requiring every ordinary confirmed redeploy to first check a file most series will never need would be exactly the kind of unnecessary friction that makes people route around a safety mechanism rather than use it. The safe path here is also the easy path, on purpose.
+**What It Means:** This succeeded immediately, with zero setup, despite autonomous-mode authorization having just been revoked. That's not an oversight — it's the point. Ordinary human-confirmed calls never consult the autonomous-mode file at all; a human's explicit "go ahead" in the current conversation *is* the complete authorization on its own, no standing record required. The autonomous-mode machinery exists specifically, and only, for the narrower unattended case — a real process running with no human turn to get a "go ahead" from at all. Requiring every ordinary confirmed redeploy to first check a file most series will never need would be the kind of unnecessary friction that makes people route around a safety mechanism rather than use it. The safe path here is also the easy path, on purpose.
 
 ## What's Next
 
