@@ -101,7 +101,7 @@ Chapter 3 is where you'll actually load data and get real numbers back. This cha
 }
 ```
 
-Notice `mean_ci_lower` and `mean_ci_upper` sitting right there next to `mean`, each one a plain, unambiguous field rather than a clause buried in a sentence. That's not decoration. It's the toolkit's first small example of a rule that holds everywhere in Omen, in every layer, without exception: **never report a number without also reporting how sure you are of it.** You'll see that rule again in Chapter 3 with real numbers attached, and then again, in progressively less gentle forms, for the rest of the book.
+Notice `mean_ci_lower` and `mean_ci_upper` sitting right there next to `mean`, each one a plain, unambiguous field rather than a clause buried in a sentence. That's not decoration. It's the toolkit's first small example of a rule that holds everywhere in Omen, in every layer, without exception: **never report a number without also reporting how sure you are of it — and, wherever a test result is involved, without also reporting how much it actually matters, not just whether it's statistically real.** You'll see the confidence-interval half of that rule again in Chapter 3 with real numbers attached, its effect-size counterpart properly explained in Chapter 4, and then both again, in progressively less gentle forms, for the rest of the book.
 
 ## What's Next
 
