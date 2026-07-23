@@ -1,6 +1,6 @@
 # Chapter 9: Smoothing Things Over — Exponential Smoothing (ETS)
 
-Death-Ray Revenue's naive baseline, from Chapter 8, landed at 17.46% MAPE. That's the number every model in this chapter and the next two has to beat convincingly, not just technically. This chapter fits the first real model in this book — exponential smoothing, also called ETS or Holt-Winters — and along the way finds a genuinely surprising real result: the model AIC likes best is not the model that actually forecasts best, and the diagnostic that catches this isn't the one you'd expect.
+Death-Ray Revenue's naive baseline, from Chapter 8, landed at 17.46% MAPE. That's the number every model in this chapter and the next two has to beat convincingly, not just technically. This chapter fits the first real model in this book — exponential smoothing, also called ETS or Holt-Winters — and along the way finds a genuinely surprising real result: the model **AIC** (the Akaike Information Criterion, a fit-quality statistic explained properly later in this chapter) likes best is not the model that actually forecasts best, and the diagnostic that catches this isn't the one you'd expect.
 
 ## What ETS Actually Smooths
 
