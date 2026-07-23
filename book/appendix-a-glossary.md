@@ -12,6 +12,8 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **AR / MA (autoregressive / moving-average).** The two building blocks SARIMA's `p` and `q` orders count: an AR term predicts from the series' own past *values*; an MA term predicts from past *forecast errors*. Ch. 6, Ch. 10.
 
+**Backtest / train-test split (holdout).** Fitting a model only on a series' training portion, then scoring it against a held-back test portion (the holdout) it never saw during fitting — the only honest way to estimate how a model performs on data it hasn't seen. Unlike a typical machine-learning split, a time-series holdout must be chronological (train on the past, hold out the most recent stretch) rather than a random shuffle, since forecasting is inherently about the future following the past. Ch. 8.
+
 **BIC (Bayesian Information Criterion).** A model-fit statistic like AIC — rewards fit, penalizes added parameters — but with a steeper per-parameter penalty that grows with sample size. Ch. 10.
 
 **Bootstrap confidence interval.** A confidence interval built by resampling the data with replacement many times and looking at the spread of a statistic across those resamples, rather than relying on a closed-form formula. Ch. 8.

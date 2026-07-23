@@ -6,6 +6,14 @@ Part III starts fitting models. Before any of them get to be interesting, they h
 
 A **naive** forecast just repeats the last observed value, forever. A **seasonal-naive** forecast repeats the value from one full seasonal cycle back, tiled across the forecast horizon. Neither one involves fitting anything — no parameters, no optimization, nothing that could go subtly wrong in the way a real model can. That's the entire point: whatever Chapters 9 through 11 build has to out-perform *this*, or it isn't earning its complexity.
 
+## Why Anything Gets Held Back At All
+
+Before checking a real split, it's worth being explicit about why one exists in the first place, since every backtest in this book depends on it. A model's error on the exact data it was fit to is not a trustworthy estimate of how well it will do on data it hasn't seen — a flexible enough model can fit the noise in its own training data almost as easily as it fits real signal, and fitting noise doesn't help it predict anything new; it just makes the in-sample error look better than it deserves to. The only honest way to find out how a model actually generalizes is to score it on data it genuinely never touched while being fit.
+
+That's what a **train/test split** (also called a **holdout**) is: divide the series into a **training set** the model is allowed to learn from, and a **test set** — held back, untouched during fitting — that exists purely to be predicted against afterward and scored. `n_train` and `n_test` above aren't arbitrary bookkeeping; `n_train` is every data point the model gets to see and fit its parameters to, `n_test` is every data point it has to predict blind, with its own fitted parameters already locked in.
+
+One thing makes a time series' split different from a typical machine-learning train/test split, and it matters enough to say plainly: the split has to be **chronological**, never a random shuffle. `train_range` ends before `test_range` begins, with no overlap, because the entire premise of forecasting is inferring the future from the past — training on data that includes points *after* the holdout, even mixed in at random, would let a model implicitly peek at information it wouldn't have had in the real, working scenario this backtest is meant to simulate: standing at some week `X`, with weeks `1` through `X` already observed, being asked what week `X+1` through `X+30` will look like. A backtest is that scenario, replayed honestly on data where you happen to already know the real answer, so you can check how close the guess actually came.
+
 ## Check the Split Before You Fit Anything
 
 Before any backtest, it's worth confirming what "holdout" actually means for this series and this holdout size — not by trusting a number silently, but by asking the tool that does no fitting at all, just reports the dates.
