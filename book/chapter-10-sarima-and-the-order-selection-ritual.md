@@ -23,7 +23,9 @@ SARIMA is where the notation this book has been building toward finally gets a n
 }
 ```
 
-**What It Means:** Grounding `d` correctly wasn't enough on its own — a guessed `(1,1,1)` barely beats naive's 17.46% MAPE from Chapter 8, badly underperforms Chapter 9's ETS fits, and its interval is just as miscalibrated as ETS's worst attempt. Getting one letter of `(p,d,q)` right doesn't get you a good model; `p` and `q` still matter, and guessing them isn't meaningfully different from guessing `d` would have been.
+**What It Means:** One more fit-quality field shows up here for the first time: `bic`, the **Bayesian Information Criterion** — like `aic`/`aicc` from Chapter 9, it rewards a model for fitting well and penalizes it for having more parameters, but with a steeper penalty per parameter that grows with the sample size. The three don't have to agree, and here they do — `573.99`, `574.66`, `578.82` all move together — so this chapter reasons from AIC/AICc alone and doesn't lean on BIC separately.
+
+Grounding `d` correctly wasn't enough on its own — a guessed `(1,1,1)` barely beats naive's 17.46% MAPE from Chapter 8, badly underperforms Chapter 9's ETS fits, and its interval is just as miscalibrated as ETS's worst attempt. Getting one letter of `(p,d,q)` right doesn't get you a good model; `p` and `q` still matter, and guessing them isn't meaningfully different from guessing `d` would have been.
 
 ## Letting a Search Do the Guessing, Then Checking Its Work
 

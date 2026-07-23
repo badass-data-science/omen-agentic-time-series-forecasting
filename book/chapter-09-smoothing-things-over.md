@@ -28,7 +28,7 @@ Exponential smoothing builds a forecast from a small number of components, each 
 }
 ```
 
-**What It Means, Part One — the Good News:** `4.62%` MAPE is a dramatic improvement over naive's `17.46%`, and the residual diagnostics back it up: `residuals_look_like_white_noise: true`, with the Ljung-Box statistic sitting comfortably under its own critical value (`effect_size: 0.58`, well below the `1.0` line that would mean trouble). This model isn't leaving obvious structure on the table. On error alone, this looks like an easy win.
+**What It Means, Part One — the Good News:** `4.62%` MAPE is a dramatic improvement over naive's `17.46%`, and the residual diagnostics back it up: `residuals_look_like_white_noise: true`, with the **Ljung-Box test** — which asks whether a sequence of residuals still contains leftover autocorrelation a good model shouldn't have left behind, rather than looking like patternless noise — sitting comfortably under its own critical value (`effect_size: 0.58`, well below the `1.0` line that would mean trouble). This model isn't leaving obvious structure on the table. On error alone, this looks like an easy win.
 
 **What It Means, Part Two — the Bad News:** `backtest_interval_coverage` says only `36.67%` of holdout points actually fell inside their nominal 95% interval. That's not a rounding error — the interval is badly, badly too narrow, and the tool says so in plain language rather than letting a low error number distract from it. A model with excellent point accuracy and a badly miscalibrated interval is not a model you can hand someone an honest range from. This chapter's real work starts here, not at the MAPE number.
 

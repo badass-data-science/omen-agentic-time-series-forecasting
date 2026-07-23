@@ -10,6 +10,10 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **ADF test (Augmented Dickey-Fuller).** A hypothesis test whose null hypothesis is "this series has a unit root" (is non-stationary) — rejecting it is evidence *for* stationarity. Ch. 4.
 
+**AR / MA (autoregressive / moving-average).** The two building blocks SARIMA's `p` and `q` orders count: an AR term predicts from the series' own past *values*; an MA term predicts from past *forecast errors*. Ch. 6, Ch. 10.
+
+**BIC (Bayesian Information Criterion).** A model-fit statistic like AIC — rewards fit, penalizes added parameters — but with a steeper per-parameter penalty that grows with sample size. Ch. 10.
+
 **Bootstrap confidence interval.** A confidence interval built by resampling the data with replacement many times and looking at the spread of a statistic across those resamples, rather than relying on a closed-form formula. Ch. 8.
 
 **Cohen's d.** A standardized effect size for a difference in means — the difference divided by a pooled standard deviation — that tells you the *magnitude* of a shift, not just whether it's statistically significant. Ch. 7's changepoint detection and Ch. 17's drift detection both use it; Ch. 4's own "effect size" entries (mean-reversion half-life, KPSS-statistic-to-critical-value ratio) are a different, unrelated concept sharing only the name. Ch. 7, Ch. 17.
@@ -38,6 +42,8 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **KPSS test (Kwiatkowski-Phillips-Schmidt-Shin).** A stationarity test whose null hypothesis is the *opposite* of the ADF test's — "this series is stationary" — making ADF/KPSS agreement or disagreement itself informative. Ch. 4.
 
+**KS statistic (Kolmogorov-Smirnov).** A test for whether two samples come from different distributions, using each sample's whole shape rather than just its mean — catches a spread or shape shift a t-test on the means alone would miss. Ch. 17.
+
 **Lag feature.** In a supervised-learning framing of forecasting, a feature built from a series' own past values (e.g., "the value 7 days ago") used to predict its future value. Ch. 11.
 
 **Ljung-Box test.** A test for whether a sequence of residuals still contains structure ("looks like white noise" is the desired failure to reject). Ch. 9.
@@ -63,6 +69,10 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 **Plausibility check.** An automated comparison of a forecast's implied change against a series' own historical distribution of changes — explicitly documented as a prompt for scrutiny, not a hypothesis test or a verdict. Ch. 14.
 
 **Prediction interval.** A range meant to contain a future observation with some stated probability — built differently by different model families in this book (ETS's simulated paths, SARIMA's analytic state-space formula, GBT's quantile regression), each with a different real failure mode. Notably absent from `fit_gradient_boosted_trees`'s own backtest (Ch. 11) — GBT only gets one once deployed (Ch. 14). Ch. 9, Ch. 10, Ch. 14.
+
+**Quantile regression.** A model trained to directly predict a specific percentile of the outcome (e.g. the 5th and 95th) rather than a single mean plus an assumed spread — the basis for GBT's prediction interval, and not derived from the same step-by-step process as a recursive point forecast. Ch. 14.
+
+**RMSE (root mean squared error).** Like MAE, an average forecast miss in the series' own units, but squares each miss before averaging — so it penalizes a few large misses harder than MAE does. Ch. 8.
 
 **Rolling-origin / walk-forward backtest.** Repeating a backtest at several different points in a series, walking backward, to measure whether a model's performance is stable across stretches rather than a property of one arbitrarily chosen holdout window. Ch. 13.
 
