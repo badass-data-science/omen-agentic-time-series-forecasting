@@ -13,30 +13,54 @@ Run over stdio (how OpenClaw / most MCP clients will actually launch it):
     this IS the stdio entrypoint by default — see mcp.run() at the bottom.
 """
 
-from typing import Optional
-from fastmcp.tools.tool import ToolResult
 
 from fastmcp import FastMCP
+from fastmcp.tools.tool import ToolResult
+
+from omen.data_prep import generate_synthetic_series, load_series
 
 from .analysis_tools import (
-    basic_stats as _basic_stats,
-    check_stationarity as _check_stationarity,
-    seasonal_decomposition_summary as _seasonal_decomposition_summary,
-    detect_seasonality_period as _detect_seasonality_period,
     acf_pacf_summary as _acf_pacf_summary,
-    detect_anomalies_zscore as _detect_anomalies_zscore,
+)
+from .analysis_tools import (
+    basic_stats as _basic_stats,
+)
+from .analysis_tools import (
+    check_stationarity as _check_stationarity,
+)
+from .analysis_tools import (
     detect_anomalies_robust_zscore as _detect_anomalies_robust_zscore,
+)
+from .analysis_tools import (
+    detect_anomalies_zscore as _detect_anomalies_zscore,
+)
+from .analysis_tools import (
     detect_changepoints as _detect_changepoints,
+)
+from .analysis_tools import (
+    detect_seasonality_period as _detect_seasonality_period,
+)
+from .analysis_tools import (
+    seasonal_decomposition_summary as _seasonal_decomposition_summary,
+)
+from .plot_tools import (
+    plot_acf_pacf as _plot_acf_pacf,
+)
+from .plot_tools import (
+    plot_anomalies as _plot_anomalies,
+)
+from .plot_tools import (
+    plot_changepoints as _plot_changepoints,
+)
+from .plot_tools import (
+    plot_periodogram as _plot_periodogram,
+)
+from .plot_tools import (
+    plot_seasonal_decomposition as _plot_seasonal_decomposition,
 )
 from .plot_tools import (
     plot_series as _plot_series,
-    plot_acf_pacf as _plot_acf_pacf,
-    plot_seasonal_decomposition as _plot_seasonal_decomposition,
-    plot_periodogram as _plot_periodogram,
-    plot_anomalies as _plot_anomalies,
-    plot_changepoints as _plot_changepoints,
 )
-from omen.data_prep import generate_synthetic_series, load_series
 
 mcp = FastMCP("ts-analyst")
 
@@ -154,7 +178,7 @@ def seasonal_decomposition_summary(
 def detect_seasonality_period(
     csv_path: str,
     min_period: int = 2,
-    max_period: Optional[int] = None,
+    max_period: int | None = None,
     date_col: str = "date",
     value_col: str = "value",
 ) -> dict:
@@ -322,7 +346,7 @@ def detect_changepoints(
 @mcp.tool()
 def plot_series(
     csv_path: str,
-    out_path: Optional[str] = None,
+    out_path: str | None = None,
     date_col: str = "date",
     value_col: str = "value",
 ) -> ToolResult:
@@ -347,7 +371,7 @@ def plot_acf_pacf(
     csv_path: str,
     n_lags: int = 21,
     alpha: float = 0.05,
-    out_path: Optional[str] = None,
+    out_path: str | None = None,
     date_col: str = "date",
     value_col: str = "value",
 ) -> ToolResult:
@@ -372,7 +396,7 @@ def plot_acf_pacf(
 def plot_seasonal_decomposition(
     csv_path: str,
     period: int = 7,
-    out_path: Optional[str] = None,
+    out_path: str | None = None,
     date_col: str = "date",
     value_col: str = "value",
 ) -> ToolResult:
@@ -396,8 +420,8 @@ def plot_seasonal_decomposition(
 def plot_periodogram(
     csv_path: str,
     min_period: int = 2,
-    max_period: Optional[int] = None,
-    out_path: Optional[str] = None,
+    max_period: int | None = None,
+    out_path: str | None = None,
     date_col: str = "date",
     value_col: str = "value",
 ) -> ToolResult:
@@ -427,7 +451,7 @@ def plot_anomalies(
     csv_path: str,
     z_threshold: float = 3.5,
     window: int = 14,
-    out_path: Optional[str] = None,
+    out_path: str | None = None,
     date_col: str = "date",
     value_col: str = "value",
 ) -> ToolResult:
@@ -456,7 +480,7 @@ def plot_changepoints(
     max_changepoints: int = 5,
     n_permutations: int = 500,
     seed: int = 42,
-    out_path: Optional[str] = None,
+    out_path: str | None = None,
     date_col: str = "date",
     value_col: str = "value",
 ) -> ToolResult:

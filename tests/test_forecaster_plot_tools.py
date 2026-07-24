@@ -6,9 +6,16 @@ pytest.importorskip("sklearn")
 from fastmcp.tools.tool import ToolResult
 
 from omen.data_prep import generate_synthetic_series
-from omen.forecaster.model_tools import fit_ets, rolling_origin_backtest, search_sarima_orders
-from omen.forecaster.plot_tools import plot_backtest, plot_rolling_origin, plot_search_sarima_orders
-
+from omen.forecaster.model_tools import (
+    fit_ets,
+    rolling_origin_backtest,
+    search_sarima_orders,
+)
+from omen.forecaster.plot_tools import (
+    plot_backtest,
+    plot_rolling_origin,
+    plot_search_sarima_orders,
+)
 
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 

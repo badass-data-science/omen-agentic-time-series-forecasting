@@ -4,17 +4,17 @@ import pytest
 
 pytest.importorskip("statsmodels")
 
-from omen.data_prep import generate_synthetic_series
 from omen.analyst.analysis_tools import (
+    acf_pacf_summary,
     basic_stats,
     check_stationarity,
-    seasonal_decomposition_summary,
-    detect_seasonality_period,
-    acf_pacf_summary,
-    detect_anomalies_zscore,
     detect_anomalies_robust_zscore,
+    detect_anomalies_zscore,
     detect_changepoints,
+    detect_seasonality_period,
+    seasonal_decomposition_summary,
 )
+from omen.data_prep import generate_synthetic_series
 
 
 @pytest.fixture

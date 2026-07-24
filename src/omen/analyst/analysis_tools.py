@@ -13,17 +13,17 @@ in what order, and how to interpret the results.
 
 import json
 import warnings
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
 from scipy.signal import periodogram
 from scipy.stats import t as _t_dist
 from statsmodels.regression.linear_model import OLS
-from statsmodels.tools.tools import add_constant
-from statsmodels.tsa.stattools import adfuller, acf, kpss, pacf
-from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tools.sm_exceptions import InterpolationWarning
+from statsmodels.tools.tools import add_constant
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.stattools import acf, adfuller, kpss, pacf
 
 
 def basic_stats(df: pd.DataFrame, confidence_level: float = 0.95) -> dict:
@@ -49,7 +49,7 @@ def basic_stats(df: pd.DataFrame, confidence_level: float = 0.95) -> dict:
         mean_ci_upper = round(mean + margin, 3)
 
     return {
-        "n_observations": int(len(df)),
+        "n_observations": len(df),
         "start_date": str(df["date"].min().date()),
         "end_date": str(df["date"].max().date()),
         "inferred_frequency": pd.infer_freq(df["date"]) or "irregular",
@@ -308,7 +308,7 @@ def seasonal_decomposition_summary(df: pd.DataFrame, period: int = 7) -> dict:
     }
 
 
-def detect_seasonality_period(df: pd.DataFrame, min_period: int = 2, max_period: Optional[int] = None) -> dict:
+def detect_seasonality_period(df: pd.DataFrame, min_period: int = 2, max_period: int | None = None) -> dict:
     """Find the dominant cyclical period in a series via its periodogram,
     with a significance test -- so the CALLER doesn't have to already
     know/guess a period before using seasonal_decomposition_summary or
@@ -508,7 +508,7 @@ def detect_anomalies_zscore(df: pd.DataFrame, z_threshold: float = 3.0) -> dict:
 
     return {
         "z_threshold": z_threshold,
-        "n_anomalies_flagged": int(len(flagged)),
+        "n_anomalies_flagged": len(flagged),
         "max_abs_z_score": round(float(flagged["z_score"].abs().max()), 3) if len(flagged) else None,
         "anomalies": anomalies[:15],  # cap for brevity, most extreme first
     }
@@ -582,7 +582,7 @@ def detect_anomalies_robust_zscore(df: pd.DataFrame, z_threshold: float = 3.5, w
     return {
         "z_threshold": z_threshold,
         "window": window,
-        "n_anomalies_flagged": int(len(flagged)),
+        "n_anomalies_flagged": len(flagged),
         "max_abs_modified_z_score": (
             round(float(flagged["modified_z_score"].abs().max()), 3) if len(flagged) else None
         ),
