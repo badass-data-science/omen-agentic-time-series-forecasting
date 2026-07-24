@@ -1,6 +1,6 @@
 # Omen - An Agentic Time Series Forecasting Platform
 
-![noir-image](book/title-page-image.png)
+<img src="https://github.com/badass-data-science/omen-agentic-time-series-forecasting/blob/main/book/title-page-image.png" width="300" />
 
 *Status: Alpha, published on PyPI as `omen-agentic-forecasting`. The
 test suite (161 tests) is real and the book's worked examples were
