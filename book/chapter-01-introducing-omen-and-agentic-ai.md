@@ -14,7 +14,7 @@ This is a book about time series forecasting — the specific, well-studied stat
 
 It is also, unavoidably, a book about doing that forecasting *with* an AI agent driving the actual tool calls, because that is how our heroine built the thing you're about to learn to use. That pairing — rigorous statistics plus an agent that knows how to ask for it correctly — is called **Omen**, and before this chapter is over you should understand why those two ingredients belong together and exactly where our heroine drew a hard line about how much either of them gets to be trusted unsupervised.
 
-If any of this voice sounds familiar, it's because Omen already has a companion blog series (`blog-posts/` in the project repository) that covers the same material in shorter, punchier form. This book is the long version — the one with exercises, a glossary, and enough room to actually explain *why*, not just *that*.
+If any of this voice sounds familiar, it's because Omen already has a companion blog series (`blog-posts/`, in the project's GitHub repository at `github.com/badass-data-science/omen-agentic-time-series-forecasting`) that covers the same material in shorter, punchier form. This book is the long version — the one with exercises, a glossary, and enough room to actually explain *why*, not just *that*.
 
 ## What "Agentic AI" Does Not Mean
 

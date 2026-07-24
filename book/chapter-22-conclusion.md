@@ -31,7 +31,8 @@ The rival supervillain does not. Chapter 18 left Death-Ray Revenue with two retr
 In the spirit of every honestly-reported gotcha in the preceding twenty-one chapters, here's what's genuinely still open in Omen itself, pulled directly from its own real, current documentation rather than invented for a tidy ending:
 
 - **No expiry on autonomous-mode grants.** Chapter 19's authorization record persists until someone explicitly revokes it; there's no time-boxed "for the next month" option yet, only "until revoked."
-- **Not yet published to PyPI.** The package layout is ready — real console scripts, a real `pyproject.toml`, real author metadata — and the distribution name is settled (`omen-agentic-forecasting`, since plain `omen` was already taken; the importable module stays `omen`), but nobody has pushed a real release yet.
+
+One item that used to sit on this exact list doesn't anymore, and it's worth naming the update rather than quietly deleting the old bullet: Omen is now genuinely published on PyPI, under `omen-agentic-forecasting` (Chapter 2 covers the actual install command). A status this book reported as "still open" a few chapters back changed while the book was being written — which is itself a small, honest demonstration of the same principle this whole book has been teaching: a claim is only as good as the last time someone checked it against reality.
 
 None of these are secrets. They're the kind of thing this book has modeled, chapter after chapter, as worth saying plainly rather than quietly hoping nobody asks: an open item, reported honestly, is worth more than a confident claim that doesn't survive being checked.
 
