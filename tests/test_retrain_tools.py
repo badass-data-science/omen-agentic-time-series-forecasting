@@ -3,13 +3,13 @@ import json
 import pytest
 
 from omen.retrain.retrain_tools import (
-    record_deployment,
-    load_deployment_manifest,
+    authorize_autonomous_mode,
+    check_autonomous_mode,
     compare_candidate_to_deployed,
     execute_redeploy,
-    authorize_autonomous_mode,
+    load_deployment_manifest,
+    record_deployment,
     revoke_autonomous_mode,
-    check_autonomous_mode,
 )
 
 

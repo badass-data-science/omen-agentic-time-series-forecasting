@@ -13,15 +13,17 @@ test window -- so every model is evaluated against the same held-out period
 if called with the same holdout_size.
 """
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2 as _chi2, t as _t_dist
+from scipy.stats import chi2 as _chi2
+from scipy.stats import t as _t_dist
+from sklearn.ensemble import GradientBoostingRegressor
+from statsmodels.stats.diagnostic import acorr_ljungbox
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from statsmodels.stats.diagnostic import acorr_ljungbox
-from sklearn.ensemble import GradientBoostingRegressor
 
 
 def train_test_split(df: pd.DataFrame, holdout_size: int) -> tuple:
@@ -180,7 +182,7 @@ def residual_diagnostics(residuals: Any, lags: int = 10, alpha: float = 0.05) ->
     }
 
 
-def _aicc(aic: float, n: int, k: int) -> Optional[float]:
+def _aicc(aic: float, n: int, k: int) -> float | None:
     """Corrected AIC (Hurvich & Tsai, 1989) for small samples: AIC's bias
     grows as the number of estimated parameters k approaches the sample
     size n, which matters here since fit_ets/fit_sarima are often fit on
@@ -263,7 +265,7 @@ def fit_naive_baselines(
     else:
         seasonal_naive_pred = naive_pred  # not enough history to be seasonal
 
-    ci_kwargs: dict[str, Any] = dict(n_bootstrap=n_bootstrap, confidence_level=confidence_level, seed=seed)
+    ci_kwargs: dict[str, Any] = {"n_bootstrap": n_bootstrap, "confidence_level": confidence_level, "seed": seed}
     return {
         "holdout_size": holdout_size,
         "holdout_actuals": [round(float(v), 4) for v in y_test],
@@ -328,7 +330,7 @@ def fit_ets(
         lower = sims.quantile(alpha / 2, axis=1).values
         upper = sims.quantile(1 - alpha / 2, axis=1).values
         backtest_interval_coverage = _interval_coverage(y_test, lower, upper, confidence_level)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 -- deliberately broad: report any simulation failure in the result rather than crash the backtest
         backtest_interval_coverage = {
             "error": f"Simulation-based interval failed for this parameter combination ({exc})."
         }
@@ -351,8 +353,8 @@ def fit_ets(
 def fit_sarima(
     df: pd.DataFrame,
     holdout_size: int = 30,
-    order: Optional[list] = None,
-    seasonal_order: Optional[list] = None,
+    order: list | None = None,
+    seasonal_order: list | None = None,
     n_bootstrap: int = 1000,
     confidence_level: float = 0.95,
     seed: int = 42,
@@ -431,7 +433,7 @@ def _build_lag_features(df: pd.DataFrame, lags: list) -> pd.DataFrame:
 def fit_gradient_boosted_trees(
     df: pd.DataFrame,
     holdout_size: int = 30,
-    lags: Optional[list] = None,
+    lags: list | None = None,
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
@@ -504,7 +506,7 @@ def diebold_mariano_test(
     model_a_name: str = "Model A",
     model_b_name: str = "Model B",
     loss: str = "squared",
-    n_lags: Optional[int] = None,
+    n_lags: int | None = None,
 ) -> dict:
     """Diebold-Mariano-style test (Diebold & Mariano, 1995) for whether
     two models' forecasts on the SAME holdout have significantly
@@ -636,7 +638,7 @@ _ROLLING_ORIGIN_FIT_FUNCTIONS: dict[str, Callable[..., dict]] = {
 def rolling_origin_backtest(
     df: pd.DataFrame,
     model_type: str,
-    params: Optional[dict] = None,
+    params: dict | None = None,
     holdout_size: int = 30,
     n_origins: int = 5,
     n_bootstrap: int = 200,
@@ -715,7 +717,7 @@ def rolling_origin_backtest(
         df_slice = df.iloc[:test_end].reset_index(drop=True)
         try:
             result = fit_fn(df_slice, holdout_size=holdout_size, n_bootstrap=n_bootstrap, seed=seed, **params)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 -- deliberately broad: report a fit failure at this origin rather than abort the whole rolling-origin backtest
             origins.append({"origin_index": i, "error": f"Fit failed at this origin: {exc}"})
             continue
 
@@ -842,10 +844,10 @@ def search_sarima_orders(
     """
     combos = [
         (p, d, q, seasonal_p, seasonal_d, seasonal_q)
-        for p in range(0, max_p + 1)
-        for q in range(0, max_q + 1)
-        for seasonal_p in range(0, max_seasonal_p + 1)
-        for seasonal_q in range(0, max_seasonal_q + 1)
+        for p in range(max_p + 1)
+        for q in range(max_q + 1)
+        for seasonal_p in range(max_seasonal_p + 1)
+        for seasonal_q in range(max_seasonal_q + 1)
     ]
     if len(combos) > max_combinations:
         return {
@@ -869,7 +871,7 @@ def search_sarima_orders(
                 seasonal_order=seasonal_order,
                 n_bootstrap=n_bootstrap_per_candidate,
             )
-        except Exception:
+        except Exception:  # noqa: BLE001 -- deliberately broad: skip any order combination that fails to fit rather than abort the whole search
             n_failed += 1
             continue
 

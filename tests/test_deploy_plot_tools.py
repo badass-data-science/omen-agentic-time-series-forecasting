@@ -6,7 +6,6 @@ from omen.data_prep import generate_synthetic_series
 from omen.deploy.forecast_tools import forecast_ets
 from omen.deploy.plot_tools import plot_forecast
 
-
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 
 

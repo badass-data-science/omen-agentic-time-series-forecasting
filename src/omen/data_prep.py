@@ -10,7 +10,6 @@ Swap in your own data by pointing load_series() at a CSV with a date column
 and a value column.
 """
 
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -54,7 +53,7 @@ def generate_synthetic_series(
     return df
 
 
-def load_series(csv_path: Optional[str] = None, date_col: str = "date", value_col: str = "value") -> pd.DataFrame:
+def load_series(csv_path: str | None = None, date_col: str = "date", value_col: str = "value") -> pd.DataFrame:
     """Load a time series from CSV, or fall back to the synthetic generator
     if no path is given. Returns a DataFrame with columns ['date', 'value'],
     sorted by date, with 'date' as a proper datetime dtype.

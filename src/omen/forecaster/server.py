@@ -11,25 +11,43 @@ Run over stdio (how OpenClaw will launch it), after `pip install -e .`:
     # or: python -m omen.forecaster.server
 """
 
-from typing import Optional
-from fastmcp.tools.tool import ToolResult
 
 from fastmcp import FastMCP
+from fastmcp.tools.tool import ToolResult
 
 from omen.data_prep import load_series
+
+from .model_tools import (
+    diebold_mariano_test as _diebold_mariano_test,
+)
+from .model_tools import (
+    fit_ets as _fit_ets,
+)
+from .model_tools import (
+    fit_gradient_boosted_trees as _fit_gradient_boosted_trees,
+)
 from .model_tools import (
     fit_naive_baselines as _fit_naive_baselines,
-    fit_ets as _fit_ets,
+)
+from .model_tools import (
     fit_sarima as _fit_sarima,
-    fit_gradient_boosted_trees as _fit_gradient_boosted_trees,
-    train_test_split as _train_test_split,
-    diebold_mariano_test as _diebold_mariano_test,
+)
+from .model_tools import (
     rolling_origin_backtest as _rolling_origin_backtest,
+)
+from .model_tools import (
     search_sarima_orders as _search_sarima_orders,
+)
+from .model_tools import (
+    train_test_split as _train_test_split,
 )
 from .plot_tools import (
     plot_backtest as _plot_backtest,
+)
+from .plot_tools import (
     plot_rolling_origin as _plot_rolling_origin,
+)
+from .plot_tools import (
     plot_search_sarima_orders as _plot_search_sarima_orders,
 )
 
@@ -168,8 +186,8 @@ def fit_ets(
 def fit_sarima(
     csv_path: str,
     holdout_size: int = 30,
-    order: Optional[list] = None,
-    seasonal_order: Optional[list] = None,
+    order: list | None = None,
+    seasonal_order: list | None = None,
     n_bootstrap: int = 1000,
     confidence_level: float = 0.95,
     seed: int = 42,
@@ -216,7 +234,7 @@ def fit_sarima(
 def fit_gradient_boosted_trees(
     csv_path: str,
     holdout_size: int = 30,
-    lags: Optional[list] = None,
+    lags: list | None = None,
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
@@ -273,7 +291,7 @@ def diebold_mariano_test(
     model_a_name: str = "Model A",
     model_b_name: str = "Model B",
     loss: str = "squared",
-    n_lags: Optional[int] = None,
+    n_lags: int | None = None,
 ) -> dict:
     """Diebold-Mariano-style test (Diebold & Mariano, 1995) for whether
     two models' forecasts on the SAME holdout have significantly
@@ -330,7 +348,7 @@ def diebold_mariano_test(
 def rolling_origin_backtest(
     csv_path: str,
     model_type: str,
-    params: Optional[dict] = None,
+    params: dict | None = None,
     holdout_size: int = 30,
     n_origins: int = 5,
     n_bootstrap: int = 200,
@@ -459,9 +477,9 @@ def plot_backtest(
     actuals: list,
     predicted: list,
     model_name: str = "Model",
-    lower: Optional[list] = None,
-    upper: Optional[list] = None,
-    out_path: Optional[str] = None,
+    lower: list | None = None,
+    upper: list | None = None,
+    out_path: str | None = None,
 ) -> ToolResult:
     """Plot actual vs. predicted values over a backtest holdout, with a
     shaded prediction-interval band if lower/upper bounds are supplied
@@ -487,7 +505,7 @@ def plot_backtest(
 
 
 @mcp.tool()
-def plot_rolling_origin(origins: list, out_path: Optional[str] = None) -> ToolResult:
+def plot_rolling_origin(origins: list, out_path: str | None = None) -> ToolResult:
     """Plot per-origin MAPE across a rolling_origin_backtest's walk-forward
     origins, with a shaded band showing the mean +/- one std -- makes
     cross-origin instability visually obvious rather than requiring a
@@ -504,7 +522,7 @@ def plot_rolling_origin(origins: list, out_path: Optional[str] = None) -> ToolRe
 
 
 @mcp.tool()
-def plot_search_sarima_orders(top_candidates: list, out_path: Optional[str] = None) -> ToolResult:
+def plot_search_sarima_orders(top_candidates: list, out_path: str | None = None) -> ToolResult:
     """Plot AICc by candidate SARIMA order as a bar chart, so a razor-thin
     margin between top candidates (easy to miss in a table of decimals)
     is visually obvious. Returns the plot as an inline image plus a

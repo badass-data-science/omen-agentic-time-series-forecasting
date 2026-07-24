@@ -16,11 +16,12 @@ judgment: "should we retrain" is exactly the kind of decision worth being
 reproducible given the same inputs, not re-derived by an LLM each time.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
-from scipy.stats import ks_2samp, norm as _norm, ttest_ind
+from scipy.stats import ks_2samp, ttest_ind
+from scipy.stats import norm as _norm
 
 
 def compute_metrics(y_true: Any, y_pred: Any) -> dict:
@@ -412,7 +413,7 @@ def rolling_drift_check(
     recent_window_size: int = 30,
     reference_window_size: int = 90,
     n_checks: int = 5,
-    step_size: Optional[int] = None,
+    step_size: int | None = None,
     persistence_threshold_frac: float = 0.5,
 ) -> dict:
     """Repeats detect_data_drift at n_checks different points walking
@@ -516,10 +517,10 @@ def recommend_retraining(
     mape_now: float,
     mape_backtest: float,
     drift_detected: bool,
-    interval_coverage_pct: Optional[float] = None,
-    nominal_confidence_pct: Optional[float] = None,
-    mape_now_ci_lower: Optional[float] = None,
-    mape_now_ci_upper: Optional[float] = None,
+    interval_coverage_pct: float | None = None,
+    nominal_confidence_pct: float | None = None,
+    mape_now_ci_lower: float | None = None,
+    mape_now_ci_upper: float | None = None,
     error_degradation_threshold_pct: float = 20.0,
     coverage_miscalibration_threshold_pct: float = 15.0,
 ) -> dict:

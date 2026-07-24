@@ -10,14 +10,14 @@ withhold the most recent data to score against real values. Here there is
 nothing to score against -- the output is a forecast to actually use.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
 from scipy.stats import norm as _norm
+from sklearn.ensemble import GradientBoostingRegressor
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from sklearn.ensemble import GradientBoostingRegressor
 
 
 def _future_dates(df: pd.DataFrame, horizon: int) -> pd.DatetimeIndex:
@@ -58,7 +58,7 @@ def _format_forecast(dates: Any, values: Any, lower: Any = None, upper: Any = No
     return rows, truncated
 
 
-def _aicc(aic: float, n: int, k: int) -> Optional[float]:
+def _aicc(aic: float, n: int, k: int) -> float | None:
     """Corrected AIC (Hurvich & Tsai, 1989) for small samples -- same
     formula and rationale as ts-forecaster's model_tools.py::_aicc,
     duplicated here (same pattern as _build_lag_features below) so this
@@ -262,7 +262,7 @@ def _fit_ets_values(
         lower = sims.quantile(alpha / 2, axis=1).values
         upper = sims.quantile(1 - alpha / 2, axis=1).values
         interval_note = f"{int(confidence_level * 100)}% interval from {n_simulations} simulated future paths."
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 -- deliberately broad: report any simulation failure in interval_note rather than crash the whole forecast call
         interval_note = f"Point forecast only -- simulation-based interval failed for this configuration ({exc})."
 
     return {
@@ -312,7 +312,7 @@ def forecast_ets(
 
 
 def _fit_sarima_values(
-    df: pd.DataFrame, horizon: int, order: Optional[list], seasonal_order: Optional[list], confidence_level: float
+    df: pd.DataFrame, horizon: int, order: list | None, seasonal_order: list | None, confidence_level: float
 ) -> dict:
     order_tuple = tuple(order) if order else (1, 1, 1)
     seasonal_order_tuple = tuple(seasonal_order) if seasonal_order else (1, 1, 1, 7)
@@ -347,8 +347,8 @@ def _fit_sarima_values(
 def forecast_sarima(
     df: pd.DataFrame,
     horizon: int = 30,
-    order: Optional[list] = None,
-    seasonal_order: Optional[list] = None,
+    order: list | None = None,
+    seasonal_order: list | None = None,
     confidence_level: float = 0.95,
 ) -> dict:
     """Retrain SARIMA on the FULL series and forecast `horizon` steps
@@ -393,7 +393,7 @@ def _build_lag_features(df: pd.DataFrame, lags: list) -> pd.DataFrame:
 def _fit_gbt_values(
     df: pd.DataFrame,
     horizon: int,
-    lags: Optional[list],
+    lags: list | None,
     n_estimators: int,
     max_depth: int,
     learning_rate: float,
@@ -530,7 +530,7 @@ def _fit_gbt_values(
 def forecast_gradient_boosted_trees(
     df: pd.DataFrame,
     horizon: int = 30,
-    lags: Optional[list] = None,
+    lags: list | None = None,
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
@@ -598,8 +598,8 @@ def forecast_ensemble(
     df: pd.DataFrame,
     model_types: list,
     horizon: int = 30,
-    weights: Optional[list] = None,
-    model_params: Optional[dict] = None,
+    weights: list | None = None,
+    model_params: dict | None = None,
     confidence_level: float = 0.95,
 ) -> dict:
     """Combine two or more of this layer's own forecasts into a single
@@ -696,7 +696,7 @@ def forecast_ensemble(
                 )
                 point, lower, upper = raw["point"], raw["lower"], raw["upper"]
                 label = "Gradient Boosted Trees (recursive)"
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 -- deliberately broad: report any component-model fit failure as a structured error rather than crash the ensemble
             return {"error": f"{model_type} failed to fit: {exc}"}
 
         point_forecasts.append(np.asarray(point, dtype=float))

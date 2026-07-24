@@ -15,18 +15,29 @@ Run over stdio (how OpenClaw will launch it), after `pip install -e .`:
     # or: python -m omen.retrain.server
 """
 
-from typing import Optional
 
 from fastmcp import FastMCP
 
 from .retrain_tools import (
-    record_deployment as _record_deployment,
-    load_deployment_manifest as _load_deployment_manifest,
-    compare_candidate_to_deployed as _compare_candidate_to_deployed,
-    execute_redeploy as _execute_redeploy,
     authorize_autonomous_mode as _authorize_autonomous_mode,
-    revoke_autonomous_mode as _revoke_autonomous_mode,
+)
+from .retrain_tools import (
     check_autonomous_mode as _check_autonomous_mode,
+)
+from .retrain_tools import (
+    compare_candidate_to_deployed as _compare_candidate_to_deployed,
+)
+from .retrain_tools import (
+    execute_redeploy as _execute_redeploy,
+)
+from .retrain_tools import (
+    load_deployment_manifest as _load_deployment_manifest,
+)
+from .retrain_tools import (
+    record_deployment as _record_deployment,
+)
+from .retrain_tools import (
+    revoke_autonomous_mode as _revoke_autonomous_mode,
 )
 
 mcp = FastMCP("ts-retrain")
@@ -39,7 +50,7 @@ def record_deployment(
     params: dict,
     backtest_metrics: dict,
     horizon: int,
-    manifest_path: Optional[str] = None,
+    manifest_path: str | None = None,
 ) -> dict:
     """Persist a record of what's currently deployed: model type, params,
     its backtest metrics from ts-forecaster, and the forecast horizon.
@@ -73,7 +84,7 @@ def record_deployment(
 
 
 @mcp.tool()
-def load_deployment_manifest(csv_path: str, manifest_path: Optional[str] = None) -> dict:
+def load_deployment_manifest(csv_path: str, manifest_path: str | None = None) -> dict:
     """Read back what's currently recorded as deployed for this series.
     Returns an error dict (not an exception) if nothing has been recorded
     yet -- that's an expected state early in a series' lifecycle, not a bug.
@@ -146,8 +157,8 @@ def execute_redeploy(
     autonomous: bool = False,
     date_col: str = "date",
     value_col: str = "value",
-    manifest_path: Optional[str] = None,
-    autonomous_mode_path: Optional[str] = None,
+    manifest_path: str | None = None,
+    autonomous_mode_path: str | None = None,
 ) -> dict:
     """Actually perform a redeploy: retrain model_type on the full series
     with params (delegating to the matching ts-deploy forecast function)
@@ -220,8 +231,8 @@ def execute_redeploy(
 def authorize_autonomous_mode(
     csv_path: str,
     authorized_by: str,
-    note: Optional[str] = None,
-    autonomous_mode_path: Optional[str] = None,
+    note: str | None = None,
+    autonomous_mode_path: str | None = None,
 ) -> dict:
     """Record that autonomous (unattended) retraining is authorized for
     this specific series. Call this ONLY after a human has explicitly
@@ -252,7 +263,7 @@ def authorize_autonomous_mode(
 
 
 @mcp.tool()
-def revoke_autonomous_mode(csv_path: str, autonomous_mode_path: Optional[str] = None) -> dict:
+def revoke_autonomous_mode(csv_path: str, autonomous_mode_path: str | None = None) -> dict:
     """Remove any autonomous-mode authorization record for this series.
     After this, execute_redeploy(..., autonomous=True) calls for this
     series will refuse until authorize_autonomous_mode is called again.
@@ -267,7 +278,7 @@ def revoke_autonomous_mode(csv_path: str, autonomous_mode_path: Optional[str] = 
 
 
 @mcp.tool()
-def check_autonomous_mode(csv_path: str, autonomous_mode_path: Optional[str] = None) -> dict:
+def check_autonomous_mode(csv_path: str, autonomous_mode_path: str | None = None) -> dict:
     """Read whatever authorize_autonomous_mode last recorded for this
     series. When authorized, returns the full record: `authorized: true`,
     plus `authorized_at`, `authorized_by`, and `note` -- cite these when
