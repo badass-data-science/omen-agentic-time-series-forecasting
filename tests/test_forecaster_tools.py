@@ -6,16 +6,16 @@ pytest.importorskip("sklearn")
 
 from omen.data_prep import generate_synthetic_series
 from omen.forecaster.model_tools import (
-    train_test_split,
-    fit_naive_baselines,
-    fit_ets,
-    fit_sarima,
-    fit_gradient_boosted_trees,
     compute_metrics_with_ci,
-    residual_diagnostics,
     diebold_mariano_test,
+    fit_ets,
+    fit_gradient_boosted_trees,
+    fit_naive_baselines,
+    fit_sarima,
+    residual_diagnostics,
     rolling_origin_backtest,
     search_sarima_orders,
+    train_test_split,
 )
 
 

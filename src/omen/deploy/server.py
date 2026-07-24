@@ -11,18 +11,26 @@ Run over stdio (how OpenClaw will launch it), after `pip install -e .`:
     # or: python -m omen.deploy.server
 """
 
-from typing import Optional
-from fastmcp.tools.tool import ToolResult
 
 from fastmcp import FastMCP
+from fastmcp.tools.tool import ToolResult
 
 from omen.data_prep import load_series
+
+from .forecast_tools import (
+    forecast_ensemble as _forecast_ensemble,
+)
+from .forecast_tools import (
+    forecast_ets as _forecast_ets,
+)
+from .forecast_tools import (
+    forecast_gradient_boosted_trees as _forecast_gradient_boosted_trees,
+)
 from .forecast_tools import (
     forecast_naive as _forecast_naive,
-    forecast_ets as _forecast_ets,
+)
+from .forecast_tools import (
     forecast_sarima as _forecast_sarima,
-    forecast_gradient_boosted_trees as _forecast_gradient_boosted_trees,
-    forecast_ensemble as _forecast_ensemble,
 )
 from .plot_tools import plot_forecast as _plot_forecast
 
@@ -129,8 +137,8 @@ def forecast_ets(
 def forecast_sarima(
     csv_path: str,
     horizon: int = 30,
-    order: Optional[list] = None,
-    seasonal_order: Optional[list] = None,
+    order: list | None = None,
+    seasonal_order: list | None = None,
     confidence_level: float = 0.95,
     date_col: str = "date",
     value_col: str = "value",
@@ -170,7 +178,7 @@ def forecast_sarima(
 def forecast_gradient_boosted_trees(
     csv_path: str,
     horizon: int = 30,
-    lags: Optional[list] = None,
+    lags: list | None = None,
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
@@ -237,8 +245,8 @@ def forecast_ensemble(
     csv_path: str,
     model_types: list,
     horizon: int = 30,
-    weights: Optional[list] = None,
-    model_params: Optional[dict] = None,
+    weights: list | None = None,
+    model_params: dict | None = None,
     confidence_level: float = 0.95,
     date_col: str = "date",
     value_col: str = "value",
@@ -296,7 +304,7 @@ def forecast_ensemble(
 def plot_forecast(
     csv_path: str,
     forecast: list,
-    out_path: Optional[str] = None,
+    out_path: str | None = None,
     date_col: str = "date",
     value_col: str = "value",
 ) -> ToolResult:

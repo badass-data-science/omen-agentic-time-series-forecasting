@@ -7,20 +7,20 @@ monitor_tools.py computation internally rather than reimplementing it,
 so the picture can never silently disagree with the JSON.
 """
 
-from typing import Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
 from fastmcp.tools.tool import ToolResult
 
 from omen.plotting import render_plot
+
 from .monitor_tools import compare_forecast_to_actuals, detect_data_drift
 
 
 def plot_forecast_vs_actuals(
     forecast: list,
     df: pd.DataFrame,
-    out_path: Optional[str] = None,
+    out_path: str | None = None,
 ) -> ToolResult:
     """Plot a deployed forecast's trajectory (with interval band, if it
     has one) against the real observed actuals that have since arrived.
@@ -76,7 +76,7 @@ def plot_drift(
     df: pd.DataFrame,
     recent_window_size: int = 30,
     reference_window_size: int = 90,
-    out_path: Optional[str] = None,
+    out_path: str | None = None,
 ) -> ToolResult:
     """Plot the recent window's and reference window's value distributions
     side by side, annotated with detect_data_drift's own real Cohen's d
@@ -118,7 +118,7 @@ def plot_drift(
     )
 
 
-def plot_rolling_drift(checks: list, out_path: Optional[str] = None) -> ToolResult:
+def plot_rolling_drift(checks: list, out_path: str | None = None) -> ToolResult:
     """Plot Cohen's d across rolling_drift_check's own walk-forward
     checks, marking which ones flagged drift.
 

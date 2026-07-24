@@ -15,7 +15,6 @@ which returns it as an inline image (plus an optional on-disk PNG if
 out_path is given).
 """
 
-from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,15 +24,16 @@ from scipy.signal import periodogram
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 from omen.plotting import render_plot
+
 from .analysis_tools import (
     _acf_pacf_raw,
-    detect_seasonality_period,
     detect_anomalies_robust_zscore,
     detect_changepoints,
+    detect_seasonality_period,
 )
 
 
-def plot_series(df: pd.DataFrame, out_path: Optional[str] = None) -> ToolResult:
+def plot_series(df: pd.DataFrame, out_path: str | None = None) -> ToolResult:
     """Plot the raw value-vs-date series. Missing values show as visible
     GAPS in the line (not interpolated over) -- basic_stats already
     treats missing data as a first-class finding in this project, so the
@@ -49,7 +49,7 @@ def plot_series(df: pd.DataFrame, out_path: Optional[str] = None) -> ToolResult:
     return render_plot(fig, out_path=out_path, n_observations=len(df), n_missing=n_missing)
 
 
-def plot_acf_pacf(df: pd.DataFrame, n_lags: int = 21, alpha: float = 0.05, out_path: Optional[str] = None) -> ToolResult:
+def plot_acf_pacf(df: pd.DataFrame, n_lags: int = 21, alpha: float = 0.05, out_path: str | None = None) -> ToolResult:
     """Plot ACF and PACF as two stem plots side by side, with the SAME
     per-lag Bartlett significance bands acf_pacf_summary reports (shared
     computation via _acf_pacf_raw, not reimplemented) -- lags whose bar
@@ -78,7 +78,7 @@ def plot_acf_pacf(df: pd.DataFrame, n_lags: int = 21, alpha: float = 0.05, out_p
     return render_plot(fig, out_path=out_path, n_lags=int(n_lags))
 
 
-def plot_seasonal_decomposition(df: pd.DataFrame, period: int = 7, out_path: Optional[str] = None) -> ToolResult:
+def plot_seasonal_decomposition(df: pd.DataFrame, period: int = 7, out_path: str | None = None) -> ToolResult:
     """Plot the additive trend/seasonal/residual decomposition as a
     vertically stacked subplot -- the same seasonal_decompose call
     seasonal_decomposition_summary's strength scores are computed from.
@@ -105,7 +105,7 @@ def plot_seasonal_decomposition(df: pd.DataFrame, period: int = 7, out_path: Opt
     return render_plot(fig, out_path=out_path, period_assumed=period)
 
 
-def plot_periodogram(df: pd.DataFrame, min_period: int = 2, max_period: Optional[int] = None, out_path: Optional[str] = None) -> ToolResult:
+def plot_periodogram(df: pd.DataFrame, min_period: int = 2, max_period: int | None = None, out_path: str | None = None) -> ToolResult:
     """Plot periodogram power vs. period, marking both the single
     globally strongest frequency (which can be a trend/edge artifact --
     the finding detect_seasonality_period's dominant_period_in_reported_range
@@ -158,7 +158,7 @@ def plot_periodogram(df: pd.DataFrame, min_period: int = 2, max_period: Optional
     )
 
 
-def plot_anomalies(df: pd.DataFrame, z_threshold: float = 3.5, window: int = 14, out_path: Optional[str] = None) -> ToolResult:
+def plot_anomalies(df: pd.DataFrame, z_threshold: float = 3.5, window: int = 14, out_path: str | None = None) -> ToolResult:
     """Plot the series with points flagged by the ROBUST (median+MAD)
     anomaly detector marked -- reuses detect_anomalies_robust_zscore's
     own output (this project's recommended default over the plain
@@ -188,7 +188,7 @@ def plot_changepoints(
     max_changepoints: int = 5,
     n_permutations: int = 500,
     seed: int = 42,
-    out_path: Optional[str] = None,
+    out_path: str | None = None,
 ) -> ToolResult:
     """Plot the series with detected changepoints as vertical lines,
     segments shaded alternately -- reuses detect_changepoints' own

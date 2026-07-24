@@ -16,18 +16,17 @@ easier to see at a glance.
 """
 
 import io
-from typing import Any, Optional
+from typing import Any
 
 import matplotlib
 
 matplotlib.use("Agg")  # headless rendering -- no display backend available or needed
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
+from fastmcp.tools.tool import ToolResult
+from fastmcp.utilities.types import Image
 
-from fastmcp.tools.tool import ToolResult  # noqa: E402
-from fastmcp.utilities.types import Image  # noqa: E402
 
-
-def render_plot(fig: "plt.Figure", out_path: Optional[str] = None, **status_extra: Any) -> ToolResult:
+def render_plot(fig: "plt.Figure", out_path: str | None = None, **status_extra: Any) -> ToolResult:
     """Render a finished matplotlib Figure to PNG bytes, return it as an
     inline FastMCP Image content block plus a small structured status
     dict (status, written_to, and anything the caller wants surfaced

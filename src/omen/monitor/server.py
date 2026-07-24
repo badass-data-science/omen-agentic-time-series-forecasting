@@ -11,21 +11,31 @@ Run over stdio (how OpenClaw will launch it), after `pip install -e .`:
     # or: python -m omen.monitor.server
 """
 
-from typing import Optional
-from fastmcp.tools.tool import ToolResult
 
 from fastmcp import FastMCP
+from fastmcp.tools.tool import ToolResult
 
 from omen.data_prep import load_series
+
 from .monitor_tools import (
     compare_forecast_to_actuals as _compare_forecast_to_actuals,
+)
+from .monitor_tools import (
     detect_data_drift as _detect_data_drift,
-    rolling_drift_check as _rolling_drift_check,
+)
+from .monitor_tools import (
     recommend_retraining as _recommend_retraining,
+)
+from .monitor_tools import (
+    rolling_drift_check as _rolling_drift_check,
+)
+from .plot_tools import (
+    plot_drift as _plot_drift,
 )
 from .plot_tools import (
     plot_forecast_vs_actuals as _plot_forecast_vs_actuals,
-    plot_drift as _plot_drift,
+)
+from .plot_tools import (
     plot_rolling_drift as _plot_rolling_drift,
 )
 
@@ -137,7 +147,7 @@ def rolling_drift_check(
     recent_window_size: int = 30,
     reference_window_size: int = 90,
     n_checks: int = 5,
-    step_size: Optional[int] = None,
+    step_size: int | None = None,
     persistence_threshold_frac: float = 0.5,
     date_col: str = "date",
     value_col: str = "value",
@@ -190,10 +200,10 @@ def recommend_retraining(
     mape_now: float,
     mape_backtest: float,
     drift_detected: bool,
-    interval_coverage_pct: Optional[float] = None,
-    nominal_confidence_pct: Optional[float] = None,
-    mape_now_ci_lower: Optional[float] = None,
-    mape_now_ci_upper: Optional[float] = None,
+    interval_coverage_pct: float | None = None,
+    nominal_confidence_pct: float | None = None,
+    mape_now_ci_lower: float | None = None,
+    mape_now_ci_upper: float | None = None,
     error_degradation_threshold_pct: float = 20.0,
     coverage_miscalibration_threshold_pct: float = 15.0,
 ) -> dict:
@@ -244,7 +254,7 @@ def recommend_retraining(
 def plot_forecast_vs_actuals(
     forecast: list,
     csv_path: str,
-    out_path: Optional[str] = None,
+    out_path: str | None = None,
     date_col: str = "date",
     value_col: str = "value",
 ) -> ToolResult:
@@ -275,7 +285,7 @@ def plot_drift(
     csv_path: str,
     recent_window_size: int = 30,
     reference_window_size: int = 90,
-    out_path: Optional[str] = None,
+    out_path: str | None = None,
     date_col: str = "date",
     value_col: str = "value",
 ) -> ToolResult:
@@ -302,7 +312,7 @@ def plot_drift(
 
 
 @mcp.tool()
-def plot_rolling_drift(checks: list, out_path: Optional[str] = None) -> ToolResult:
+def plot_rolling_drift(checks: list, out_path: str | None = None) -> ToolResult:
     """Plot Cohen's d across rolling_drift_check's own walk-forward
     checks, marking which ones flagged drift. Returns the image INLINE
     as well as, if `out_path` is given, saved to disk.

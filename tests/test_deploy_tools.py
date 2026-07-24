@@ -6,11 +6,11 @@ pytest.importorskip("sklearn")
 
 from omen.data_prep import generate_synthetic_series
 from omen.deploy.forecast_tools import (
-    forecast_naive,
-    forecast_ets,
-    forecast_sarima,
-    forecast_gradient_boosted_trees,
     forecast_ensemble,
+    forecast_ets,
+    forecast_gradient_boosted_trees,
+    forecast_naive,
+    forecast_sarima,
 )
 
 
@@ -102,7 +102,7 @@ def test_forecast_gbt_feature_importance_ci_shape(sample_df):
     result = forecast_gradient_boosted_trees(sample_df, horizon=10, n_bootstrap=10)
     assert result["feature_importance_ci_n_bootstrap"] == 10
     assert result["feature_importance_ci_confidence_level"] == 0.95
-    for col, entry in result["feature_importances"].items():
+    for entry in result["feature_importances"].values():
         assert set(entry.keys()) == {"importance", "ci_lower", "ci_upper"}
         assert entry["ci_lower"] <= entry["ci_upper"]
 

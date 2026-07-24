@@ -30,47 +30,51 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from generate_book_datasets import (
-    grumbling_level,
-    mojito_inventory,
-    mojito_inventory_clean,
-    mojito_inventory_month2_actuals,
-    mojito_inventory_constant,
-    mad_degenerate_edge_case,
     deathray_revenue,
     deathray_revenue_rival,
     deathray_revenue_slow_month,
     drycleaning_bills,
     drycleaning_bills_steep_trend,
-    power_consumption,
+    grumbling_level,
     interpol_attention,
     interpol_attention_shifted,
     interpol_attention_train,
-    self_destruct_timer,
+    mad_degenerate_edge_case,
     minion_overtime,
+    mojito_inventory,
+    mojito_inventory_clean,
+    mojito_inventory_constant,
+    mojito_inventory_month2_actuals,
+    power_consumption,
+    self_destruct_timer,
 )
 
 from omen.analyst.plot_tools import (
-    plot_series,
     plot_acf_pacf,
-    plot_seasonal_decomposition,
-    plot_periodogram,
     plot_anomalies,
     plot_changepoints,
+    plot_periodogram,
+    plot_seasonal_decomposition,
+    plot_series,
 )
+from omen.deploy.forecast_tools import forecast_sarima
+from omen.deploy.plot_tools import plot_forecast
 from omen.forecaster.model_tools import (
     fit_naive_baselines,
-    search_sarima_orders,
     rolling_origin_backtest,
+    search_sarima_orders,
 )
 from omen.forecaster.plot_tools import (
     plot_backtest,
     plot_rolling_origin,
     plot_search_sarima_orders,
 )
-from omen.deploy.forecast_tools import forecast_sarima
-from omen.deploy.plot_tools import plot_forecast
 from omen.monitor.monitor_tools import rolling_drift_check
-from omen.monitor.plot_tools import plot_forecast_vs_actuals, plot_drift, plot_rolling_drift
+from omen.monitor.plot_tools import (
+    plot_drift,
+    plot_forecast_vs_actuals,
+    plot_rolling_drift,
+)
 
 
 def _mojito_sarima_forecast():

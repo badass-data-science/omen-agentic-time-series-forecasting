@@ -42,7 +42,13 @@ deploy = ["statsmodels>=0.14", "scikit-learn>=1.4"]
 monitor = ["scipy>=1.11"]
 retrain = []
 all = ["statsmodels>=0.14", "scikit-learn>=1.4", "scipy>=1.11"]
-dev = ["pytest>=8.0", "ruff>=0.15", "mypy>=1.10", "pandas-stubs", "scipy-stubs"]
+# ruff pinned to an EXACT version, not a floor -- an unpinned ruff>=X let a
+# routine ruff release silently expand its own default rule set (new rules
+# like UP045/BLE001/PERF102 started firing) and broke CI with no code change
+# on our side. Bump this deliberately, re-run `ruff check .` locally, and fix
+# or justify (with a scoped `# noqa`) whatever the new version newly flags --
+# don't just widen the version range again.
+dev = ["pytest>=8.0", "ruff==0.16.0", "mypy>=1.10", "pandas-stubs", "scipy-stubs"]
 
 [project.urls]
 Homepage = "https://github.com/badass-data-science/omen-agentic-time-series-forecasting"

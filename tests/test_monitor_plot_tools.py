@@ -2,8 +2,11 @@ import base64
 
 from omen.data_prep import generate_synthetic_series
 from omen.monitor.monitor_tools import detect_data_drift, rolling_drift_check
-from omen.monitor.plot_tools import plot_forecast_vs_actuals, plot_drift, plot_rolling_drift
-
+from omen.monitor.plot_tools import (
+    plot_drift,
+    plot_forecast_vs_actuals,
+    plot_rolling_drift,
+)
 
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 

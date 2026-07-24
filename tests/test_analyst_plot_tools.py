@@ -2,15 +2,15 @@ import pytest
 
 pytest.importorskip("statsmodels")
 
-from omen.data_prep import generate_synthetic_series
 from omen.analyst.plot_tools import (
-    plot_series,
     plot_acf_pacf,
-    plot_seasonal_decomposition,
-    plot_periodogram,
     plot_anomalies,
     plot_changepoints,
+    plot_periodogram,
+    plot_seasonal_decomposition,
+    plot_series,
 )
+from omen.data_prep import generate_synthetic_series
 
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 
