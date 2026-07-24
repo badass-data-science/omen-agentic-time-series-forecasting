@@ -9,11 +9,37 @@ checked against live tool output. CI (GitHub Actions, see
 type-checking on every push and PR; see "Published on PyPI" below for
 release details.*
 
-Five layers of agentic time series tooling, packaged as a normal
-installable Python project. Each layer is a FastMCP server (typed tools)
-plus a companion OpenClaw skill (the reasoning workflow around those
-tools), bundled together so the whole thing installs and updates as one
-package.
+## What This Is
+
+Time series forecasting is a well-studied statistical discipline, but
+it's easy to get wrong in ways that look fine until they aren't: skipping
+a stationarity check, never comparing against a naive baseline, reporting
+a point forecast with no confidence interval attached. Ask a
+general-purpose AI model to "forecast this series" and it will typically
+write plausible-looking `pandas`/`statsmodels` code from memory that
+skips exactly those checks -- not because the statistics are hard to
+name, but because getting them right, correctly, inside freshly
+improvised code, every single time, is a much harder ask of an LLM than
+it looks.
+
+Omen's answer is to stop asking an agent to improvise the statistics at
+all. Every operation here -- checking stationarity, backtesting a model
+against a real holdout, computing a confidence interval, deciding whether
+a retrained candidate is actually worth redeploying -- is a pre-built,
+tested, typed tool, exposed over the Model Context Protocol (MCP) as a
+FastMCP server with a companion OpenClaw skill (the reasoning workflow
+around those tools). An AI agent's job becomes choosing which tool to
+call next and reasoning about the structured result that comes back, not
+writing statistics code from scratch. Consequential actions, like
+redeploying a live model, are gated behind an explicit, code-checked
+confirmation rather than left to an agent's judgment call; open-ended
+reasoning, like which model family fits a series' shape, is left to the
+agent, where it belongs.
+
+That split shows up as five layers, packaged as one normal installable
+Python project, each covering one stage of a forecast's real lifecycle
+from first looking at the data through deciding whether to retrain months
+later:
 
 - **Layer 1 — `ts-analyst`**: explore a series (stationarity, seasonality,
   anomalies, structural breaks) and recommend a forecasting approach with
