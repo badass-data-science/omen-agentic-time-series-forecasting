@@ -4,13 +4,17 @@ Before Chapter 3 can put the mojito problem to rest, something more tedious has 
 
 ## What You're Actually Installing
 
-Omen is a normal, installable Python package. There is no special runtime, no proprietary binary, nothing to license. Once installed, it gives you five **console scripts** — small executable commands, one per layer — that each start a **FastMCP server**: a lightweight process that speaks the Model Context Protocol (MCP) over standard input and output and, when asked, reports exactly which typed tools it exposes.
+Omen is a normal, installable Python package, published on PyPI. There is no special runtime, no proprietary binary, nothing to license. Once installed, it gives you five **console scripts** — small executable commands, one per layer — that each start a **FastMCP server**: a lightweight process that speaks the Model Context Protocol (MCP) over standard input and output and, when asked, reports exactly which typed tools it exposes.
 
 ```bash
-pip install -e ".[all]"
+pip install "omen-agentic-forecasting[all]"
 ```
 
-installs everything: all five layers and their dependencies (`statsmodels`, `scikit-learn`, and friends). If you only want a subset — say, you're only planning to explore data with Layer 1 and don't want `scikit-learn` dragged in for no reason — per-layer extras exist too: `.[analyst]`, `.[forecaster]`, `.[deploy]`, `.[monitor]`, `.[retrain]`. This book assumes `.[all]` from here on, since later chapters use every layer.
+installs everything: all five layers and their dependencies (`statsmodels`, `scikit-learn`, and friends). One naming quirk worth knowing before you type that command: the *PyPI listing name* is `omen-agentic-forecasting` — plain `omen` was already taken by an unrelated package — but the *importable module* stays plain `omen`, and the five console scripts keep their original `ts-*-server` names regardless of which name you installed under. The longer name only ever shows up in the install command itself; every other command and code example in this book uses the short names.
+
+If you only want a subset — say, you're only planning to explore data with Layer 1 and don't want `scikit-learn` dragged in for no reason — per-layer extras exist too: `omen-agentic-forecasting[analyst]`, `[forecaster]`, `[deploy]`, `[monitor]`, `[retrain]`. This book assumes `[all]` from here on, since later chapters use every layer.
+
+If you'd rather install from source instead — to read the code alongside the book, or to contribute — clone the project's GitHub repository (`github.com/badass-data-science/omen-agentic-time-series-forecasting`, introduced back in Chapter 1) and run `pip install -e ".[all]"` from inside it. Both paths land you at the exact same five console scripts; the editable install just points them at your local checkout instead of a downloaded package.
 
 Once installed, confirm the five console scripts actually landed on your `PATH`:
 
@@ -33,7 +37,7 @@ Once you understand that this is *all* that's actually happening underneath any 
 
 ### OpenClaw (the primary target platform for this book)
 
-Omen ships a ready-to-merge configuration snippet at the root of the project, `openclaw.config.snippet.jsonc`. Merge its contents into `~/.openclaw/openclaw.json`. In outline, it looks like this:
+Omen ships a ready-to-merge configuration snippet, `openclaw.config.snippet.jsonc`, at the root of its GitHub repository — that file lives in the repo, not inside the package `pip install` downloads, so if you installed straight from PyPI rather than cloning the repository, the simplest path is to just copy the block below directly instead of hunting for the file locally. Merge its contents into `~/.openclaw/openclaw.json`. In outline, it looks like this:
 
 ```jsonc
 {
@@ -89,7 +93,7 @@ Several general-purpose AI assistants beyond the ones named above also speak MCP
 
 Here is a failure our heroine hit herself while first wiring up a real test against a live Omen server — narrated as it happened, because it's the single most common installation problem, and it looks alarming right up until you know what it is.
 
-The setup: a virtual environment, Omen installed into it with `pip install -e ".[all]"`, the console script confirmed present with `which ts-analyst-server`. Then, a client configuration pointing at the server by its bare command name:
+The setup: a virtual environment, Omen installed into it with `pip install "omen-agentic-forecasting[all]"`, the console script confirmed present with `which ts-analyst-server`. Then, a client configuration pointing at the server by its bare command name:
 
 ```json
 { "mcpServers": { "ts-analyst": { "command": "ts-analyst-server", "args": [] } } }

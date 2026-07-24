@@ -129,8 +129,9 @@ with a real smoke test: connecting a client and calling
 `ts-analyst__basic_stats` once, successfully, as proof of life.
 
 **Learning objectives:**
-- Install Omen (`pip install -e ".[all]"` or per-layer extras) into a clean
-  virtual environment.
+- Install Omen (`pip install "omen-agentic-forecasting[all]"` or per-layer
+  extras, or `pip install -e ".[all]"` from a cloned repo checkout) into a
+  clean virtual environment.
 - Register all five MCP servers with at least one agentic platform.
 - Diagnose the single most common installation failure (a launched
   subprocess not inheriting the venv's `PATH`) and fix it.
@@ -1036,9 +1037,9 @@ book's arc from "look before leaping" through "should you even redeploy."
   a book about *forecasting* — not fortune-telling — should end on.
 - A short "where the toolkit itself goes next" section, pulled honestly
   from Omen's own real, currently-open items (no expiry on autonomous-mode
-  grants, PyPI publishing still pending) rather than invented future
-  features — modeling, one last time, the book's own running lesson about
-  not overclaiming certainty.
+  grants) rather than invented future features — modeling, one last time,
+  the book's own running lesson about not overclaiming certainty. Also
+  notes, honestly, that PyPI publishing (once on this same list) is done.
 
 **Sample prompts:**
 - "Summarize everything you now know about this series across all five

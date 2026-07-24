@@ -2,11 +2,12 @@
 
 ![noir-image](book/title-page-image.png)
 
-*Status: Alpha. The test suite (161 tests) is real and the book's
-worked examples were checked against live tool output. CI (GitHub
-Actions, see `.github/workflows/ci.yml`) runs the suite plus ruff
-linting and mypy type-checking on every push and PR; see "Publishing
-this to PyPI" below for the rest of what's still open.*
+*Status: Alpha, published on PyPI as `omen-agentic-forecasting`. The
+test suite (161 tests) is real and the book's worked examples were
+checked against live tool output. CI (GitHub Actions, see
+`.github/workflows/ci.yml`) runs the suite plus ruff linting and mypy
+type-checking on every push and PR; see "Published on PyPI" below for
+release details.*
 
 Five layers of agentic time series tooling, packaged as a normal
 installable Python project. Each layer is a FastMCP server (typed tools)
@@ -277,27 +278,20 @@ autonomous=True)` itself once `should_redeploy: true` comes back (which
 itself re-checks the record before acting), and report what it did rather
 than pausing to ask.
 
-## Publishing this to PyPI
+## Published on PyPI
 
-This layout is ready for it as-is:
+Live: `pip install omen-agentic-forecasting` (see "Setup" above for the
+`[extras]` variants). The importable module stays plain `omen` -- only the
+PyPI listing name differs, since plain `omen` was already taken; see the
+comment above `[project.scripts]` in `pyproject.toml` for why.
+
+To ship a new release once `version` in `pyproject.toml` is bumped:
 ```bash
 pip install build twine
 python -m build                      # produces dist/*.whl and dist/*.tar.gz
 twine upload --repository testpypi dist/*    # try TestPyPI first
 twine upload dist/*                          # then the real thing
 ```
-Before actually publishing, you'll want to:
-- ~~confirm `omen` is actually free on PyPI~~ **Done.** `omen` itself
-  was already taken -- the plain word is short and generic, exactly
-  the kind of name that gets claimed early. The project now publishes
-  under `omen-agentic-forecasting` instead (confirmed free via PyPI's
-  JSON API), set in `pyproject.toml`'s `name` field. The importable
-  module stays plain `omen` -- only the PyPI listing name changed; see
-  the comment above `[project.scripts]` in `pyproject.toml` for why.
-- ~~fill in real author info in `pyproject.toml`~~ **Done.** `authors`
-  now lists the real name/email instead of the `"Your Name"
-  <you@example.com>` placeholder.
-- bump `version` for each release
 
 ## Things worth knowing about specific tools (carried over from earlier layers)
 
