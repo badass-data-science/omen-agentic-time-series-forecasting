@@ -25,7 +25,7 @@ Because the nulls point in opposite directions, running both and reading them to
 **Death-Ray Revenue** — weekly income from renting out the Secret Lab™'s death ray to other operations that would rather lease world-ending hardware than build their own — is this book's first deliberately non-stationary series. Reputation compounds, rental rates have climbed accordingly, and the series has been trending upward for well over a year now. It's introduced here and comes back repeatedly through Part III as the flagship "let's actually build a model for this" example — worth getting properly acquainted with before the first real test runs against it.
 
 **Prompt:**
-> Load the death-ray revenue series and give me the basics before we test anything.
+> Load the death-ray revenue series at `book/examples/book_datasets/deathray_revenue.csv` and give me the basics before we test anything.
 
 **What Comes Back** (a real result, 70 weeks):
 

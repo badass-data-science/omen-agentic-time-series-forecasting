@@ -7,7 +7,7 @@ Every operation has a rhythm to it, whether or not anyone in charge has ever bot
 **Henchman Costume Dry-Cleaning Bills** — weekly spend on getting the corps' public-appearance costumes properly pressed and de-scorched — swells every autumn, as Halloween-adjacent public appearances multiply and every costume in inventory needs attention at once. It also creeps up slowly year over year, for the mundane reason that the henchman roster keeps growing. Three years of weekly totals are on hand, and this chapter asks Omen to find the autumn pattern on its own, rather than being told in advance to look for a 52-week cycle.
 
 **Prompt:**
-> Load the dry-cleaning bills series and give me the basics.
+> Load the dry-cleaning bills series at `book/examples/book_datasets/drycleaning_bills.csv` and give me the basics.
 
 **What Comes Back** (a real result, 155 weeks):
 
@@ -105,7 +105,7 @@ The mechanism behind this is a **periodogram**: a decomposition of the series in
 Here's the gotcha this chapter promised, demonstrated rather than just asserted. The dry-cleaning series above was generated with a *modest* trend — the henchman roster growing gradually. What happens if the roster grows much faster instead — say, after an aggressive recruitment drive triples headcount over the same three years?
 
 **Prompt:**
-> Load the same dry-cleaning series, but regenerated with a 10x steeper trend, and give me the basics before we search for seasonality again.
+> Load the same dry-cleaning series, but regenerated with a 10x steeper trend, at `book/examples/book_datasets/drycleaning_bills_steep_trend.csv`, and give me the basics before we search for seasonality again.
 
 **What Comes Back** (a real result, same 155 weeks, same seasonal pattern, only the trend changed):
 

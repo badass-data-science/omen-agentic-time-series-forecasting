@@ -50,6 +50,23 @@ TITLE_PAGE_IMAGE = os.path.join(BOOK_DIR, "title-page-image.png")
 
 IMAGE_LINK_RE = re.compile(r"(!\[[^\]]*\]\()([^)\s]+)(\))")
 
+# The book is organized into six parts (see outline.md's own "## Part N"
+# headers -- outline.md itself is excluded from the assembled book, so
+# this mapping is the only place that structure is expressed in anything
+# reader-facing). Keyed by the chapter filename that OPENS each part;
+# assemble() injects a raw-LaTeX \part{...} command immediately before
+# that file's own content, which pandoc's `book` documentclass renders as
+# a real, distinct part-title page AND a real top-level `--toc` entry --
+# neither of which a plain `# Chapter N` heading alone produces.
+PART_OPENERS = {
+    "chapter-01-introducing-omen-and-agentic-ai.md": "Part I — Meet Your New Henchman",
+    "chapter-03-first-contact.md": "Part II — Reading the Series Before You Trust It",
+    "chapter-08-the-floor-is-naive.md": "Part III — Building and Judging Candidate Models",
+    "chapter-14-deploying-for-real.md": "Part IV — Shipping and Living With a Forecast",
+    "chapter-18-should-you-even-redeploy.md": "Part V — The Retrain Decision and Beyond",
+    "chapter-20-prompting-omen-like-you-mean-it.md": "Part VI — Becoming a Better Forecasting Villain",
+}
+
 # Pandoc's code blocks (Shaded/Highlighting, via fancyvrb) don't wrap long
 # lines by default -- a JSON example wider than the page margin just runs
 # off the edge and gets cut off. fvextra's breaklines/breakanywhere fixes
@@ -158,10 +175,20 @@ def _rewrite_image_links(content: str, out_dir: str) -> str:
     return IMAGE_LINK_RE.sub(_rewrite, content)
 
 
+def _part_marker(title: str) -> str:
+    """A raw-LaTeX block pandoc passes through verbatim to the PDF --
+    \\part{} is what actually gets this title its own divider page and
+    its own top-level entry in --toc, neither of which a Markdown
+    heading (which this book reserves for chapters/sections) can do."""
+    return f'```{{=latex}}\n\\part{{{_latex_escape(title)}}}\n```'
+
+
 def assemble(out_dir: str) -> str:
     os.makedirs(out_dir, exist_ok=True)
     parts = []
     for filename in _ordered_source_files():
+        if filename in PART_OPENERS:
+            parts.append(_part_marker(PART_OPENERS[filename]))
         with open(os.path.join(BOOK_DIR, filename), encoding="utf-8") as f:
             content = f.read()
         parts.append(_rewrite_image_links(content, out_dir).strip())

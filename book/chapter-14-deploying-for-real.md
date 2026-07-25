@@ -1,6 +1,6 @@
 # Chapter 14: Deploying for Real — Full-Series Refits and Prediction Intervals
 
-Secret Lab™ Mojito Inventory has been waiting since Chapter 3. Every chapter since then borrowed Death-Ray Revenue instead — a fair trade for teaching model comparison on a single consistent series, but it left Chapter 1's opening promise unfinished for the series that actually started this book. This chapter closes that loop: a real, deployed forecast for mojito inventory, using `ts-deploy` instead of `ts-forecaster` for the first time. It also opens with a mistake worth making on purpose, because the mistake teaches more than skipping past it would.
+With Part IV, a model finally leaves the backtest sandbox for good. Secret Lab™ Mojito Inventory has been waiting since Chapter 3. Every chapter since then borrowed Death-Ray Revenue instead — a fair trade for teaching model comparison on a single consistent series, but it left Chapter 1's opening promise unfinished for the series that actually started this book. This chapter closes that loop: a real, deployed forecast for mojito inventory, using `ts-deploy` instead of `ts-forecaster` for the first time. It also opens with a mistake worth making on purpose, because the mistake teaches more than skipping past it would.
 
 ## The Mistake: Deploying Straight From Chapter 3's Own CSV
 
@@ -34,10 +34,10 @@ df["value"] = df["value"].interpolate(method="linear")
 # n_missing: 5 -> 0
 ```
 
-Don't just trust that comment, though — load the cleaned result back through Omen itself and check:
+Don't just trust that comment, though — load the cleaned result back through Omen itself and check. The already-interpolated CSV is pre-generated at `book/examples/book_datasets/mojito_inventory_clean.csv`, so you don't have to run the pandas snippet yourself to follow along:
 
 **Prompt:**
-> Load the cleaned mojito inventory series and confirm there are no missing values left.
+> Load the cleaned mojito inventory series at `book/examples/book_datasets/mojito_inventory_clean.csv` and confirm there are no missing values left.
 
 **What Comes Back** (a real result):
 

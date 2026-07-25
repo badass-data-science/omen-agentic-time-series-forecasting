@@ -1,6 +1,6 @@
 # Chapter 18: Should You Even Redeploy? — Deterministic Gates and Confidence-Aware Comparisons
 
-A rival supervillain has entered the death-ray rental market, undercutting prices aggressively. Death-Ray Revenue's once-reliable climb has flattened over the last several months — this isn't noise, it's real competitive pressure, and `ts-monitor` would have every reason to flag it. The question this chapter answers isn't "has something changed" — that part's assumed. It's the next one: given a freshly retrained candidate model, is it actually worth the disruption of redeploying? Part V's tool for that question, `ts-retrain__compare_candidate_to_deployed`, answers it the same way every time, with no room for an agent to talk itself into either side.
+Part V opens on the retrain decision itself. A rival supervillain has entered the death-ray rental market, undercutting prices aggressively. Death-Ray Revenue's once-reliable climb has flattened over the last several months — this isn't noise, it's real competitive pressure, and `ts-monitor` would have every reason to flag it. The question this chapter answers isn't "has something changed" — that part's assumed. It's the next one: given a freshly retrained candidate model, is it actually worth the disruption of redeploying? Part V's tool for that question, `ts-retrain__compare_candidate_to_deployed`, answers it the same way every time, with no room for an agent to talk itself into either side.
 
 ## Why This Is a Rule, Not a Judgment Call
 
@@ -31,7 +31,7 @@ Before retraining a candidate at all, ask a more basic question first: what does
 ## The Real Retrain, and a Genuinely Honest Answer
 
 **Prompt:**
-> Load the death-ray revenue series extended through the rival's price war, and give me the basics before retraining anything.
+> Load the death-ray revenue series extended through the rival's price war, at `book/examples/book_datasets/deathray_revenue_rival.csv`, and give me the basics before retraining anything.
 
 **What Comes Back** (a real result, 91 weeks — Chapter 4's original 70 weeks plus 21 more covering the price war):
 

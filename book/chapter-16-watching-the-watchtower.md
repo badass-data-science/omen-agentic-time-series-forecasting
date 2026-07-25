@@ -3,7 +3,7 @@
 A deployed forecast is a claim about the future, and Chapter 14 shipped one for Secret Lab™ Mojito Inventory a month ago: SARIMA, 30 days out, default order, real prediction intervals attached. A month has now passed. Real observations exist for every one of those 30 forecasted dates. This chapter opens `ts-monitor` for the first time and asks the only question that actually matters once a forecast has had time to be tested by reality: was it right?
 
 **Prompt:**
-> Load the real July observations -- the month that's now elapsed since deployment -- and give me the basics before comparing anything.
+> Load the real July observations at `book/examples/book_datasets/mojito_inventory_month2_actuals.csv` -- the month that's now elapsed since deployment -- and give me the basics before comparing anything.
 
 **What Comes Back** (a real result, 30 days):
 
@@ -97,7 +97,7 @@ Mid-month, an unplanned "product testing event" — a party — drew down the la
 The residual-outlier check's own documentation names a specific, non-hypothetical limitation: if half or more of a month's residuals are *exactly* identical, the median absolute deviation the check is built on can collapse to exactly zero — and when it does, every point's modified z-score collapses to zero along with it, regardless of how extreme any single remaining residual actually is. This is worth confirming rather than taking the docstring's word for it.
 
 **Prompt:**
-> Load the constructed 10-day actuals series for this edge case and give me the basics.
+> Load the constructed 10-day actuals series for this edge case at `book/examples/book_datasets/mad_degenerate_edge_case.csv` and give me the basics.
 
 **What Comes Back** (a real result):
 
