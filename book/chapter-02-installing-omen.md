@@ -180,4 +180,4 @@ One tool from that listing above is worth a quick, honest note before moving on,
 
 ## What's Next
 
-The plumbing works. Chapter 3 puts it to actual use: real data, a real series with real months of history, and the first genuine statistical question this book asks — not "does the connection work," but "what does this data actually look like, and how sure are we?"
+The plumbing works, and Part I closes with it. Part II picks the mojito problem back up for real: real data, a real series with real months of history, and the first genuine statistical question this book asks — not "does the connection work," but "what does this data actually look like, and how sure are we?" Chapter 3 starts there.

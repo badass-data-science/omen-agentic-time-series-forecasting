@@ -1,6 +1,6 @@
 # Chapter 3: First Contact — Loading Data and Basic Statistics
 
-The whiteboard is gone. In its place, six months of daily mojito inventory counts, logged from the Secret Lab™'s point-of-sale system and exported to a perfectly ordinary CSV: one column for the date, one column for how many mojitos were on hand at closing. This is the first real data this book touches, and it deserves a moment of respect before you run a single tool against it, because almost everything that goes wrong in forecasting goes wrong because someone skipped this moment.
+Part II starts here, and with it, real data. The whiteboard is gone. In its place, six months of daily mojito inventory counts, logged from the Secret Lab™'s point-of-sale system and exported to a perfectly ordinary CSV: one column for the date, one column for how many mojitos were on hand at closing. This is the first real data this book touches, and it deserves a moment of respect before you run a single tool against it, because almost everything that goes wrong in forecasting goes wrong because someone skipped this moment.
 
 ## What a Time Series Actually Is
 
