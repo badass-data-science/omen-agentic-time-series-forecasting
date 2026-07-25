@@ -125,8 +125,10 @@ Find that exact path with `which ts-analyst-server` while your venv is activated
 
 Installation isn't actually finished until you've watched a real tool call succeed — "the install command didn't error" is not the same claim as "the connection works," and this book isn't going to let the distinction slide even in the setup chapter. Here's the smoke test, using a series too small to mean anything statistically on purpose: five days of the Secret Lab™'s internally tracked "Weekly Grumbling Level" among the henchman corps, a metric our heroine takes more seriously than you'd think.
 
+One thing worth knowing before the first prompt: every named dataset this book uses, including this one, ships pre-generated in Omen's own GitHub repository — `github.com/badass-data-science/omen-agentic-time-series-forecasting`, the same one Chapter 1 pointed you at for the companion blog posts — at `book/examples/book_datasets/<name>.csv`. This one specifically lives at `book/examples/book_datasets/grumbling_level.csv`. That's not a coincidence or a convenience copy; it's the literal CSV every real result in this book was produced from. Clone the repository, point your own agent's `csv_path` at the same file, and you'll get the exact same numbers back, not just read about them. `book/examples/README.md` covers where these files come from and how to regenerate them yourself if you ever want to confirm that.
+
 **Prompt:**
-> Confirm the `ts-analyst` MCP server is running and list every tool it exposes. Then run `basic_stats` on this five-day grumbling-level series just to prove the connection works end to end.
+> Confirm the `ts-analyst` MCP server is running and list every tool it exposes. Then run `basic_stats` on the five-day grumbling-level series at `book/examples/book_datasets/grumbling_level.csv`, just to prove the connection works end to end.
 
 **What Comes Back** (a real result, from a real running server):
 
@@ -157,7 +159,7 @@ Look at those five points directly rather than just trusting the summary — `ts
 
 Five points, a gentle rise from 3 to 6, nothing more — which is precisely the point. There's no hidden shape a summary statistic could be smoothing over here; the plot and the JSON are describing the exact same five numbers two different ways, and for a series this small, seeing both at once is the fastest way to trust that the tool didn't just make up a plausible-looking mean.
 
-One tool from that listing above is worth a quick, honest note before moving on, precisely because this book never actually uses it again: `generate_synthetic_data`. Every dataset from here forward is built by this book's own `generate_book_datasets.py`, which calls the same underlying generator directly for exact, seeded, reproducible control over trend/seasonality/noise parameters — a level of control this tool's simpler `out_path`/`n_days` interface doesn't expose. But if *you're* following along without a series of your own to point at, this is the tool that gets you one.
+One tool from that listing above is worth a quick, honest note before moving on, precisely because this book never actually uses it again: `generate_synthetic_data`. Every dataset from here forward is built by this book's own `generate_book_datasets.py`, which calls the same underlying generator directly for exact, seeded, reproducible control over trend/seasonality/noise parameters — a level of control this tool's simpler `out_path`/`n_days` interface doesn't expose, and the reason `book/examples/book_datasets/` exists as a fixed, reproducible set of files rather than "run this and see what you get." But if you'd rather not point at any file at all yet — no clone of this book's own repository handy, nothing of your own either — this is the tool that gets you a series with a single call, no path required.
 
 **Prompt:**
 > I don't have my own series handy yet. Generate 90 days of synthetic demand data to a CSV so I can try the other tools on something real.

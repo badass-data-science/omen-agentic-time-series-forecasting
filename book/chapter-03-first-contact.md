@@ -36,10 +36,12 @@ Not "column not found," not a hint about what to do next — just the raw Python
 
 Finally: none of this requires a CSV to exist at all yet. Every tool's `csv_path` is optional — omit it (as Chapter 2 already did with `generate_synthetic_data`) and you get a synthetic series instead, generated the same deterministic way every time. Real data and synthetic data flow through the exact same downstream tools; nothing in Layers 1 through 5 treats them differently once loaded.
 
+Where does *this* chapter's CSV come from, concretely? Chapter 2 already mentioned this in passing for its own smoke-test series, and it's worth stating as a general rule now rather than repeating it per chapter: every named dataset this book uses, from here through Chapter 22, ships pre-generated in the project's own repository at `book/examples/book_datasets/<name>.csv` — this chapter's mojito inventory series specifically at `book/examples/book_datasets/mojito_inventory.csv`. These aren't illustrative stand-ins; they're the literal files every real result in this book was produced from, so pointing your own agent's `csv_path` at the same file gets you the exact same numbers, not an approximation. `book/examples/README.md` documents how they were generated and how to regenerate them yourself, deterministically, if you ever want to verify that directly rather than take it on faith.
+
 ## Loading the Series
 
 **Prompt:**
-> Load the mojito inventory series and tell me the average daily stock level, with a confidence interval.
+> Load the mojito inventory series at `book/examples/book_datasets/mojito_inventory.csv` and tell me the average daily stock level, with a confidence interval.
 
 **What Comes Back** (a real result, from a real 182-day series generated the same way the project's own test suite generates synthetic data, with five days deliberately blanked out to represent "the incident" — more on that shortly):
 
@@ -94,7 +96,7 @@ Look at those five missing days directly rather than just knowing the count. `ts
 One more edge case worth seeing with your own eyes before this chapter moves on, because it looks like a bug the first time you encounter it and is actually the tool being scrupulously honest. Imagine a week where the mojito count genuinely never changed — a suspiciously calm week, inventory-wise:
 
 **Prompt:**
-> Run `basic_stats` on a week where the mojito count was flat at 200 every single day.
+> Run `basic_stats` on the week at `book/examples/book_datasets/mojito_inventory_constant.csv`, where the mojito count was flat at 200 every single day.
 
 **What Comes Back** (real output):
 

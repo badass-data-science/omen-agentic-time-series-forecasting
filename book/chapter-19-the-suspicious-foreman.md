@@ -5,7 +5,7 @@ Every self-respecting evil lair has a self-destruct countdown, and every self-re
 The series itself deserves a quick, honest look before diving into confirmation mechanics, even though — unlike almost every other series in this book — how well it forecasts is not the point here:
 
 **Prompt:**
-> Load the self-destruct countdown timer adjustments series and give me the basics.
+> Load the self-destruct countdown timer adjustments series at `book/examples/book_datasets/self_destruct_timer.csv` and give me the basics.
 
 **What Comes Back** (a real result, 45 days):
 

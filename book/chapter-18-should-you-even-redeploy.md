@@ -31,7 +31,7 @@ Before retraining a candidate at all, ask a more basic question first: what does
 ## The Real Retrain, and a Genuinely Honest Answer
 
 **Prompt:**
-> Load the death-ray revenue series extended through the rival's price war, and give me the basics before retraining anything.
+> Load the death-ray revenue series extended through the rival's price war, at `book/examples/book_datasets/deathray_revenue_rival.csv`, and give me the basics before retraining anything.
 
 **What Comes Back** (a real result, 91 weeks — Chapter 4's original 70 weeks plus 21 more covering the price war):
 

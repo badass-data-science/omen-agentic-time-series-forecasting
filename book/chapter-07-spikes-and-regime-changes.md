@@ -7,7 +7,7 @@ Not everything worth flagging in a series is a pattern. Sometimes something just
 **Secret Lab™ Power Consumption**, tracked daily in kilowatt-hours, has two separate incidents buried in it this chapter is going to find. Once, the death ray misfired during a routine test and drew an enormous, one-day surge of power before the safety interlocks caught it. Later, entirely unrelated, the Lab annexed a rival operation's smaller lair — along with all of its power-hungry legacy equipment — and baseline consumption has run permanently higher ever since. One of these is a spike. The other is a regime change. This chapter's two detector families exist because those are not the same thing.
 
 **Prompt:**
-> Load the power consumption series and give me the basics.
+> Load the power consumption series at `book/examples/book_datasets/power_consumption.csv` and give me the basics.
 
 **What Comes Back** (a real result, 250 days):
 

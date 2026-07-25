@@ -34,10 +34,10 @@ df["value"] = df["value"].interpolate(method="linear")
 # n_missing: 5 -> 0
 ```
 
-Don't just trust that comment, though — load the cleaned result back through Omen itself and check:
+Don't just trust that comment, though — load the cleaned result back through Omen itself and check. The already-interpolated CSV is pre-generated at `book/examples/book_datasets/mojito_inventory_clean.csv`, so you don't have to run the pandas snippet yourself to follow along:
 
 **Prompt:**
-> Load the cleaned mojito inventory series and confirm there are no missing values left.
+> Load the cleaned mojito inventory series at `book/examples/book_datasets/mojito_inventory_clean.csv` and confirm there are no missing values left.
 
 **What Comes Back** (a real result):
 

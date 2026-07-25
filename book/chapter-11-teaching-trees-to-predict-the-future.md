@@ -7,7 +7,7 @@ Everything so far in Part III has fit a model built specifically for time series
 **Minion Overtime Hours**, logged daily, has two real drivers behind it: a strong day-of-week pattern (weekend shifts need actual minion oversight the automated systems can't be fully trusted with alone), and a real, if subtler, year-end scramble as annual villainy quotas start looming. 400 days of history are on hand — enough to give a tree-based model something to actually learn from.
 
 **Prompt:**
-> Load the minion overtime series and give me the basics.
+> Load the minion overtime series at `book/examples/book_datasets/minion_overtime.csv` and give me the basics.
 
 **What Comes Back** (a real result, 400 days):
 

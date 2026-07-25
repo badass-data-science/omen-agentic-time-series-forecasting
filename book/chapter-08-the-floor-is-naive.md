@@ -87,7 +87,7 @@ This observation proves less than it might look like it does. Eyeballing whether
 One more real scenario before this chapter moves on: a failure mode a quick glance at MAPE alone will not catch. Imagine a stretch where death-ray bookings didn't just slow down — they stopped entirely for a month, after a rival's legal team sent a strongly-worded cease-and-desist over a licensing dispute.
 
 **Prompt:**
-> Load this shorter supplementary revenue series -- the one with the licensing freeze -- and give me the basics.
+> Load this shorter supplementary revenue series at `book/examples/book_datasets/deathray_revenue_slow_month.csv` -- the one with the licensing freeze -- and give me the basics.
 
 **What Comes Back** (a real result, 48 weeks):
 

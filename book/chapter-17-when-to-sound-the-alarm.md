@@ -3,7 +3,7 @@
 Interpol Attention Level is a weekly "heat" index the Secret Lab™ tracks about its own operation — how much scrutiny the world's law enforcement agencies are currently paying it. Ambition being what it is, this number has been climbing, steadily, for nearly two years, entirely on its own, with no single incident behind the climb. That ordinary fact turns out to be exactly the shape that exposes a real blind spot in `detect_data_drift`.
 
 **Prompt:**
-> Load the Interpol attention series and give me the basics.
+> Load the Interpol attention series at `book/examples/book_datasets/interpol_attention.csv` and give me the basics.
 
 **What Comes Back** (a real result, 91 weeks):
 
@@ -63,7 +63,7 @@ An ordinary, unbroken climb — no visible jump, no single day that looks like a
 If ordinary trend alone produces a large effect size, what does an actual incident look like by comparison? A believable one: a botched heist becomes public, and Interpol's attention spikes hard over the following two months, on top of the trend that was already there.
 
 **Prompt:**
-> Load the escalation version of the series -- the one with the real incident added -- and give me the basics.
+> Load the escalation version of the series at `book/examples/book_datasets/interpol_attention_shifted.csv` -- the one with the real incident added -- and give me the basics.
 
 **What Comes Back** (a real result, same 91 weeks, only the final 8 changed):
 
@@ -141,7 +141,7 @@ Compare this against the plain series' plot a moment ago: the same steady climb 
 **Prompt:**
 > Given everything above — real degradation, real drift — what does `recommend_retraining` actually suggest doing next?
 
-A real deployed model exists for this series: ETS, backtested on the first 83 weeks at `2.40%` MAPE. Load that exact training history before trusting the number:
+A real deployed model exists for this series: ETS, backtested on the first 83 weeks at `2.40%` MAPE. Load that exact training history -- at `book/examples/book_datasets/interpol_attention_train.csv` -- before trusting the number:
 
 **What Comes Back** (a real result, 83 weeks — everything before the real escalation happened):
 
