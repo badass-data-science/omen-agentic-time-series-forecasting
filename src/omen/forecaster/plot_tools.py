@@ -19,11 +19,11 @@ from omen.plotting import render_plot
 
 
 def plot_backtest(
-    actuals: list,
-    predicted: list,
+    actuals: list[float],
+    predicted: list[float],
     model_name: str = "Model",
-    lower: list | None = None,
-    upper: list | None = None,
+    lower: list[float] | None = None,
+    upper: list[float] | None = None,
     out_path: str | None = None,
 ) -> ToolResult:
     """Plot actual vs. predicted values over a backtest holdout, with a
@@ -58,7 +58,7 @@ def plot_backtest(
     return render_plot(fig, out_path=out_path, n_points_plotted=len(actuals_arr), interval_shown=has_interval)
 
 
-def plot_rolling_origin(origins: list, out_path: str | None = None) -> ToolResult:
+def plot_rolling_origin(origins: list[dict], out_path: str | None = None) -> ToolResult:
     """Plot per-origin MAPE across a rolling_origin_backtest's walk-forward
     origins, with a shaded band showing the mean +/- one std across
     origins -- makes cross-origin instability (a model whose accuracy
@@ -100,7 +100,7 @@ def plot_rolling_origin(origins: list, out_path: str | None = None) -> ToolResul
     return render_plot(fig, out_path=out_path, n_origins_plotted=len(successful), mape_pct_mean=round(mean, 4), mape_pct_std=round(std, 4))
 
 
-def plot_search_sarima_orders(top_candidates: list, out_path: str | None = None) -> ToolResult:
+def plot_search_sarima_orders(top_candidates: list[dict], out_path: str | None = None) -> ToolResult:
     """Plot AICc by candidate SARIMA order as a bar chart, so a razor-thin
     margin between the top candidates (which a table of decimals can
     hide) is visually obvious.
@@ -113,7 +113,7 @@ def plot_search_sarima_orders(top_candidates: list, out_path: str | None = None)
         raise ValueError("top_candidates is empty -- nothing to plot.")
 
     labels = []
-    values = []
+    values: list[float] = []
     used_aic_fallback = False
     for c in top_candidates:
         order = tuple(c["order"])
@@ -123,7 +123,8 @@ def plot_search_sarima_orders(top_candidates: list, out_path: str | None = None)
         if v is None:
             v = c.get("aic")
             used_aic_fallback = True
-        values.append(v)
+        assert v is not None, "SARIMA candidate is missing both aicc and aic"
+        values.append(float(v))
 
     x = np.arange(len(labels))
     fig, ax = plt.subplots(figsize=(max(6, 1.2 * len(labels)), 4.5))

@@ -353,8 +353,8 @@ def fit_ets(
 def fit_sarima(
     df: pd.DataFrame,
     holdout_size: int = 30,
-    order: list | None = None,
-    seasonal_order: list | None = None,
+    order: list[int] | None = None,
+    seasonal_order: list[int] | None = None,
     n_bootstrap: int = 1000,
     confidence_level: float = 0.95,
     seed: int = 42,
@@ -417,7 +417,7 @@ def fit_sarima(
     }
 
 
-def _build_lag_features(df: pd.DataFrame, lags: list) -> pd.DataFrame:
+def _build_lag_features(df: pd.DataFrame, lags: list[int]) -> pd.DataFrame:
     """Build lag + calendar features for the gradient-boosted-trees model.
     Drops rows with NaN lags (i.e. the first max(lags) rows)."""
     feat = df.copy()
@@ -433,7 +433,7 @@ def _build_lag_features(df: pd.DataFrame, lags: list) -> pd.DataFrame:
 def fit_gradient_boosted_trees(
     df: pd.DataFrame,
     holdout_size: int = 30,
-    lags: list | None = None,
+    lags: list[int] | None = None,
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
@@ -500,9 +500,9 @@ def fit_gradient_boosted_trees(
 
 
 def diebold_mariano_test(
-    actuals: list,
-    predicted_a: list,
-    predicted_b: list,
+    actuals: list[float],
+    predicted_a: list[float],
+    predicted_b: list[float],
     model_a_name: str = "Model A",
     model_b_name: str = "Model B",
     loss: str = "squared",
@@ -711,7 +711,7 @@ def rolling_origin_backtest(
             )
         }
 
-    origins = []
+    origins: list[dict[str, Any]] = []
     for i in range(n_origins):
         test_end = n - holdout_size * i
         df_slice = df.iloc[:test_end].reset_index(drop=True)
@@ -745,7 +745,7 @@ def rolling_origin_backtest(
         return {"error": f"All {n_origins} origins failed to fit.", "origins": origins}
 
     def _mean_std(key: str) -> tuple:
-        values: list = [o[key] for o in successful if o[key] is not None]
+        values: list[float] = [float(o[key]) for o in successful if o[key] is not None]
         if not values:
             return None, None
         return round(float(np.mean(values)), 4), round(float(np.std(values, ddof=1)) if len(values) > 1 else 0.0, 4)

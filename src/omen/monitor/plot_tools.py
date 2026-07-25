@@ -18,7 +18,7 @@ from .monitor_tools import compare_forecast_to_actuals, detect_data_drift
 
 
 def plot_forecast_vs_actuals(
-    forecast: list,
+    forecast: list[dict],
     df: pd.DataFrame,
     out_path: str | None = None,
 ) -> ToolResult:
@@ -118,7 +118,7 @@ def plot_drift(
     )
 
 
-def plot_rolling_drift(checks: list, out_path: str | None = None) -> ToolResult:
+def plot_rolling_drift(checks: list[dict], out_path: str | None = None) -> ToolResult:
     """Plot Cohen's d across rolling_drift_check's own walk-forward
     checks, marking which ones flagged drift.
 
