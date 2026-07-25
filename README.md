@@ -14,7 +14,8 @@ pip install "omen-agentic-forecasting[all]"
 *Status: Alpha, published on PyPI. 161 real tests, and every worked
 example in the companion book was run against live tool output, not
 hand-typed. CI (GitHub Actions) runs the full suite plus ruff linting and
-mypy type-checking on every push and PR.*
+mypy type-checking on every push and PR. See `CHANGELOG.md` for version
+history.*
 
 ## Why This Exists
 

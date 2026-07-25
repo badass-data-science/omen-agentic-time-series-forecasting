@@ -50,6 +50,20 @@ python -m build                 # build sdist/wheel for publishing
 
 Per-layer installs: `.[analyst]`, `.[forecaster]`, `.[deploy]`, `.[monitor]`, `.[retrain]` if you don't want every dependency.
 
+**Releasing a new version**: bump `version` in `pyproject.toml`, add an entry
+to `CHANGELOG.md` (Keep a Changelog format -- see the existing entries),
+merge that as a normal PR, then on `main`:
+```bash
+git tag -a vX.Y.Z -m "vX.Y.Z"
+git push origin vX.Y.Z
+python -m build                              # produces dist/*.whl and dist/*.tar.gz
+pip install build twine
+twine upload --repository testpypi dist/*    # try TestPyPI first
+twine upload dist/*                          # then the real thing
+```
+PyPI does not allow re-uploading the same version number, so double-check
+the version and the built artifacts before the last command.
+
 ## Non-obvious conventions
 
 - **Every `@mcp.tool()` parameter that's a list MUST be parameterized (`list[int]`, `list[float]`, `list[str]`, `list[dict]`, ...) — never a bare `list` or `list | None`.** FastMCP derives each tool's JSON schema from its Python type hints, and a bare `list` exports as an untyped schema field (no `"type": "array"`), so an MCP client can't tell it should send a JSON array and falls back to sending the value as a plain string, which then fails Pydantic validation with `Input should be a valid list`. This is a REAL bug class, not a style nit -- found live by a user testing `fit_sarima`/`forecast_sarima` in Claude Desktop, and a repo-wide audit then found the identical bare-`list` mistake in 13 total `@mcp.tool()` params across three server files, all fixed together. `mypy`'s `disallow_untyped_defs` does **not** catch this (a bare `list` still counts as "typed"), so it has to be checked by hand -- verify a tool's real exported schema with `await mcp.get_tool(name)` and inspect `.parameters["properties"][...]` for a genuine `"items"` key, not just that mypy is quiet.
