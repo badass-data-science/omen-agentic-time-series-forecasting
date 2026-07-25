@@ -12,7 +12,7 @@ EPUB gets the same title/author metadata and that same image as its
 cover (if present), but not the PDF's six-part \\part{} divider structure
 -- see render_epub()'s docstring for why.
 
-Reading order is: dedication.md, about_the_author.md,
+Reading order is: dedication.md, about_the_author.md, about_the_series.md,
 ai_use_statement.md, chapter-01 through chapter-22 (sorted by filename,
 which sorts correctly since every chapter number is zero-padded), then
 appendix-a, appendix-b, appendix-c (alphabetical, which is also their
@@ -78,7 +78,11 @@ PART_OPENERS = {
 # off the edge and gets cut off. fvextra's breaklines/breakanywhere fixes
 # this (see pandoc's own manual on the topic); there's no equivalent
 # -M/-V metadata flag for it, so it has to go in via --include-in-header.
-_CODE_WRAP_HEADER = "\\usepackage{fvextra}\n\\fvset{breaklines=true,breakanywhere=true}\n"
+_CODE_WRAP_HEADER = (
+    "\\usepackage{fvextra}\n\\fvset{breaklines=true,breakanywhere=true}\n"
+    "\\usepackage{seqsplit}\n"
+    "\\DeclareRobustCommand{\\texttt}[1]{\\seqsplit{#1}}\n"
+)
 
 
 _LATEX_SPECIAL_CHARS = {
@@ -118,7 +122,15 @@ def _custom_title_page_header() -> str:
     """
     image_line = ""
     if os.path.isfile(TITLE_PAGE_IMAGE):
-        image_line = f"    \\includegraphics[width=0.85\\textwidth]{{{TITLE_PAGE_IMAGE}}}\\par\n"
+        # height capped (not just width) so the image can never claim more
+        # than a fixed share of the page regardless of trim size -- at
+        # 7in x 9.19in, an image sized purely by width overflowed the page
+        # and pushed EDITION onto a second page; keepaspectratio means
+        # whichever of width/height is more restrictive wins, no distortion.
+        image_line = (
+            "    \\includegraphics[width=0.85\\textwidth,height=0.35\\textheight,"
+            f"keepaspectratio]{{{TITLE_PAGE_IMAGE}}}\\par\n"
+        )
     else:
         print(f"Note: {TITLE_PAGE_IMAGE} not found -- title page will have no image.", file=sys.stderr)
 
@@ -131,15 +143,15 @@ def _custom_title_page_header() -> str:
         "  \\pagecolor{black}\n"
         "  \\color{white}\n"
         "  \\begin{center}\n"
-        "    \\vspace*{2cm}\n"
+        "    \\vspace*{\\fill}\n"
         f"    {{\\LARGE {_latex_escape(TITLE)} \\par}}\n"
-        "    \\vspace{4em}\n"
+        "    \\vspace{2em}\n"
         f"    {{\\large {_latex_escape(AUTHOR)} \\par}}\n"
-        "    \\vspace{3em}\n"
+        "    \\vfill\n"
         f"{image_line}"
         "    \\vfill\n"
         f"    {{\\large {_latex_escape(EDITION)} \\par}}\n"
-        "    \\vspace*{2cm}\n"
+        "    \\vspace*{\\fill}\n"
         "  \\end{center}\n"
         "  \\end{titlepage}\n"
         "  \\pagecolor{white}\n"
@@ -150,7 +162,7 @@ def _custom_title_page_header() -> str:
 
 
 def _ordered_source_files():
-    """dedication -> about_the_author -> ai_use_statement ->
+    """dedication -> about_the_author -> about_the_series -> ai_use_statement ->
     chapter-01..22 (sorted, zero-padded so this is also numeric order)
     -> the three appendices, alphabetically. outline.md is excluded on
     purpose -- see module docstring."""
@@ -162,7 +174,11 @@ def _ordered_source_files():
         f for f in os.listdir(BOOK_DIR)
         if f.startswith("appendix-") and f.endswith(".md")
     )
-    return ["dedication.md", "about_the_author.md", "ai_use_statement.md"] + chapters + appendices
+    return (
+        ["dedication.md", "about_the_author.md", "about_the_series.md", "ai_use_statement.md"]
+        + chapters
+        + appendices
+    )
 
 
 def _rewrite_image_links(content: str, out_dir: str) -> str:
@@ -238,7 +254,11 @@ def render_pdf(md_path: str, out_dir: str, pdf_engine: str) -> bool:
         "--toc",
         "--top-level-division=chapter",
         "-V", "documentclass=book",
-        "-V", "geometry:margin=1in",
+        # 7in x 9.19in -- O'Reilly's standard "animal book" trim size, not
+        # the LaTeX book class's US Letter default. Margin trimmed from
+        # the old 1in to 0.75in to keep a reasonable text width at this
+        # smaller page size.
+        "-V", "geometry:paperwidth=7in,paperheight=9.19in,margin=0.75in",
         "-V", "mainfont=DejaVu Serif",
         "-V", "monofont=DejaVu Sans Mono",
         "-M", f"title={TITLE}",
