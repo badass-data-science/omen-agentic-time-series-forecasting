@@ -20,11 +20,21 @@ python generate_book_datasets.py
 python generate_book_plots.py
 ```
 
-Writes every dataset as a CSV into `./data/`, and every plot as a PNG
-into `./images/`. Requires Omen installed (`pip install -e ".[all]"`
-from the project root — `omen.data_prep` itself only needs
+Writes every dataset as a CSV into `./data/` by default, and every plot
+as a PNG into `./images/`. Requires Omen installed (`pip install -e
+".[all]"` from the project root — `omen.data_prep` itself only needs
 `numpy`/`pandas`, but you'll want the rest to actually run the tools
 each chapter calls; plotting needs `matplotlib`, a core dependency).
+
+The repository also commits a copy of every dataset CSV under
+`book_datasets/` — unlike `./data/`, which isn't tracked and is treated
+as regenerate-on-demand scratch output. If you're updating the
+committed copy rather than just regenerating locally, point `--out` at
+it directly:
+
+```bash
+python generate_book_datasets.py --out book_datasets
+```
 
 Regenerate just one dataset or plot:
 
