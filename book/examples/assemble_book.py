@@ -82,6 +82,12 @@ _CODE_WRAP_HEADER = (
     "\\usepackage{fvextra}\n\\fvset{breaklines=true,breakanywhere=true}\n"
     "\\usepackage{seqsplit}\n"
     "\\DeclareRobustCommand{\\texttt}[1]{\\seqsplit{#1}}\n"
+    # LaTeX's default hyphenation happily breaks the book's own coined
+    # "Supervillain(s)" as "Su-pervillain(s)" wherever a line wrap lands
+    # mid-word -- fine for an ordinary word, jarring for a brand/series
+    # name that appears constantly. \hyphenation{} forbids splitting these
+    # specific words at all, so they wrap to the next line whole instead.
+    "\\hyphenation{Supervillain Supervillains supervillain supervillains}\n"
 )
 
 
