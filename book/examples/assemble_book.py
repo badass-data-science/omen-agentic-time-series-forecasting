@@ -78,7 +78,11 @@ PART_OPENERS = {
 # off the edge and gets cut off. fvextra's breaklines/breakanywhere fixes
 # this (see pandoc's own manual on the topic); there's no equivalent
 # -M/-V metadata flag for it, so it has to go in via --include-in-header.
-_CODE_WRAP_HEADER = "\\usepackage{fvextra}\n\\fvset{breaklines=true,breakanywhere=true}\n"
+_CODE_WRAP_HEADER = (
+    "\\usepackage{fvextra}\n\\fvset{breaklines=true,breakanywhere=true}\n"
+    "\\usepackage{seqsplit}\n"
+    "\\DeclareRobustCommand{\\texttt}[1]{\\seqsplit{#1}}\n"
+)
 
 
 _LATEX_SPECIAL_CHARS = {
@@ -238,7 +242,11 @@ def render_pdf(md_path: str, out_dir: str, pdf_engine: str) -> bool:
         "--toc",
         "--top-level-division=chapter",
         "-V", "documentclass=book",
-        "-V", "geometry:margin=1in",
+        # 7in x 9.19in -- O'Reilly's standard "animal book" trim size, not
+        # the LaTeX book class's US Letter default. Margin trimmed from
+        # the old 1in to 0.75in to keep a reasonable text width at this
+        # smaller page size.
+        "-V", "geometry:paperwidth=7in,paperheight=9.19in,margin=0.75in",
         "-V", "mainfont=DejaVu Serif",
         "-V", "monofont=DejaVu Sans Mono",
         "-M", f"title={TITLE}",
