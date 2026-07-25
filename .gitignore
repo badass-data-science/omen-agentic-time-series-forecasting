@@ -28,6 +28,7 @@ htmlcov/
 # Local scratch data generated while testing the tools
 *.csv
 !tests/**/*.csv
+!book/examples/book_datasets/*.csv
 deployment_manifest*.json
 
 # graphify: machine-specific bookkeeping and re-buildable cache, not
