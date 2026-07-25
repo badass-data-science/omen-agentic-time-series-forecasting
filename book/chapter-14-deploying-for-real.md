@@ -1,6 +1,6 @@
 # Chapter 14: Deploying for Real — Full-Series Refits and Prediction Intervals
 
-Part IV starts here, taking a model out of the backtest sandbox for good. Secret Lab™ Mojito Inventory has been waiting since Chapter 3. Every chapter since then borrowed Death-Ray Revenue instead — a fair trade for teaching model comparison on a single consistent series, but it left Chapter 1's opening promise unfinished for the series that actually started this book. This chapter closes that loop: a real, deployed forecast for mojito inventory, using `ts-deploy` instead of `ts-forecaster` for the first time. It also opens with a mistake worth making on purpose, because the mistake teaches more than skipping past it would.
+With Part IV, a model finally leaves the backtest sandbox for good. Secret Lab™ Mojito Inventory has been waiting since Chapter 3. Every chapter since then borrowed Death-Ray Revenue instead — a fair trade for teaching model comparison on a single consistent series, but it left Chapter 1's opening promise unfinished for the series that actually started this book. This chapter closes that loop: a real, deployed forecast for mojito inventory, using `ts-deploy` instead of `ts-forecaster` for the first time. It also opens with a mistake worth making on purpose, because the mistake teaches more than skipping past it would.
 
 ## The Mistake: Deploying Straight From Chapter 3's Own CSV
 

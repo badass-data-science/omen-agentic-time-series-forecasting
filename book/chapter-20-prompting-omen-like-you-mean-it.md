@@ -1,6 +1,6 @@
 # Chapter 20: Prompting Omen Like You Mean It
 
-Part VI starts here, turning from any one layer's mechanics to using Omen well as a whole. Nineteen chapters have shown Omen's tools working correctly, given reasonably well-formed requests. This chapter is about the requests themselves — three real submitted prompts, each with a real flaw, rewritten and explained. No new series this time; every example reuses history this book has already built.
+The last stretch of this book, Part VI, turns from any one layer's mechanics to using Omen well as a whole. Nineteen chapters have shown Omen's tools working correctly, given reasonably well-formed requests. This chapter is about the requests themselves — three real submitted prompts, each with a real flaw, rewritten and explained. No new series this time; every example reuses history this book has already built.
 
 ## Prompt One: Too Vague to Carry Anything Forward
 
