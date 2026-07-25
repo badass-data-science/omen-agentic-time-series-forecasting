@@ -186,8 +186,8 @@ def fit_ets(
 def fit_sarima(
     csv_path: str,
     holdout_size: int = 30,
-    order: list | None = None,
-    seasonal_order: list | None = None,
+    order: list[int] | None = None,
+    seasonal_order: list[int] | None = None,
     n_bootstrap: int = 1000,
     confidence_level: float = 0.95,
     seed: int = 42,
@@ -234,7 +234,7 @@ def fit_sarima(
 def fit_gradient_boosted_trees(
     csv_path: str,
     holdout_size: int = 30,
-    lags: list | None = None,
+    lags: list[int] | None = None,
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
@@ -285,9 +285,9 @@ def fit_gradient_boosted_trees(
 
 @mcp.tool()
 def diebold_mariano_test(
-    actuals: list,
-    predicted_a: list,
-    predicted_b: list,
+    actuals: list[float],
+    predicted_a: list[float],
+    predicted_b: list[float],
     model_a_name: str = "Model A",
     model_b_name: str = "Model B",
     loss: str = "squared",
@@ -474,11 +474,11 @@ def search_sarima_orders(
 
 @mcp.tool()
 def plot_backtest(
-    actuals: list,
-    predicted: list,
+    actuals: list[float],
+    predicted: list[float],
     model_name: str = "Model",
-    lower: list | None = None,
-    upper: list | None = None,
+    lower: list[float] | None = None,
+    upper: list[float] | None = None,
     out_path: str | None = None,
 ) -> ToolResult:
     """Plot actual vs. predicted values over a backtest holdout, with a
@@ -505,7 +505,7 @@ def plot_backtest(
 
 
 @mcp.tool()
-def plot_rolling_origin(origins: list, out_path: str | None = None) -> ToolResult:
+def plot_rolling_origin(origins: list[dict], out_path: str | None = None) -> ToolResult:
     """Plot per-origin MAPE across a rolling_origin_backtest's walk-forward
     origins, with a shaded band showing the mean +/- one std -- makes
     cross-origin instability visually obvious rather than requiring a
@@ -522,7 +522,7 @@ def plot_rolling_origin(origins: list, out_path: str | None = None) -> ToolResul
 
 
 @mcp.tool()
-def plot_search_sarima_orders(top_candidates: list, out_path: str | None = None) -> ToolResult:
+def plot_search_sarima_orders(top_candidates: list[dict], out_path: str | None = None) -> ToolResult:
     """Plot AICc by candidate SARIMA order as a bar chart, so a razor-thin
     margin between top candidates (easy to miss in a table of decimals)
     is visually obvious. Returns the plot as an inline image plus a

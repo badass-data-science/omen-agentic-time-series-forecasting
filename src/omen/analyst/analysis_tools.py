@@ -653,7 +653,7 @@ def _binary_segmentation(
     n_permutations: int,
     rng: np.random.Generator,
     max_changepoints: int,
-    changepoints: list,
+    changepoints: list[dict],
 ) -> None:
     """Recursively find the single most likely changepoint in
     values[start:end]; if significant, record it and recurse into both
@@ -739,7 +739,7 @@ def detect_changepoints(
 
     dates = df["date"].reset_index(drop=True)
     rng = np.random.default_rng(seed)
-    raw_changepoints: list = []
+    raw_changepoints: list[dict] = []
     _binary_segmentation(values, 0, n, alpha, min_segment_size, n_permutations, rng, max_changepoints, raw_changepoints)
     raw_changepoints.sort(key=lambda c: c["index"])
 

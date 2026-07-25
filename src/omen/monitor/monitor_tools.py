@@ -144,7 +144,7 @@ def _wilson_score_interval(successes: int, n: int, confidence_level: float = 0.9
     return round(lower * 100, 2), round(upper * 100, 2)
 
 
-def _residual_outliers(matched: list, z_threshold: float = 3.5) -> dict:
+def _residual_outliers(matched: list[dict], z_threshold: float = 3.5) -> dict:
     """Flags matched-point residuals (actual - forecast) that look like
     outliers relative to the rest of the elapsed-horizon comparison, using
     a modified z-score (median + MAD, Iglewicz & Hoya 1993) -- the same
@@ -219,7 +219,7 @@ def _residual_outliers(matched: list, z_threshold: float = 3.5) -> dict:
 
 
 def compare_forecast_to_actuals(
-    forecast: list,
+    forecast: list[dict],
     df: pd.DataFrame,
     confidence_level: float = 0.95,
     n_bootstrap: int = 1000,

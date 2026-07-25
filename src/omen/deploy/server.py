@@ -137,8 +137,8 @@ def forecast_ets(
 def forecast_sarima(
     csv_path: str,
     horizon: int = 30,
-    order: list | None = None,
-    seasonal_order: list | None = None,
+    order: list[int] | None = None,
+    seasonal_order: list[int] | None = None,
     confidence_level: float = 0.95,
     date_col: str = "date",
     value_col: str = "value",
@@ -178,7 +178,7 @@ def forecast_sarima(
 def forecast_gradient_boosted_trees(
     csv_path: str,
     horizon: int = 30,
-    lags: list | None = None,
+    lags: list[int] | None = None,
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
@@ -243,9 +243,9 @@ def forecast_gradient_boosted_trees(
 @mcp.tool()
 def forecast_ensemble(
     csv_path: str,
-    model_types: list,
+    model_types: list[str],
     horizon: int = 30,
-    weights: list | None = None,
+    weights: list[float] | None = None,
     model_params: dict | None = None,
     confidence_level: float = 0.95,
     date_col: str = "date",
@@ -303,7 +303,7 @@ def forecast_ensemble(
 @mcp.tool()
 def plot_forecast(
     csv_path: str,
-    forecast: list,
+    forecast: list[dict],
     out_path: str | None = None,
     date_col: str = "date",
     value_col: str = "value",

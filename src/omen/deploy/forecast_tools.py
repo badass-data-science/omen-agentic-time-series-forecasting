@@ -312,7 +312,7 @@ def forecast_ets(
 
 
 def _fit_sarima_values(
-    df: pd.DataFrame, horizon: int, order: list | None, seasonal_order: list | None, confidence_level: float
+    df: pd.DataFrame, horizon: int, order: list[int] | None, seasonal_order: list[int] | None, confidence_level: float
 ) -> dict:
     order_tuple = tuple(order) if order else (1, 1, 1)
     seasonal_order_tuple = tuple(seasonal_order) if seasonal_order else (1, 1, 1, 7)
@@ -347,8 +347,8 @@ def _fit_sarima_values(
 def forecast_sarima(
     df: pd.DataFrame,
     horizon: int = 30,
-    order: list | None = None,
-    seasonal_order: list | None = None,
+    order: list[int] | None = None,
+    seasonal_order: list[int] | None = None,
     confidence_level: float = 0.95,
 ) -> dict:
     """Retrain SARIMA on the FULL series and forecast `horizon` steps
@@ -375,7 +375,7 @@ def forecast_sarima(
     }
 
 
-def _build_lag_features(df: pd.DataFrame, lags: list) -> pd.DataFrame:
+def _build_lag_features(df: pd.DataFrame, lags: list[int]) -> pd.DataFrame:
     """Same feature construction as Layer 2's model_tools.py, duplicated
     here so this server stays self-contained. Preserves original row
     position in `time_index` (i.e. does NOT reset to 0 after dropna), so
@@ -393,7 +393,7 @@ def _build_lag_features(df: pd.DataFrame, lags: list) -> pd.DataFrame:
 def _fit_gbt_values(
     df: pd.DataFrame,
     horizon: int,
-    lags: list | None,
+    lags: list[int] | None,
     n_estimators: int,
     max_depth: int,
     learning_rate: float,
@@ -530,7 +530,7 @@ def _fit_gbt_values(
 def forecast_gradient_boosted_trees(
     df: pd.DataFrame,
     horizon: int = 30,
-    lags: list | None = None,
+    lags: list[int] | None = None,
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
@@ -596,9 +596,9 @@ _ENSEMBLE_MODEL_TYPES = ("naive", "ets", "sarima", "gbt")
 
 def forecast_ensemble(
     df: pd.DataFrame,
-    model_types: list,
+    model_types: list[str],
     horizon: int = 30,
-    weights: list | None = None,
+    weights: list[float] | None = None,
     model_params: dict | None = None,
     confidence_level: float = 0.95,
 ) -> dict:

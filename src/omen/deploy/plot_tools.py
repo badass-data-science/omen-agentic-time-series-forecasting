@@ -17,7 +17,7 @@ from omen.plotting import render_plot
 
 def plot_forecast(
     df: pd.DataFrame,
-    forecast: list,
+    forecast: list[dict],
     out_path: str | None = None,
 ) -> ToolResult:
     """Plot a series' history plus a deployed forecast_* result's own
