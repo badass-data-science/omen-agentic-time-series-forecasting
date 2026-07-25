@@ -122,7 +122,15 @@ def _custom_title_page_header() -> str:
     """
     image_line = ""
     if os.path.isfile(TITLE_PAGE_IMAGE):
-        image_line = f"    \\includegraphics[width=0.85\\textwidth]{{{TITLE_PAGE_IMAGE}}}\\par\n"
+        # height capped (not just width) so the image can never claim more
+        # than a fixed share of the page regardless of trim size -- at
+        # 7in x 9.19in, an image sized purely by width overflowed the page
+        # and pushed EDITION onto a second page; keepaspectratio means
+        # whichever of width/height is more restrictive wins, no distortion.
+        image_line = (
+            "    \\includegraphics[width=0.85\\textwidth,height=0.35\\textheight,"
+            f"keepaspectratio]{{{TITLE_PAGE_IMAGE}}}\\par\n"
+        )
     else:
         print(f"Note: {TITLE_PAGE_IMAGE} not found -- title page will have no image.", file=sys.stderr)
 
@@ -135,15 +143,15 @@ def _custom_title_page_header() -> str:
         "  \\pagecolor{black}\n"
         "  \\color{white}\n"
         "  \\begin{center}\n"
-        "    \\vspace*{2cm}\n"
+        "    \\vspace*{\\fill}\n"
         f"    {{\\LARGE {_latex_escape(TITLE)} \\par}}\n"
-        "    \\vspace{4em}\n"
+        "    \\vspace{2em}\n"
         f"    {{\\large {_latex_escape(AUTHOR)} \\par}}\n"
-        "    \\vspace{3em}\n"
+        "    \\vfill\n"
         f"{image_line}"
         "    \\vfill\n"
         f"    {{\\large {_latex_escape(EDITION)} \\par}}\n"
-        "    \\vspace*{2cm}\n"
+        "    \\vspace*{\\fill}\n"
         "  \\end{center}\n"
         "  \\end{titlepage}\n"
         "  \\pagecolor{white}\n"
