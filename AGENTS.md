@@ -39,6 +39,11 @@ leak into code, imports, or the `ts-*` convention.
 ```bash
 pip install -e ".[all,dev]"    # everything, including test deps
 pytest                          # run the suite
+ruff check .                    # lint -- ruff is pinned EXACTLY in pyproject.toml; see the
+                                 # comment there before bumping it (a routine ruff release
+                                 # once silently expanded its own default rule set and broke
+                                 # CI on a PR that hadn't touched any .py file)
+mypy                             # type-check (src/omen only, see pyproject.toml)
 ts-analyst-server                # run a layer's MCP server standalone (Ctrl+C to stop)
 python -m build                 # build sdist/wheel for publishing
 ```
@@ -47,6 +52,7 @@ Per-layer installs: `.[analyst]`, `.[forecaster]`, `.[deploy]`, `.[monitor]`, `.
 
 ## Non-obvious conventions
 
+- **Every `@mcp.tool()` parameter that's a list MUST be parameterized (`list[int]`, `list[float]`, `list[str]`, `list[dict]`, ...) — never a bare `list` or `list | None`.** FastMCP derives each tool's JSON schema from its Python type hints, and a bare `list` exports as an untyped schema field (no `"type": "array"`), so an MCP client can't tell it should send a JSON array and falls back to sending the value as a plain string, which then fails Pydantic validation with `Input should be a valid list`. This is a REAL bug class, not a style nit -- found live by a user testing `fit_sarima`/`forecast_sarima` in Claude Desktop, and a repo-wide audit then found the identical bare-`list` mistake in 13 total `@mcp.tool()` params across three server files, all fixed together. `mypy`'s `disallow_untyped_defs` does **not** catch this (a bare `list` still counts as "typed"), so it has to be checked by hand -- verify a tool's real exported schema with `await mcp.get_tool(name)` and inspect `.parameters["properties"][...]` for a genuine `"items"` key, not just that mypy is quiet.
 - **One shared `data_prep.py`** at the package root (`omen.data_prep`). Every subpackage imports it — never re-add a per-layer copy.
 - **Within a subpackage, tools return plain functions taking a DataFrame; `server.py` wraps them as `@mcp.tool()` and does the CSV loading.** Keep that split — it's what makes the tool logic unit-testable without spinning up MCP (see `tests/`, which import the tools modules directly, not through `server.py`).
 - **`recommend_retraining` in `monitor_tools.py` is deliberately deterministic/rule-based**, not an LLM judgment call — that's intentional, not a missed opportunity to "let the agent decide." Keep new decision-style tools (accept/reject, threshold-based verdicts) rule-based for the same reason: reproducibility given the same inputs. `retrain_tools.py`'s `compare_candidate_to_deployed` follows the same rule.
