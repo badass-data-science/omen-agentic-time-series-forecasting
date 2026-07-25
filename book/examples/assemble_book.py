@@ -82,6 +82,40 @@ _CODE_WRAP_HEADER = (
     "\\usepackage{fvextra}\n\\fvset{breaklines=true,breakanywhere=true}\n"
     "\\usepackage{seqsplit}\n"
     "\\DeclareRobustCommand{\\texttt}[1]{\\seqsplit{#1}}\n"
+    # LaTeX's default hyphenation happily breaks the book's own coined
+    # "Supervillain(s)" as "Su-pervillain(s)" wherever a line wrap lands
+    # mid-word -- fine for an ordinary word, jarring for a brand/series
+    # name that appears constantly. \hyphenation{} forbids splitting these
+    # specific words at all, so they wrap to the next line whole instead.
+    "\\hyphenation{Supervillain Supervillains supervillain supervillains}\n"
+    # The book class's default running header prints the ENTIRE chapter
+    # title (via \chaptermark/\sectionmark), all-caps -- fine on a wide
+    # Letter page, but several of this book's chapter titles have long
+    # colon-subtitles (e.g. "Chapter 17: When to Sound the Alarm -- Drift
+    # Detection and Its Blind Spots") that don't fit in the header at the
+    # narrower 7in trim, overflowing the margin and running into the page
+    # number.
+    #
+    # \thechapter is NOT usable here to reconstruct a short "Chapter N"
+    # label -- every H1 in this book (front matter, all 22 chapters, all
+    # 3 appendices) maps to \chapter{} equally under
+    # --top-level-division=chapter, so LaTeX's own chapter COUNTER doesn't
+    # match the "Chapter N" text that's actually just plain words baked
+    # into each heading string by the book's own authors (confirmed
+    # empirically -- naively using \thechapter here printed "CHAPTER 0"
+    # instead of "CHAPTER 3"). Instead, truncate the ACTUAL heading text
+    # (xstring's \StrBefore) at its first colon -- "Chapter 3: First
+    # Contact..." becomes "Chapter 3"; "Appendix A: Glossary" becomes
+    # "Appendix A"; a colon-less title ("Dedication") is returned
+    # unchanged by \StrBefore's documented not-found behavior, which is
+    # already short enough to not need truncating anyway.
+    "\\usepackage{xstring}\n"
+    "\\newcommand{\\OmenChapterMark}{}\n"
+    "\\renewcommand{\\chaptermark}[1]{%\n"
+    "  \\StrBefore{#1}{:}[\\OmenChapterMark]%\n"
+    "  \\markboth{\\MakeUppercase{\\OmenChapterMark}}{\\MakeUppercase{\\OmenChapterMark}}%\n"
+    "}\n"
+    "\\renewcommand{\\sectionmark}[1]{\\markright{\\MakeUppercase{\\OmenChapterMark}}}\n"
 )
 
 
