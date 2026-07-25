@@ -3,11 +3,14 @@ assemble_book.py
 
 Concatenates "Agentic Time Series Forecasting for Supervillains" -- front
 matter, all 22 chapters, and the three appendices, in reading order -- into
-a single Markdown file, then (by default) renders that file to PDF via
-pandoc. `outline.md` is deliberately excluded: it's this project's internal
-planning document, never reader-facing, and was never part of the book
-itself. The PDF's title page shows, top to bottom: title, author,
-book/title-page-image.png (if present), then edition.
+a single Markdown file, then (by default) renders that file to PDF AND
+EPUB via pandoc. `outline.md` is deliberately excluded: it's this
+project's internal planning document, never reader-facing, and was never
+part of the book itself. The PDF's title page shows, top to bottom:
+title, author, book/title-page-image.png (if present), then edition. The
+EPUB gets the same title/author metadata and that same image as its
+cover (if present), but not the PDF's six-part \\part{} divider structure
+-- see render_epub()'s docstring for why.
 
 Reading order is: dedication.md, about_the_author.md,
 ai_use_statement.md, chapter-01 through chapter-22 (sorted by filename,
@@ -24,15 +27,18 @@ location instead -- this script does that rewrite automatically, so the
 assembled Markdown's images resolve correctly regardless of --out.
 
 Usage:
-    python assemble_book.py                  # writes dist/omen-book.md and dist/omen-book.pdf
+    python assemble_book.py                  # writes dist/omen-book.{md,pdf,epub}
     python assemble_book.py --out DIR         # writes to a different directory
-    python assemble_book.py --skip-pdf        # Markdown only, no pandoc invocation
+    python assemble_book.py --skip-pdf        # skip the PDF (still writes EPUB)
+    python assemble_book.py --skip-epub       # skip the EPUB (still writes PDF)
 
 Requires nothing extra for the Markdown output. The PDF step requires
 pandoc plus a working LaTeX engine (xelatex by default -- pass
---pdf-engine to use a different one); if pandoc isn't on PATH, this script
-says so plainly and still leaves the Markdown file written, rather than
-failing the whole run.
+--pdf-engine to use a different one); the EPUB step requires only pandoc
+itself. If pandoc isn't on PATH, this script says so plainly for
+whichever step needed it and still leaves the Markdown file (and any
+other output that didn't need pandoc) written, rather than failing the
+whole run.
 """
 
 import argparse
@@ -263,10 +269,66 @@ def render_pdf(md_path: str, out_dir: str, pdf_engine: str) -> bool:
     return True
 
 
+def render_epub(md_path: str, out_dir: str) -> bool:
+    """Returns True on success, False (with a plain explanation, not a
+    traceback) if pandoc isn't available -- same non-fatal-missing-tool
+    handling as render_pdf.
+
+    Uses the exact same assembled Markdown as the PDF, run with pandoc's
+    CWD set to out_dir for the same reason render_pdf does: image links
+    were already rewritten relative to out_dir by assemble(), and the
+    cover image path below has to agree with that same CWD.
+
+    KNOWN GAP, not an oversight: this does NOT get the six \\part{...}
+    dividers render_pdf's PDF gets (see PART_OPENERS). Those are raw
+    LaTeX blocks (` ```{=latex} `) -- pandoc only emits a raw block into
+    the OUTPUT if the raw block's own tagged format matches the writer,
+    so for EPUB (not LaTeX) they're silently dropped, not an error. The
+    EPUB's nav/TOC is therefore chapters-and-sections only, the same
+    shape the PDF itself had before this session added \\part{} support.
+    Giving EPUB equivalent Part-level nav structure would need a
+    different mechanism (e.g. a real Markdown heading one level above
+    chapters, built only for this output path) -- not implemented here.
+    """
+    epub_path_abs = os.path.abspath(os.path.join(out_dir, "omen-book.epub"))
+
+    cmd = [
+        "pandoc",
+        os.path.basename(md_path),
+        "-o", epub_path_abs,
+        "--toc",
+        "-M", f"title={TITLE}",
+        "-M", f"author={AUTHOR}",
+    ]
+    if os.path.exists(TITLE_PAGE_IMAGE):
+        cmd += ["--epub-cover-image", os.path.relpath(TITLE_PAGE_IMAGE, out_dir)]
+
+    try:
+        subprocess.run(cmd, check=True, cwd=os.path.abspath(out_dir))
+    except FileNotFoundError:
+        print(
+            "pandoc not found on PATH -- skipping EPUB output. "
+            f"The assembled Markdown is still at {md_path}; "
+            "install pandoc and re-run to also get an EPUB.",
+            file=sys.stderr,
+        )
+        return False
+    except subprocess.CalledProcessError:
+        print(
+            f"pandoc exited with an error (see above) -- EPUB not written. "
+            f"The assembled Markdown is still at {md_path}.",
+            file=sys.stderr,
+        )
+        return False
+    print(f"Wrote {epub_path_abs}")
+    return True
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Assemble the book into one Markdown file, then PDF via pandoc.")
+    parser = argparse.ArgumentParser(description="Assemble the book into one Markdown file, then PDF/EPUB via pandoc.")
     parser.add_argument("--out", type=str, default="dist", help="Directory to write output into.")
-    parser.add_argument("--skip-pdf", action="store_true", help="Only write the assembled Markdown; don't invoke pandoc.")
+    parser.add_argument("--skip-pdf", action="store_true", help="Don't invoke pandoc for the PDF.")
+    parser.add_argument("--skip-epub", action="store_true", help="Don't invoke pandoc for the EPUB.")
     parser.add_argument("--pdf-engine", type=str, default="xelatex", help="pandoc --pdf-engine to use.")
     args = parser.parse_args()
 
@@ -275,6 +337,8 @@ def main():
 
     if not args.skip_pdf:
         render_pdf(md_path, args.out, args.pdf_engine)
+    if not args.skip_epub:
+        render_epub(md_path, args.out)
 
 
 if __name__ == "__main__":
