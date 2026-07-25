@@ -253,7 +253,7 @@ omen/
 ├── prompts/                       # ready-to-use prompts for testing/learning each layer
 │   └── testing-and-learning-prompts.md
 └── book/                          # "Agentic Time Series Forecasting for Supervillains" e-book, not part of the package
-    ├── dedication.md, ai_use_statement.md, about_the_author.md
+    ├── dedication.md, ai_use_statement.md, about_the_author.md, about_the_series.md
     ├── title-page-image.png       # cover image, also embedded above and on the book's title page
     ├── outline.md
     ├── chapter-01-introducing-omen-and-agentic-ai.md ... chapter-22-conclusion.md
