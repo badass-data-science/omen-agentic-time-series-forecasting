@@ -1,6 +1,6 @@
 # Chapter 6: Echoes — Autocorrelation and the ACF/PACF
 
-Chapter 5 asked whether the dry-cleaning series repeats itself on a schedule. This chapter asks a related but different question: setting the schedule aside, how much does the series simply *remember* what it was doing recently? The tool for that question is the ACF/PACF, and this chapter reuses Chapter 5's exact same dry-cleaning data specifically so you can watch it teach two different lessons back to back, using nothing you haven't already loaded.
+Chapter 5 asked whether the dry-cleaning series repeats itself on a schedule. This chapter asks a related but different question: setting the schedule aside, how much does the series simply *remember* what it was doing recently? The tools for evaluating that question are the ACF and PACF, and this chapter reuses Chapter 5's exact same dry-cleaning data specifically so you can watch it teach two different lessons back to back, using nothing you haven't already loaded.
 
 ## Two Kinds of Memory
 
