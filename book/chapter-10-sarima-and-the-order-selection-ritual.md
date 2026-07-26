@@ -10,7 +10,7 @@ The **I** — for **Integrated** — is differencing: instead of modeling the se
 
 The **AR** — **AutoRegressive** — part predicts each (differenced) value from a weighted combination of the `p` values immediately before it: today depends on yesterday, the day before, and so on, back `p` steps. The **MA** — **Moving-Average** — part instead predicts from the `q` most recent *forecast errors*, not raw values: a way of letting the model correct for how wrong its own recent guesses were, rather than only looking at what actually happened. Chapter 6's ACF and PACF are exactly the diagnostics built to reason about how large `p` and `q` should be, for precisely this reason.
 
-The capital-letter twins — `P`, `D`, `Q` — repeat that entire AR/I/MA structure a second time, but applied `s` steps apart instead of one step apart, to capture a repeating seasonal pattern on top of the ordinary day-to-day one (Chapter 5's territory). A series can need both: short-term momentum captured by lowercase `p`/`q`, and a weekly or annual echo captured by uppercase `P`/`Q` at period `s`.
+The capital-letter twins — `P`, `D`, `Q` — are the **S** in SARIMA: **Seasonal**. They repeat that entire AR/I/MA structure a second time, but applied `s` steps apart instead of one step apart, to capture a repeating pattern on top of the ordinary day-to-day one (Chapter 5's territory). Why bother with a second copy of the same machinery rather than just widening `p`/`d`/`q`? Because a weekly echo and yesterday's momentum are different phenomena operating at different distances, and treating them as one blurs both: plain, non-seasonal ARIMA would need an enormous `p` to reach back a full cycle just to notice it repeats, and even then it couldn't cleanly separate "yesterday predicts today" from "last Tuesday predicts this Tuesday." Giving the seasonal pattern its own `P`/`D`/`Q` at its own period `s` lets the model reason about each timescale on its own terms — a series can need both: short-term momentum captured by lowercase `p`/`q`, and a weekly or annual echo captured by uppercase `P`/`Q` at period `s`, without one drowning out the other.
 
 Put together, `(p, d, q)(P, D, Q, s)` is really just an instruction for how to build one forecast: difference the series `d` times (and its seasonal cycle `D` times) until it's stable, then predict each remaining value from `p` recent values, `q` recent errors, and the same two things again at the seasonal lag `s`. Nothing in that recipe is new by this chapter — every piece was reasoned about individually, on real data, well before it had this name.
 
@@ -21,7 +21,7 @@ Each letter above already has a real, earlier answer in this book, not just a de
 ## Grounding `d`, Guessing Everything Else
 
 **Prompt:**
-> Given that Chapter 4 found this series non-stationary with `d=1`, fit SARIMA using that differencing order rather than guessing.
+> This series was already found non-stationary, requiring one difference (`d=1`) to fix. Fit SARIMA using that differencing order rather than guessing.
 
 **What Comes Back** (real result — `d=1` grounded in Chapter 4's finding, `p=1`, `q=1` as an unexamined starting guess, seasonal terms disabled since no seasonal cycle was ever established for this series):
 
