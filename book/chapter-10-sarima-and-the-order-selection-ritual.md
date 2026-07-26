@@ -21,7 +21,7 @@ Each letter above already has a real, earlier answer in this book, not just a de
 ## Grounding `d`, Guessing Everything Else
 
 **Prompt:**
-> Given that Chapter 4 found this series non-stationary with `d=1`, fit SARIMA using that differencing order rather than guessing.
+> This series was already found non-stationary, requiring one difference (`d=1`) to fix. Fit SARIMA using that differencing order rather than guessing.
 
 **What Comes Back** (real result — `d=1` grounded in Chapter 4's finding, `p=1`, `q=1` as an unexamined starting guess, seasonal terms disabled since no seasonal cycle was ever established for this series):
 

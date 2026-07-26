@@ -7,7 +7,7 @@ With Part IV, a model finally leaves the backtest sandbox for good. Secret Lab�
 Chapter 3's mojito inventory series has 5 missing days baked into it — "the incident," `basic_stats`' own `n_missing` field caught it cleanly back then. It would be easy to assume that since `basic_stats` handled it gracefully, every other tool in this book does too.
 
 **Prompt:**
-> Deploy an ETS forecast for mojito inventory, straight from the CSV Chapter 3 used.
+> Deploy an ETS forecast for mojito inventory, using the CSV at `book/examples/book_datasets/mojito_inventory.csv`.
 
 **What Comes Back** (a real result — every single field, not a truncated excerpt):
 

@@ -69,7 +69,7 @@ One more subtlety before this chapter moves on, because it trips people up speci
 Step back from the individual lags and look at the overall picture: the ACF doesn't drop off quickly. It decays slowly and smoothly from `0.99` at lag 1 down through `0.61` at lag 8, and — checked further out, past where this series stops being "significant" by the formal test — it keeps drifting down rather than snapping to zero or oscillating in a clean seasonal spike pattern. That slow, smooth decay is itself a diagnostic: it's the classic signature of a series that hasn't been freed of its own trend yet — the same kind of persistence Chapter 4 found on Death-Ray Revenue, though Chapter 4 never actually tested *this* series. It's worth checking directly rather than assuming the family resemblance settles it.
 
 **Prompt:**
-> The ACF's slow decay looks like the same non-stationary signature Chapter 4 found on a different series. Don't assume it — run `check_stationarity` on this dry-cleaning series directly.
+> This ACF's slow decay looks like the non-stationary signature seen before on a different, trending series. Don't assume it — run `check_stationarity` on this dry-cleaning series directly.
 
 **What Comes Back** (a real result, `check_stationarity` run on this exact dry-cleaning series for the first time):
 

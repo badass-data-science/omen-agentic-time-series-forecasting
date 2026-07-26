@@ -11,7 +11,7 @@ There's one more piece of machinery to understand before the results: forecast e
 ## Resolving Chapter 8: Was Naive's Win Real?
 
 **Prompt:**
-> Chapter 8 found naive beating seasonal-naive on Death-Ray Revenue, but their MAPE confidence intervals overlapped. Is that difference actually significant?
+> An earlier backtest found naive beating seasonal-naive on Death-Ray Revenue, but their MAPE confidence intervals overlapped. Is that difference actually significant?
 
 **What Comes Back** (a real result, same 30-week holdout used throughout Part III):
 
@@ -33,7 +33,7 @@ There's one more piece of machinery to understand before the results: forecast e
 ## Resolving Chapter 10: Was the Near-Tie Actually a Tie?
 
 **Prompt:**
-> Chapter 10's order search found SARIMA(1,1,2) and SARIMA(2,1,2) less than one AICc point apart. Is their backtest accuracy actually distinguishable?
+> An order search on this series already found SARIMA(1,1,2) and SARIMA(2,1,2) less than one AICc point apart. Is their backtest accuracy actually distinguishable?
 
 **What Comes Back** (a real result, both fit with `d=1` fixed per Chapter 4, on the same holdout):
 
@@ -57,7 +57,7 @@ There's one more piece of machinery to understand before the results: forecast e
 A tempting narrative for this chapter would be SARIMA losing to seasonal-naive — "the fancier model doesn't automatically win." Run for real, on this project's actual Death-Ray Revenue series, that's not what happened.
 
 **Prompt:**
-> Run the Diebold-Mariano test comparing SARIMA(1,1,2) against each of Chapter 8's baselines — seasonal-naive and naive — on the same holdout.
+> Run the Diebold-Mariano test comparing SARIMA(1,1,2) against the naive and seasonal-naive baselines already backtested on this series, on the same holdout.
 
 **What Comes Back** (real result, SARIMA(1,1,2) vs. each Chapter 8 baseline, same holdout):
 
