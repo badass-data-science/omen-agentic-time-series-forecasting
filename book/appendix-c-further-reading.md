@@ -12,7 +12,7 @@ The academic sources Omen's own methods are actually drawn from — not a genera
 
 **Bartlett, M. S. (1946).** "On the Theoretical Specification and Sampling Properties of Autocorrelated Time-Series." *Supplement to the Journal of the Royal Statistical Society*. The formula behind `acf_pacf_summary`'s lag-dependent significance threshold, used instead of a flat threshold that would over-flag distant lags. Ch. 6.
 
-**Iglewicz, B., & Hoya, D. C. (1993).** "How to Detect and Handle Outliers." *ASQC Quality Press*. The median-and-MAD-based modified z-score behind `detect_anomalies_robust_zscore` and `compare_forecast_to_actuals`'s residual-outlier check. Ch. 7, Ch. 16.
+**Iglewicz, B., & Hoaglin, D. C. (1993).** "How to Detect and Handle Outliers." *ASQC Quality Press*. The median-and-MAD-based modified z-score behind `detect_anomalies_robust_zscore` and `compare_forecast_to_actuals`'s residual-outlier check. Ch. 7, Ch. 16.
 
 **Hurvich, C. M., & Tsai, C.-L. (1989).** "Regression and Time Series Model Selection in Small Samples." *Biometrika*. The small-sample correction behind every `aicc` value this book reported, from Ch. 9 onward.
 

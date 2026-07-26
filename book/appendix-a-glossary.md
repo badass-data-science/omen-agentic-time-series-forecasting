@@ -58,7 +58,7 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **Mean reversion.** The tendency of a series to drift back toward its own long-run average after moving away from it, rather than wandering off permanently — measured by `mean_reversion_lambda` (the estimated speed of the pull-back) and its derived half-life. Not to be confused with the unrelated "effect size" entries this same tool reports (KPSS-statistic-to-critical-value ratio); see Cohen's d above. Ch. 4.
 
-**Modified z-score.** A robust alternative to a standard z-score, built from the median and MAD instead of the mean and standard deviation (Iglewicz & Hoya, 1993) — degrades in a specific, documented way when half or more of the underlying values are identical. Ch. 7, Ch. 16.
+**Modified z-score.** A robust alternative to a standard z-score, built from the median and MAD instead of the mean and standard deviation (Iglewicz & Hoaglin, 1993) — degrades in a specific, documented way when half or more of the underlying values are identical. Ch. 7, Ch. 16.
 
 **Naive / seasonal-naive baseline.** The simplest possible forecasts — repeat the last value forever, or repeat the last full seasonal cycle — that every real model has to beat to justify its own complexity. Ch. 8.
 

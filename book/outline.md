@@ -1059,6 +1059,6 @@ book's arc from "look before leaping" through "should you even redeploy."
   own data instead of the book's examples.
 - **Appendix C — Further Reading.** The academic sources this toolkit's own
   methods are drawn from (Dickey & Fuller; Kwiatkowski, Phillips, Schmidt &
-  Shin; Fisher's 1929 g-test; Diebold & Mariano 1995; Iglewicz & Hoya 1993;
+  Shin; Fisher's 1929 g-test; Diebold & Mariano 1995; Iglewicz & Hoaglin 1993;
   Hurvich & Tsai 1989), plus the companion blog post series and
   `prompts/testing-and-learning-prompts.md` for continued practice.
