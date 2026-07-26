@@ -9,7 +9,7 @@ This tracks the installable **package** (`src/omen/`). The companion book,
 blog posts, and other repo content change frequently and aren't versioned
 here — see `git log` for that history.
 
-## [Unreleased]
+## [0.0.3] - 2026-07-26
 
 ### Fixed
 - The 0.0.2 fix below turned out to be incomplete: giving `order`/`seasonal_order`/
