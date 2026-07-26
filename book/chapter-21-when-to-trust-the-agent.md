@@ -12,7 +12,7 @@ Every deliberately rule-based decision point this book actually ran, real, with 
 - **`authorize_autonomous_mode` / `check_autonomous_mode` / `revoke_autonomous_mode`** (Chapter 19): a second, independent gate, demonstrated live to flip from refusal to success to refusal again, purely by what a file on disk said at the moment of the call.
 - **`well_calibrated`** interval-coverage checks (Chapters 9, 16): a fixed tolerance band around nominal confidence, the same threshold logic mirrored identically across `ts-forecaster` and `ts-monitor` on purpose (see `AGENTS.md`).
 - **`residuals_look_like_white_noise`** (Ljung-Box, Chapters 9-10): a fixed statistical test with a fixed critical value, not a judgment call about whether a residual plot "looks fine."
-- **`diebold_mariano_test`**'s `is_significant_difference` (Chapter 12): a fixed `p<0.05` rule, the same test producing every real verdict in that chapter — including, honestly, the ones that overturned the outline's own planned story.
+- **`diebold_mariano_test`**'s `is_significant_difference` (Chapter 12): a fixed `p<0.05` rule, the same test producing every real verdict in that chapter — including, honestly, the ones that overturned the chapter's own expected result.
 - **`drift_detected`** (Chapter 17): fixed `p<0.05` on two tests, no exceptions for "but it's probably just the trend."
 
 ## And, Deliberately, the Opposite List

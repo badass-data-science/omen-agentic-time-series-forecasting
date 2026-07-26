@@ -102,7 +102,7 @@ Compare this against the plain series' plot a moment ago: the same steady climb 
 {"mean_shift_pct": 53.287, "mean_shift_cohens_d": 11.9146, "ks_statistic": 1.0, "drift_detected": true}
 ```
 
-**What It Means:** `11.91`, against the plain trend's `1.45` — nearly an **eight-fold** jump, both nominally "large" by the same textbook bins that already called the boring trend large. This is the actual lesson, sharper than the outline originally planned: effect size doesn't cleanly sort into "boring" and "alarming" using a fixed cutoff table borrowed from a statistics textbook. What it *does* do is give you a genuine magnitude scale — and reading it comparatively, against what this specific series' own ordinary behavior already produces, tells you far more than checking whether it clears some universal threshold. `1.45` being this series' new normal, `11.91` is not.
+**What It Means:** `11.91`, against the plain trend's `1.45` — nearly an **eight-fold** jump, both nominally "large" by the same textbook bins that already called the boring trend large. This is the real lesson here: effect size doesn't cleanly sort into "boring" and "alarming" using a fixed cutoff table borrowed from a statistics textbook. What it *does* do is give you a genuine magnitude scale — and reading it comparatively, against what this specific series' own ordinary behavior already produces, tells you far more than checking whether it clears some universal threshold. `1.45` being this series' new normal, `11.91` is not.
 
 **Prompt:**
 > Plot the same distribution comparison for the escalation-shifted series.
