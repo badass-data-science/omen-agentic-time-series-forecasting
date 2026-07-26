@@ -186,8 +186,8 @@ def fit_ets(
 def fit_sarima(
     csv_path: str,
     holdout_size: int = 30,
-    order: list[int] | None = None,
-    seasonal_order: list[int] | None = None,
+    order: tuple[int, ...] = (1, 1, 1),
+    seasonal_order: tuple[int, ...] = (1, 1, 1, 7),
     n_bootstrap: int = 1000,
     confidence_level: float = 0.95,
     seed: int = 42,
@@ -222,8 +222,8 @@ def fit_sarima(
     return _fit_sarima(
         df,
         holdout_size=holdout_size,
-        order=order,
-        seasonal_order=seasonal_order,
+        order=list(order),
+        seasonal_order=list(seasonal_order),
         n_bootstrap=n_bootstrap,
         confidence_level=confidence_level,
         seed=seed,
@@ -234,7 +234,7 @@ def fit_sarima(
 def fit_gradient_boosted_trees(
     csv_path: str,
     holdout_size: int = 30,
-    lags: list[int] | None = None,
+    lags: tuple[int, ...] = (1, 7, 14),
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
@@ -273,7 +273,7 @@ def fit_gradient_boosted_trees(
     return _fit_gradient_boosted_trees(
         df,
         holdout_size=holdout_size,
-        lags=lags,
+        lags=list(lags),
         n_estimators=n_estimators,
         max_depth=max_depth,
         learning_rate=learning_rate,
@@ -348,7 +348,7 @@ def diebold_mariano_test(
 def rolling_origin_backtest(
     csv_path: str,
     model_type: str,
-    params: dict | None = None,
+    params: dict = {},  # noqa: B006 -- never mutated, only read via **params
     holdout_size: int = 30,
     n_origins: int = 5,
     n_bootstrap: int = 200,
@@ -379,6 +379,7 @@ def rolling_origin_backtest(
         model_type: "ets", "sarima", or "gbt".
         params: Keyword arguments for the matching fit_* function, e.g.
             for "sarima": {"order": [1,1,1], "seasonal_order": [1,1,1,7]}.
+            Defaults to {} (each fit_* function's own defaults).
         holdout_size: Test window size at each origin.
         n_origins: How many non-overlapping origins to evaluate.
         n_bootstrap: Bootstrap resamples for each origin's OWN backtest

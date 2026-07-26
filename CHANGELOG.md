@@ -9,6 +9,25 @@ This tracks the installable **package** (`src/omen/`). The companion book,
 blog posts, and other repo content change frequently and aren't versioned
 here — see `git log` for that history.
 
+## [0.0.3] - 2026-07-26
+
+### Fixed
+- The 0.0.2 fix below turned out to be incomplete: giving `order`/`seasonal_order`/
+  `params`/etc. a proper item type stopped their *arrays* from being untyped, but
+  every one of them was still `Optional`/`X | None = None`, which makes FastMCP
+  export an `"anyOf": [{"type": "array"/"object", ...}, {"type": "null"}]` schema
+  — and that `anyOf`-with-`null` wrapper is, on its own, enough to make some MCP
+  clients stringify the value even when the non-null branch is fully, correctly
+  typed. Confirmed live again against `fit_sarima`'s `order`/`seasonal_order` and
+  `rolling_origin_backtest`'s `params` (the latter never had an item-typing
+  problem at all — a bare `dict` has always exported as `{"type": "object"}`).
+  Fixed by giving these parameters (and the equivalent ones in `ts-deploy`'s
+  `forecast_sarima`/`forecast_gradient_boosted_trees`/`forecast_ensemble`) a
+  concrete, non-`None` default instead, removing the `anyOf`/`null` branch from
+  their schemas entirely. `forecast_ensemble`'s `weights` and `plot_backtest`'s
+  `lower`/`upper` are deliberately left `Optional`, since `None` carries real,
+  distinct meaning for those two that can't be replaced by a fixed default.
+
 ## [0.0.2] - 2026-07-25
 
 ### Fixed

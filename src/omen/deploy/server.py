@@ -140,8 +140,8 @@ def forecast_ets(
 def forecast_sarima(
     csv_path: str,
     horizon: int = 30,
-    order: list[int] | None = None,
-    seasonal_order: list[int] | None = None,
+    order: tuple[int, ...] = (1, 1, 1),
+    seasonal_order: tuple[int, ...] = (1, 1, 1, 7),
     confidence_level: float = 0.95,
     date_col: str = "date",
     value_col: str = "value",
@@ -173,7 +173,7 @@ def forecast_sarima(
     """
     df = load_series(csv_path, date_col, value_col)
     return _forecast_sarima(
-        df, horizon=horizon, order=order, seasonal_order=seasonal_order, confidence_level=confidence_level
+        df, horizon=horizon, order=list(order), seasonal_order=list(seasonal_order), confidence_level=confidence_level
     )
 
 
@@ -181,7 +181,7 @@ def forecast_sarima(
 def forecast_gradient_boosted_trees(
     csv_path: str,
     horizon: int = 30,
-    lags: list[int] | None = None,
+    lags: tuple[int, ...] = (1, 7, 14),
     n_estimators: int = 200,
     max_depth: int = 3,
     learning_rate: float = 0.05,
@@ -233,7 +233,7 @@ def forecast_gradient_boosted_trees(
     return _forecast_gradient_boosted_trees(
         df,
         horizon=horizon,
-        lags=lags,
+        lags=list(lags),
         n_estimators=n_estimators,
         max_depth=max_depth,
         learning_rate=learning_rate,
@@ -249,7 +249,7 @@ def forecast_ensemble(
     model_types: list[str],
     horizon: int = 30,
     weights: list[float] | None = None,
-    model_params: dict | None = None,
+    model_params: dict = {},  # noqa: B006 -- never mutated, only read via .get()
     confidence_level: float = 0.95,
     seed: int = 42,
     date_col: str = "date",
@@ -289,6 +289,7 @@ def forecast_ensemble(
         weights: Optional weight per model_type entry (same order, same length). Equal if omitted.
         model_params: Optional per-model_type kwargs override, e.g.
             {"sarima": {"order": [1,1,1], "seasonal_order": [1,1,1,7]}}.
+            Defaults to {} (every model_type uses its own defaults).
         confidence_level: Width of each component's own prediction interval, e.g. 0.95 for 95%.
         seed: Random seed for any component's interval simulation (currently only ETS), for reproducibility.
         date_col: Name of the date column in the CSV.
