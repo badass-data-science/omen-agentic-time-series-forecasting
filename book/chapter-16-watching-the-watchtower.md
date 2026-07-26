@@ -3,7 +3,7 @@
 A deployed forecast is a claim about the future, and Chapter 14 shipped one for Secret Lab™ Mojito Inventory a month ago: SARIMA, 30 days out, default order, real prediction intervals attached. A month has now passed. Real observations exist for every one of those 30 forecasted dates. This chapter opens `ts-monitor` for the first time and asks the only question that actually matters once a forecast has had time to be tested by reality: was it right?
 
 **Prompt:**
-> Load the real July observations at `book/examples/book_datasets/mojito_inventory_month2_actuals.csv` -- the month that's now elapsed since deployment -- and give me the basics before comparing anything.
+> Load the real July observations at `book/examples/book_datasets/mojito_inventory_month2_actuals.csv` — the month that's now elapsed since deployment — and give me the basics before comparing anything.
 
 **What Comes Back** (a real result, 30 days):
 
@@ -26,7 +26,7 @@ A deployed forecast is a claim about the future, and Chapter 14 shipped one for 
 
 Thirty real days, no gaps, averaging around 215 units. On its own, plotted raw, before any comparison against the deployed forecast:
 
-![Real July mojito inventory observations, 30 days -- one sharp downward dip visible partway through the month](examples/images/mojito_inventory_month2_actuals_series.png)
+![Real July mojito inventory observations, 30 days — one sharp downward dip visible partway through the month](examples/images/mojito_inventory_month2_actuals_series.png)
 
 One dip stands out immediately, well before any forecast-comparison tool gets involved — keep it in mind as this chapter's checkpoints unfold, since it's the same event the residual-outlier check below is going to name explicitly.
 
@@ -120,9 +120,12 @@ The residual-outlier check's own documentation names a specific, non-hypothetica
 
 `std: 0.0`, `mean_ci_lower`/`mean_ci_upper` both `null` — the same honest zero-variance signature Chapter 3's flat mojito week produced. This series is a dead-flat line at exactly 100:
 
-![Ten days of constructed actuals, perfectly flat at 100 -- the residuals against this series are what drives the MAD-collapse failure mode below](examples/images/mad_degenerate_edge_case_series.png)
+![Ten days of constructed actuals, perfectly flat at 100 — the residuals against this series are what drives the MAD-collapse failure mode below](examples/images/mad_degenerate_edge_case_series.png)
 
 The *actuals* being perfectly flat isn't itself the failure mode — it's what's about to happen once these are compared against a forecast that's mostly, but not entirely, exactly right on top of them. That comparison is next.
+
+**Prompt:**
+> Compare this flat actuals series against a forecast that's mostly exact but has a few residuals, including one huge miss, and check for residual outliers.
 
 **What Comes Back** (a real result, on a constructed 10-point case: six residuals of exactly `0`, plus residuals of `5`, `-5`, `-3`, and one enormous miss of `100`):
 

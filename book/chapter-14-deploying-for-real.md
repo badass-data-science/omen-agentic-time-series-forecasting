@@ -60,7 +60,7 @@ Don't just trust that comment, though — load the cleaned result back through O
 
 `n_missing_values: 0`, confirmed by the same tool that would have caught it if the interpolation had missed something. Notice the mean also shifted slightly, from Chapter 3's `244.061` to `244.351` — a real, if tiny, consequence of replacing five `NaN` gaps with interpolated values rather than just excluding them, better to know about now than to be surprised by later. And the plot, gap-free for the first time in this book:
 
-![Mojito inventory series, gaps now filled by linear interpolation -- compare directly against Chapter 3's version with five visible breaks](examples/images/mojito_inventory_clean_series.png)
+![Mojito inventory series, gaps now filled by linear interpolation — compare directly against Chapter 3's version with five visible breaks](examples/images/mojito_inventory_clean_series.png)
 
 Compare this directly against Chapter 3's own plot of the same series: the same overall shape, but every one of those five breaks in the line is gone, replaced by a straight interpolated segment bridging each gap. That's the visual confirmation that this is the series this chapter is about to deploy from, not still the broken one from the opening mistake above.
 
@@ -75,17 +75,17 @@ One consequence to flag explicitly: the `aicc` this layer reports is **not** com
 ## Comparing Interval Strategies, For Real
 
 **Prompt:**
-> Deploy naive, ETS, and SARIMA forecasts, 30 days out. How do their prediction intervals compare?
+> Deploy seasonal-naive, ETS, and SARIMA forecasts, 30 days out. How do their prediction intervals compare?
 
 **What Comes Back** (real results, day-30 endpoint only, cleaned series):
 
 | Model | Day-30 forecast | Day-30 interval | Width |
 |---|---|---|---|
 | Seasonal-naive (analytic) | 271.33 | [207.68, 334.98] | 127.30 |
-| ETS (simulated) | 238.56 | [70.72, 397.66] | 326.95 |
+| ETS (simulated) | 238.56 | [87.39, 406.26] | 318.87 |
 | SARIMA (analytic) | 251.09 | [217.45, 284.73] | 67.28 |
 
-**What It Means:** This book's outline expected the naive floor to be the honest, dramatically-widest interval of the three — the textbook "admit you know nothing" baseline. That's not what actually happened here. ETS's *simulated* interval is more than twice as wide as naive's analytic one by day 30, and nearly five times wider than SARIMA's. Here's why, not just what happened: naive's interval formula scales a single fixed residual standard deviation by `sqrt(horizon)` — smooth, bounded growth by construction. ETS's interval comes from actually simulating hundreds of future paths forward through a model with its own trend and seasonal dynamics, and letting those paths' own spread at day 30 define the interval — which can diverge much further than a simple textbook scaling formula would, especially for a model whose components (as Chapter 9 already found, on a different series) aren't necessarily well-calibrated to begin with. SARIMA's analytic interval, by contrast, comes out narrowest — not because it's more careful, but because it's a direct property of this specific fitted state-space model's own math on this specific series. None of the three interval-construction strategies is inherently the most honest one. Which is widest is an empirical question, answered fresh every time, not something to assume in advance from which model sounds simplest.
+**What It Means:** The textbook expectation is that the naive floor should be the honest, dramatically-widest interval of the three — the "admit you know nothing" baseline. That's not what actually happened here. ETS's *simulated* interval is more than twice as wide as seasonal-naive's analytic one by day 30, and nearly five times wider than SARIMA's. Here's why, not just what happened: seasonal-naive's interval formula scales a single fixed residual standard deviation by `sqrt(horizon)` — smooth, bounded growth by construction. ETS's interval comes from actually simulating hundreds of future paths forward through a model with its own trend and seasonal dynamics, and letting those paths' own spread at day 30 define the interval — which can diverge much further than a simple textbook scaling formula would, especially for a model whose components (as Chapter 9 already found, on a different series) aren't necessarily well-calibrated to begin with. SARIMA's analytic interval, by contrast, comes out narrowest — not because it's more careful, but because it's a direct property of this specific fitted state-space model's own math on this specific series. None of the three interval-construction strategies is inherently the most honest one. Which is widest is an empirical question, answered fresh every time, not something to assume in advance from which model sounds simplest.
 
 **Prompt:**
 > Plot the deployed SARIMA forecast against the mojito series' own history.

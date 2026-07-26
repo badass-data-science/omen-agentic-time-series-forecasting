@@ -25,7 +25,7 @@ Because the nulls point in opposite directions, running both and reading them to
 **Death-Ray Revenue** — weekly income from renting out the Secret Lab™'s death ray to other operations that would rather lease world-ending hardware than build their own — is this book's first deliberately non-stationary series. Reputation compounds, rental rates have climbed accordingly, and the series has been trending upward for well over a year now. It's introduced here and comes back repeatedly through Part III as the flagship "let's actually build a model for this" example — worth getting properly acquainted with before the first real test runs against it.
 
 **Prompt:**
-> Load the death-ray revenue series at `book/examples/book_datasets/deathray_revenue.csv` and give me the basics before we test anything.
+> Load the Death-Ray Revenue series at `book/examples/book_datasets/deathray_revenue.csv` and give me the basics before we test anything.
 
 **What Comes Back** (a real result, 70 weeks):
 
@@ -53,7 +53,7 @@ Weekly data (`inferred_frequency: "W-MON"`, not daily), no missing values, a mea
 Now the shape actually seen, not just implied by a wide min/max: a clean, sustained climb from around $15,000 to around $35,000 over about a year and a half, without ever seriously reversing. That's the visual version of "this looks non-stationary" — the next section makes it a rigorous, real test rather than an eyeball judgment.
 
 **Prompt:**
-> Is the death-ray revenue series stationary? If ADF and KPSS disagree, what should I do about it?
+> Is the Death-Ray Revenue series stationary? If ADF and KPSS disagree, what should I do about it?
 
 **What Comes Back** (a real result, from 70 weeks of revenue aggregated from a synthetic daily series with a strong upward trend, generated the same way the project's own test data always is):
 
@@ -88,8 +88,7 @@ Before the specific numbers, the general idea: **effect size** is a concept an i
 
 A bare "non-stationary: true" would already be useful. But look at what else came back — `mean_reversion_lambda` and `mean_reversion_half_life_periods` — and this is where the chapter earns its subtitle.
 
-**Mean reversion** is the tendency of a series to drift back toward its own long-run average after moving away from it, rather than wandering off permanently. `mean_reversion_lambda` is the estimated *speed* of that pull-back, fit from the regression `Δy_t = λ·y_{t-1} + μ
-+ ε_t`. Here it's `-0.001116` — technically negative, technically implying *some* reversion — but look at its confidence interval: `[-0.022961, 0.020729]`. That interval comfortably straddles zero. In plain terms: the data cannot distinguish "reverts extremely slowly" from "doesn't revert at all," and reporting the point estimate alone, without that interval, would have implied a confidence the number doesn't earn.
+**Mean reversion** is the tendency of a series to drift back toward its own long-run average after moving away from it, rather than wandering off permanently. `mean_reversion_lambda` is the estimated *speed* of that pull-back, fit from the regression `Δy_t = λ·y_{t-1} + μ + ε_t`. Here it's `-0.001116` — technically negative, technically implying *some* reversion — but look at its confidence interval: `[-0.022961, 0.020729]`. That interval comfortably straddles zero. In plain terms: the data cannot distinguish "reverts extremely slowly" from "doesn't revert at all," and reporting the point estimate alone, without that interval, would have implied a confidence the number doesn't earn.
 
 The opposite extreme is a **random walk** — a series with no memory of its own level, where each new value is just the previous one plus pure, unpredictable noise, so every deviation is permanent by construction. It's the exact non-stationary case ADF's null hypothesis and KPSS's alternative hypothesis are both written against (this chapter's "unit root" language above is another name for the same thing). It's also the reason naive's "just repeat the last value" baseline (Chapter 8) is, mathematically, the *correct* forecast for a true random walk rather than a lazy one: there's no real structure left to beat it with. A persistent trend, like this series, isn't a random walk itself, but shares the family resemblance ADF/KPSS are testing for — neither one reverts to a fixed mean on its own.
 

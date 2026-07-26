@@ -12,11 +12,11 @@ The academic sources Omen's own methods are actually drawn from — not a genera
 
 **Bartlett, M. S. (1946).** "On the Theoretical Specification and Sampling Properties of Autocorrelated Time-Series." *Supplement to the Journal of the Royal Statistical Society*. The formula behind `acf_pacf_summary`'s lag-dependent significance threshold, used instead of a flat threshold that would over-flag distant lags. Ch. 6.
 
-**Iglewicz, B., & Hoya, D. C. (1993).** "How to Detect and Handle Outliers." *ASQC Quality Press*. The median-and-MAD-based modified z-score behind `detect_anomalies_robust_zscore` and `compare_forecast_to_actuals`'s residual-outlier check. Ch. 7, Ch. 16.
+**Iglewicz, B., & Hoaglin, D. C. (1993).** "How to Detect and Handle Outliers." *ASQC Quality Press*. The median-and-MAD-based modified z-score behind `detect_anomalies_robust_zscore` and `compare_forecast_to_actuals`'s residual-outlier check. Ch. 7, Ch. 16.
 
 **Hurvich, C. M., & Tsai, C.-L. (1989).** "Regression and Time Series Model Selection in Small Samples." *Biometrika*. The small-sample correction behind every `aicc` value this book reported, from Ch. 9 onward.
 
-**Hyndman, R. J., & Athanasopoulos, G.** *Forecasting: Principles and Practice* (any edition; freely available at otexts.com/fpp3). The standard reference for the naive-forecast interval formulas behind `fit_naive_baselines` and `forecast_naive`, and for the trend/seasonal strength heuristic behind `seasonal_decomposition_summary` -- also a good general forecasting textbook beyond what this book's own scope covers. Ch. 5, Ch. 8, Ch. 14.
+**Hyndman, R. J., & Athanasopoulos, G.** *Forecasting: Principles and Practice* (any edition; freely available at otexts.com/fpp3). The standard reference for the naive-forecast interval formulas behind `fit_naive_baselines` and `forecast_naive`, and for the trend/seasonal strength heuristic behind `seasonal_decomposition_summary` — also a good general forecasting textbook beyond what this book's own scope covers. Ch. 5, Ch. 8, Ch. 14.
 
 **Diebold, F. X., & Mariano, R. S. (1995).** "Comparing Predictive Accuracy." *Journal of Business & Economic Statistics*. The paired significance test behind `diebold_mariano_test`, and the mechanism behind two of this book's most consequential real findings (Ch. 8 and Ch. 10's open questions, both resolved in Ch. 12).
 

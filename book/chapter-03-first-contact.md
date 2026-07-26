@@ -116,7 +116,7 @@ One more edge case worth seeing with your own eyes before this chapter moves on,
 
 A plot makes the same point even faster than the JSON does:
 
-![The flat, zero-variance mojito week -- a perfectly flat line at 200](examples/images/mojito_inventory_constant_series.png)
+![The flat, zero-variance mojito week — a perfectly flat line at 200](examples/images/mojito_inventory_constant_series.png)
 
 A dead-flat line. There's nothing subtle to squint at here — that's exactly why `mean_ci_lower`/`mean_ci_upper` coming back `null` is the honest answer and not a bug: a perfectly flat line has no variance for a confidence interval to be built from, and the picture makes that visually obvious in a way the number 0.0 alone doesn't quite land.
 

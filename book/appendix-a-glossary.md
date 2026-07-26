@@ -4,7 +4,7 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **ACF (autocorrelation function).** How correlated a series is with a lagged copy of itself, at each lag. Ch. 6.
 
-**ADF test (Augmented Dickey-Fuller).** A hypothesis test whose null hypothesis is "this series has a unit root" (is non-stationary) — rejecting it is evidence *for* stationarity. Ch. 4.
+**ADF test (Augmented Dickey-Fuller).** A hypothesis test whose null hypothesis is "this series has a unit root" (is non-stationary) — rejecting it is evidence *for* stationarity. Ch. 4, Ch. 6.
 
 **AIC (Akaike Information Criterion).** A model-fit statistic that penalizes added parameters — lower is better — used to compare candidate models without a held-out test set. Ch. 9.
 
@@ -12,15 +12,17 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **AR / MA (autoregressive / moving-average).** The two building blocks SARIMA's `p` and `q` orders count: an AR term predicts from the series' own past *values*; an MA term predicts from past *forecast errors*. Ch. 6, Ch. 10.
 
-**Backtest / train-test split (holdout).** Fitting a model only on a series' training portion, then scoring it against a held-back test portion (the holdout) it never saw during fitting — the only honest way to estimate how a model performs on data it hasn't seen. Unlike a typical machine-learning split, a time-series holdout must be chronological (train on the past, hold out the most recent stretch) rather than a random shuffle, since forecasting is inherently about the future following the past. Ch. 8.
+**Backtest / train-test split (holdout).** Scoring a model only against data it never saw while fitting — the one honest way to estimate real-world performance. The time-series wrinkle: the split has to be chronological (train on the past, hold out the most recent stretch), never a random shuffle. Ch. 8.
 
-**BIC (Bayesian Information Criterion).** A model-fit statistic like AIC — rewards fit, penalizes added parameters — but with a steeper per-parameter penalty that grows with sample size. Ch. 10.
+**Bartlett's formula.** The reason ACF significance thresholds grow with lag rather than staying flat: testing lag *k* is statistically like asking whether a value looks like more structure than an MA(k−1) model would already predict, so a series with strong short-lag autocorrelation needs a wider bar at later lags to count as new information. Ch. 6.
+
+**BIC (Bayesian Information Criterion).** AIC's stricter sibling — same reward-fit/penalize-parameters shape, but the penalty scales up with sample size, not just parameter count. Ch. 10.
 
 **Bootstrap confidence interval.** A confidence interval built by resampling the data with replacement many times and looking at the spread of a statistic across those resamples, rather than relying on a closed-form formula. Ch. 8.
 
-**Cohen's d.** A standardized effect size for a difference in means — the difference divided by a pooled standard deviation — that tells you the *magnitude* of a shift, not just whether it's statistically significant. Ch. 7's changepoint detection and Ch. 17's drift detection both use it; Ch. 4's own "effect size" entries (mean-reversion half-life, KPSS-statistic-to-critical-value ratio) are a different, unrelated concept sharing only the name. Ch. 7, Ch. 17.
-
 **Coefficient of variation.** A standard deviation divided by its own mean — used in this book to flag when a model's performance is *unstable* across origins, not just what it averages to. Ch. 13.
+
+**Cohen's d.** A standardized effect size for a difference in means — the difference divided by a pooled standard deviation — that tells you the *magnitude* of a shift, not just whether it's statistically significant. Ch. 7's changepoint detection and Ch. 17's drift detection both use it; Ch. 4's own "effect size" entries (mean-reversion half-life, KPSS-statistic-to-critical-value ratio) are a different, unrelated concept sharing only the name. Ch. 7, Ch. 17.
 
 **Confirmed / deterministic gate.** A code-level check (not a prose instruction) that a consequential action refuses to run without an explicit flag — this book's running example is `execute_redeploy`'s `confirmed=True` requirement. Ch. 19.
 
@@ -38,17 +40,19 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **Feature importance.** In a tree-based model, a measure of how much a given feature reduced prediction error during training — a statement about predictive usefulness within that specific model, not a causal claim. Ch. 11.
 
+**Fisher's g-test.** A significance test (Fisher, 1929) for a periodogram's single strongest candidate frequency — asks whether it's stronger than pure noise would produce by chance, not just whether it's the largest value in the list. Ch. 5.
+
 **HAC-robust variance (Newey-West).** A variance estimate that accounts for heteroskedasticity and autocorrelation in a sequence of values — necessary for the Diebold-Mariano test because multi-step forecast errors are typically autocorrelated. Ch. 12.
 
 **Interval arithmetic (worst-case/best-case).** Combining two confidence intervals for a ratio-shaped quantity by evaluating the quantity at the *corners* of the joint uncertainty box (not by adding variances), since a ratio's extrema occur at monotonic corners rather than a symmetric combination. Ch. 18.
 
-**KPSS test (Kwiatkowski-Phillips-Schmidt-Shin).** A stationarity test whose null hypothesis is the *opposite* of the ADF test's — "this series is stationary" — making ADF/KPSS agreement or disagreement itself informative. Ch. 4.
+**KPSS test (Kwiatkowski-Phillips-Schmidt-Shin).** A stationarity test whose null hypothesis is the *opposite* of the ADF test's — "this series is stationary" — making ADF/KPSS agreement or disagreement itself informative. Ch. 4, Ch. 6.
 
-**KS statistic (Kolmogorov-Smirnov).** A test for whether two samples come from different distributions, using each sample's whole shape rather than just its mean — catches a spread or shape shift a t-test on the means alone would miss. Ch. 17.
+**KS statistic (Kolmogorov-Smirnov).** Compares two samples' entire distribution shape, not just their averages — catches a spread or shape change a plain t-test would sail right past. Ch. 17.
 
 **Lag feature.** In a supervised-learning framing of forecasting, a feature built from a series' own past values (e.g., "the value 7 days ago") used to predict its future value. Ch. 11.
 
-**Ljung-Box test.** A test for whether a sequence of residuals still contains structure ("looks like white noise" is the desired failure to reject). Ch. 9.
+**Ljung-Box test.** A test for leftover structure in a model's residuals — failing to reject it is the desired outcome, meaning the residuals look like plain noise. Ch. 9.
 
 **MAD (median absolute deviation).** A robust measure of spread — the median of the absolute deviations from the median — used as the basis for a modified z-score less sensitive to outliers than a standard deviation-based one. Ch. 7, Ch. 16.
 
@@ -56,9 +60,9 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **MAPE (mean absolute percentage error).** Average absolute error as a percentage of the actual value — undefined at an actual value of exactly zero, and excluded points are reported explicitly rather than silently dropped. Ch. 8.
 
-**Mean reversion.** The tendency of a series to drift back toward its own long-run average after moving away from it, rather than wandering off permanently — measured by `mean_reversion_lambda` (the estimated speed of the pull-back) and its derived half-life. Not to be confused with the unrelated "effect size" entries this same tool reports (KPSS-statistic-to-critical-value ratio); see Cohen's d above. Ch. 4.
+**Mean reversion.** A series' tendency to drift back toward its own average rather than wander off for good — quantified here by `mean_reversion_lambda`'s pull-back speed and its derived half-life. Not to be confused with the unrelated "effect size" entries this same tool reports (KPSS-statistic-to-critical-value ratio); see Cohen's d above. Ch. 4.
 
-**Modified z-score.** A robust alternative to a standard z-score, built from the median and MAD instead of the mean and standard deviation (Iglewicz & Hoya, 1993) — degrades in a specific, documented way when half or more of the underlying values are identical. Ch. 7, Ch. 16.
+**Modified z-score.** A robust alternative to a standard z-score, built from the median and MAD instead of the mean and standard deviation (Iglewicz & Hoaglin, 1993) — degrades in a specific, documented way when half or more of the underlying values are identical. Ch. 7, Ch. 16.
 
 **Naive / seasonal-naive baseline.** The simplest possible forecasts — repeat the last value forever, or repeat the last full seasonal cycle — that every real model has to beat to justify its own complexity. Ch. 8.
 
@@ -74,17 +78,17 @@ Every statistical term this book actually used, defined in a sentence or two, cr
 
 **Prediction interval.** A range meant to contain a future observation with some stated probability — built differently by different model families in this book (ETS's simulated paths, SARIMA's analytic state-space formula, GBT's quantile regression), each with a different real failure mode. Notably absent from `fit_gradient_boosted_trees`'s own backtest (Ch. 11) — GBT only gets one once deployed (Ch. 14). Ch. 9, Ch. 10, Ch. 14.
 
-**Quantile regression.** A model trained to directly predict a specific percentile of the outcome (e.g. the 5th and 95th) rather than a single mean plus an assumed spread — the basis for GBT's prediction interval, and not derived from the same step-by-step process as a recursive point forecast. Ch. 14.
+**Quantile regression.** Predicting a target percentile of an outcome directly, rather than a mean with an assumed spread around it — the basis for GBT's prediction interval, and not derived from the same step-by-step process as a recursive point forecast. Ch. 14.
 
-**Random walk.** A series where each new value is the previous value plus pure, unpredictable noise, with no underlying level to pull it back toward — every deviation is permanent. The exact non-stationary case ADF's null hypothesis and KPSS's alternative hypothesis are both written against, and the reason a naive "repeat the last value" baseline is the mathematically correct forecast for one. Ch. 4, Ch. 8.
+**Random walk.** The opposite of mean reversion: a series with no underlying level pulling it back, so any deviation sticks around for good. The exact non-stationary case ADF's null hypothesis and KPSS's alternative hypothesis are both written against, and the reason a naive "repeat the last value" baseline is the mathematically correct forecast for one. Ch. 4, Ch. 8.
 
-**RMSE (root mean squared error).** Like MAE, an average forecast miss in the series' own units, but squares each miss before averaging — so it penalizes a few large misses harder than MAE does. Ch. 8.
+**RMSE (root mean squared error).** MAE's harsher cousin: same units, same idea, but squaring each miss before averaging makes it disproportionately sensitive to a handful of large errors. Ch. 8.
 
 **Rolling-origin / walk-forward backtest.** Repeating a backtest at several different points in a series, walking backward, to measure whether a model's performance is stable across stretches rather than a property of one arbitrarily chosen holdout window. Ch. 13.
 
 **SARIMA.** Seasonal ARIMA — `(p,d,q)(P,D,Q,s)` — a model family combining autoregressive terms, differencing, and moving-average terms, with seasonal counterparts at period `s`. Ch. 10.
 
-**Stationarity.** A series whose statistical properties (mean, variance, autocorrelation structure) don't change over time — the standing assumption behind most classical forecasting models, tested rather than assumed throughout this book. Ch. 4.
+**Stationarity.** A series whose statistical properties (mean, variance, autocorrelation structure) don't change over time — the standing assumption behind most classical forecasting models, tested rather than assumed throughout this book. Ch. 4, Ch. 6.
 
 **Student's t confidence interval.** A confidence interval built using the t-distribution rather than the normal distribution, more appropriate for small samples. Ch. 3.
 
