@@ -2,9 +2,21 @@
 
 SARIMA is where the notation this book has been building toward finally gets a name: `(p, d, q)(P, D, Q, s)`. Every one of those letters is something you've already reasoned about in an earlier chapter, whether or not it had this particular name at the time. This chapter connects them properly, fits the model on Death-Ray Revenue, and shows — using a real search, not a hypothetical one — why an automated order search deserves your skepticism even when it looks clean.
 
+## What SARIMA Actually Does
+
+Before the letters, the idea: SARIMA is three older, simpler techniques bolted together into one model, each addressing something the others can't.
+
+The **I** — for **Integrated** — is differencing: instead of modeling the series' raw values, SARIMA can model the *changes* between consecutive values (or, at a higher order, changes in the changes). This is exactly Chapter 4's stationarity question in disguise — a series with a trend isn't stationary in its raw form, but its week-to-week differences often are, which is precisely why `d` is grounded in Chapter 4's own ADF/KPSS finding rather than guessed.
+
+The **AR** — **AutoRegressive** — part predicts each (differenced) value from a weighted combination of the `p` values immediately before it: today depends on yesterday, the day before, and so on, back `p` steps. The **MA** — **Moving-Average** — part instead predicts from the `q` most recent *forecast errors*, not raw values: a way of letting the model correct for how wrong its own recent guesses were, rather than only looking at what actually happened. Chapter 6's ACF and PACF are exactly the diagnostics built to reason about how large `p` and `q` should be, for precisely this reason.
+
+The capital-letter twins — `P`, `D`, `Q` — repeat that entire AR/I/MA structure a second time, but applied `s` steps apart instead of one step apart, to capture a repeating seasonal pattern on top of the ordinary day-to-day one (Chapter 5's territory). A series can need both: short-term momentum captured by lowercase `p`/`q`, and a weekly or annual echo captured by uppercase `P`/`Q` at period `s`.
+
+Put together, `(p, d, q)(P, D, Q, s)` is really just an instruction for how to build one forecast: difference the series `d` times (and its seasonal cycle `D` times) until it's stable, then predict each remaining value from `p` recent values, `q` recent errors, and the same two things again at the seasonal lag `s`. Nothing in that recipe is new by this chapter — every piece was reasoned about individually, on real data, well before it had this name.
+
 ## The Notation, Traced Back to Chapters You've Already Read
 
-`d` and seasonal `D` are **differencing orders** — how many times the series (or its seasonal cycle) needs to be differenced before it behaves like a stationary series. This is Chapter 4's question, not a new one. `p` and `q` are the **autoregressive** and **moving-average** orders — how many lagged values, and how many lagged forecast errors, the model uses to build each prediction. Their seasonal counterparts, `P` and `Q`, do the same thing at the seasonal period `s`. Chapter 6's ACF/PACF work is exactly what a real order-selection process should be reasoning from for `p` and `q` — though, to be honest, Chapter 6 examined the dry-cleaning series, not Death-Ray Revenue specifically. This chapter doesn't have a from-scratch ACF/PACF reading for *this* series to lean on, which is precisely the gap `search_sarima_orders` exists to help with later in the chapter — a tool, not a substitute for having done the reading.
+Each letter above already has a real, earlier answer in this book, not just a definition. `d` and seasonal `D` are Chapter 4's question — is this series (or its seasonal cycle) stationary, and if not, how many differences fix that. `p` and `q` are exactly what Chapter 6's ACF and PACF work should be reasoning from. There's a catch worth being honest about here, though: Chapter 6 examined the dry-cleaning series, not Death-Ray Revenue. This chapter doesn't have a from-scratch ACF/PACF reading for *this* series to lean on, which is precisely the gap `search_sarima_orders` exists to help with later in the chapter — a tool, not a substitute for having done the reading.
 
 ## Grounding `d`, Guessing Everything Else
 
