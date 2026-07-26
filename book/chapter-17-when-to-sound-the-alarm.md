@@ -176,7 +176,7 @@ A real deployed model exists for this series: ETS, backtested on the first 83 we
 The last 8 weeks — the ones containing the real escalation — are deliberately absent from both this JSON and this plot: this is exactly what a model deployed *before* the incident happened would actually have been backtested and trained against, nothing more.
 
 **Prompt:**
-> Given everything above — real degradation, real drift — what does `recommend_retraining` actually suggest doing next, checked against the 8 weeks that include the real escalation?
+> Given everything above — real drift, confirmed and localized — check this deployed model against the 8 weeks that include the real escalation. What does `recommend_retraining` actually suggest doing next?
 
 **What Comes Back** (a real result):
 
