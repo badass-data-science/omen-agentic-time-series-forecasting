@@ -3,7 +3,7 @@
 Interpol Attention Level is a weekly "heat" index the Secret Lab™ tracks about its own operation — how much scrutiny the world's law enforcement agencies are currently paying it. Ambition being what it is, this number has been climbing, steadily, for nearly two years, entirely on its own, with no single incident behind the climb. That ordinary fact turns out to be exactly the shape that exposes a real blind spot in `detect_data_drift`.
 
 **Prompt:**
-> Load the Interpol attention series at `book/examples/book_datasets/interpol_attention.csv` and give me the basics.
+> Load the Interpol Attention series at `book/examples/book_datasets/interpol_attention.csv` and give me the basics.
 
 **What Comes Back** (a real result, 91 weeks):
 
@@ -33,7 +33,7 @@ An ordinary, unbroken climb — no visible jump, no single day that looks like a
 ## An Ordinary Trend, Flagged as Drift
 
 **Prompt:**
-> Check the Interpol attention series for drift. Is the flag driven by a genuine regime change, or could it just be the ongoing trend?
+> Check the Interpol Attention series for drift. Is the flag driven by a genuine regime change, or could it just be the ongoing trend?
 
 **What Comes Back** (a real result — 8-week recent window against a 26-week reference window, on the unmodified, steadily-trending series):
 
