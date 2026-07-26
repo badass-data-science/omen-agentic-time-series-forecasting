@@ -132,6 +132,9 @@ Same 155 weeks, same underlying autumn pattern — but the mean roughly quadrupl
 
 Compare this directly against the plot two sections back: the same repeating autumn pattern is technically still in there, but it's now a minor ripple riding on top of a trend steep enough to dominate the picture by eye. That's the visual preview of exactly the failure mode this section is about to demonstrate numerically — a periodogram search that can't tell "a real repeating cycle" apart from "a trend so strong it looks like one very long cycle."
 
+**Prompt:**
+> Search for the dominant seasonal period in this steep-trend series, over the same 10–60 week range as before.
+
 **What Comes Back** (real output, same series regenerated with a 10x-steeper underlying trend, searched over the same plausible seasonal range of 10–60 weeks):
 
 ```json

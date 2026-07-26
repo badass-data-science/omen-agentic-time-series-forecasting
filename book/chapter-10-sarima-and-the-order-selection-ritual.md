@@ -62,6 +62,9 @@ The y-axis here is deliberately zoomed to the candidates' actual spread rather t
 
 `search_sarima_orders` deliberately doesn't crown a winner and hand it to you pre-approved — its own top candidates report only a stripped-down `backtest_metrics` summary, not the full picture. Confirming the choice means calling `fit_sarima` directly on it.
 
+**Prompt:**
+> Fit SARIMA directly with order=(1,1,2), seasonal_order=(0,0,0,2) -- the search's top candidate -- and check its residuals and interval calibration for real.
+
 **What Comes Back** (real result, `order=[1,1,2]`, `seasonal_order=[0,0,0,2]`):
 
 ```json

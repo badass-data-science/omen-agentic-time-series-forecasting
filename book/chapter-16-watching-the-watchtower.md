@@ -124,6 +124,9 @@ The residual-outlier check's own documentation names a specific, non-hypothetica
 
 The *actuals* being perfectly flat isn't itself the failure mode — it's what's about to happen once these are compared against a forecast that's mostly, but not entirely, exactly right on top of them. That comparison is next.
 
+**Prompt:**
+> Compare this flat actuals series against a forecast that's mostly exact but has a few residuals, including one huge miss, and check for residual outliers.
+
 **What Comes Back** (a real result, on a constructed 10-point case: six residuals of exactly `0`, plus residuals of `5`, `-5`, `-3`, and one enormous miss of `100`):
 
 ```json

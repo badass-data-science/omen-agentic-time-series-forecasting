@@ -30,6 +30,9 @@ That's a useful thing to know before touching this chapter's main tool at all, a
 
 Before that, one piece of pure math to confirm with a real tool call rather than trusting on faith: combining two **identical** components at equal weight should narrow the interval by a factor of exactly `1/√2`, under the variance-combination formula's independence assumption. `sqrt(0.5² · σ² + 0.5² · σ²) = σ · sqrt(0.5) = σ/√2` — simple enough to check by hand, and checked below against the real tool rather than just trusted on the algebra alone.
 
+**Prompt:**
+> Ensemble SARIMA with an exact identical copy of itself, equal weights, and compare the combined interval width against a single SARIMA fit's own interval width.
+
 **What Comes Back** (a real result, SARIMA fit twice with identical parameters, deliberately, deterministic analytic interval so no simulation randomness can blur the comparison):
 
 ```

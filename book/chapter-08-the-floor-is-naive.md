@@ -114,6 +114,9 @@ A shorter, supplementary series — not the same 70-week Death-Ray Revenue from 
 
 Four consecutive weeks flat at zero, near the end of an otherwise ordinary trending series — visible proof the freeze isn't a data artifact or a single dropped value, but a real, sustained stretch of no revenue at all sitting inside what's about to become the backtest holdout.
 
+**Prompt:**
+> Backtest a naive baseline against this series with a 10-week holdout, and show me MAE and MAPE.
+
 **What Comes Back** (real result, on a shorter supplementary series with four consecutive weeks of exactly `$0` revenue sitting inside a 10-week holdout):
 
 ```json

@@ -52,6 +52,9 @@ An ordinary, unbroken climb — no visible jump, no single day that looks like a
 
 `drift_detected: true`, and `mean_shift_cohens_d: 1.45` isn't a marginal effect size. By the conventional textbook bins (small ≈ 0.2, medium ≈ 0.5, large ≈ 0.8), `1.45` is comfortably **large**. That complicates a tempting assumption: that an ordinary, well-understood trend should only ever produce a small, easily-dismissed effect size, while a real problem produces a large one. That assumption is false, demonstrated with real numbers, on real data. A perfectly ordinary, fully-expected trend — nothing anomalous about it at all — can by itself produce a large Cohen's d. The effect size here is doing exactly what it's supposed to: correctly reporting that these two windows really are quite different from each other. It says nothing about *why* they're different, and "why" is precisely the judgment call this book keeps insisting a human or agent make, not the test.
 
+**Prompt:**
+> Plot the reference-vs-recent distribution comparison for this drift check.
+
 **What Comes Back** (a real render, `ts-monitor__plot_drift` on the same unmodified series and windows):
 
 ![The reference window's and recent window's value distributions side by side, with a real Cohen's d of 1.45 annotated — the recent window is visibly shifted higher, entirely from the ongoing trend](examples/images/interpol_drift_plain.png)
@@ -90,6 +93,9 @@ Same start, same minimum — but the maximum jumped from 694 to 994, and the ove
 
 Compare this against the plain series' plot a moment ago: the same steady climb for most of the series, then a real, visible step up right at the end — exactly the shape a genuine incident riding on top of an ongoing trend should look like, and visually distinct from the plain trend's smooth, uninterrupted climb.
 
+**Prompt:**
+> Check the escalation-shifted series for drift the same way, using the same 8-week/26-week windows.
+
 **What Comes Back** (a real result, the same 8-vs-26-week check, on a version of the series with a flat `+300` shift added to its most recent 8 weeks):
 
 ```json
@@ -97,6 +103,9 @@ Compare this against the plain series' plot a moment ago: the same steady climb 
 ```
 
 **What It Means:** `11.91`, against the plain trend's `1.45` — nearly an **eight-fold** jump, both nominally "large" by the same textbook bins that already called the boring trend large. This is the actual lesson, sharper than the outline originally planned: effect size doesn't cleanly sort into "boring" and "alarming" using a fixed cutoff table borrowed from a statistics textbook. What it *does* do is give you a genuine magnitude scale — and reading it comparatively, against what this specific series' own ordinary behavior already produces, tells you far more than checking whether it clears some universal threshold. `1.45` being this series' new normal, `11.91` is not.
+
+**Prompt:**
+> Plot the same distribution comparison for the escalation-shifted series.
 
 **What Comes Back** (the same `plot_drift` render, on the escalation-shifted series):
 
@@ -138,10 +147,10 @@ Compare this against the plain series' plot a moment ago: the same steady climb 
 
 ## Turning This Into a Decision
 
-**Prompt:**
-> Given everything above — real degradation, real drift — what does `recommend_retraining` actually suggest doing next?
+A real deployed model exists for this series: ETS, backtested on the first 83 weeks at `2.40%` MAPE. Load that exact training history before trusting the number.
 
-A real deployed model exists for this series: ETS, backtested on the first 83 weeks at `2.40%` MAPE. Load that exact training history -- at `book/examples/book_datasets/interpol_attention_train.csv` -- before trusting the number:
+**Prompt:**
+> Load the pre-escalation training history for this series at `book/examples/book_datasets/interpol_attention_train.csv` and confirm the numbers before trusting them.
 
 **What Comes Back** (a real result, 83 weeks — everything before the real escalation happened):
 
@@ -164,7 +173,12 @@ A real deployed model exists for this series: ETS, backtested on the first 83 we
 
 ![The pre-escalation training history alone -- the same ordinary climb, stopping 8 weeks before the real incident](examples/images/interpol_attention_train_series.png)
 
-The last 8 weeks — the ones containing the real escalation — are deliberately absent from both this JSON and this plot: this is exactly what a model deployed *before* the incident happened would actually have been backtested and trained against, nothing more. Checked against the 8 weeks that include the real escalation:
+The last 8 weeks — the ones containing the real escalation — are deliberately absent from both this JSON and this plot: this is exactly what a model deployed *before* the incident happened would actually have been backtested and trained against, nothing more.
+
+**Prompt:**
+> Given everything above — real degradation, real drift — what does `recommend_retraining` actually suggest doing next, checked against the 8 weeks that include the real escalation?
+
+**What Comes Back** (a real result):
 
 ```json
 {

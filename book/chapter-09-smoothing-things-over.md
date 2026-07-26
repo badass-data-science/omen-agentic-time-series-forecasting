@@ -38,6 +38,9 @@ Before chasing the calibration problem, here are the two fit statistics sitting 
 
 Now the trap, walked into deliberately: what happens if the trend is damped instead of left to run freely?
 
+**Prompt:**
+> Now fit ETS with the trend damped this time, everything else unchanged. Does AICc actually pick the better forecasting model?
+
 **What Comes Back** (real result, `damped_trend: true`, everything else unchanged):
 
 ```json
@@ -54,6 +57,9 @@ Now the trap, walked into deliberately: what happens if the trend is damped inst
 ## Fixing the Interval, Not Just Noticing It's Broken
 
 Here's where `backtest_interval_coverage` earns its keep as a real diagnostic rather than a formality. Both models so far assumed an **additive** seasonal component — a fixed dollar swing added on top of the level, regardless of how large the level has grown. But Death-Ray Revenue has been climbing steadily since Chapter 4, on rental prices that scale with reputation — the kind of growth that plausibly swings by a roughly constant *percentage*, not a constant dollar amount. That's exactly what a **multiplicative** seasonal component represents instead.
+
+**Prompt:**
+> Refit ETS with a multiplicative seasonal component instead. Does the interval calibration improve?
 
 **What Comes Back** (real result, `seasonal: "mul"`, trend still additive and undamped):
 

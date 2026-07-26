@@ -56,6 +56,9 @@ There's one more piece of machinery to understand before the results: forecast e
 
 This book's outline originally planned a different headline result for this chapter: SARIMA losing to seasonal-naive, a "the fancier model doesn't automatically win" gotcha. Run for real, on this project's actual Death-Ray Revenue series, that's not what happened.
 
+**Prompt:**
+> Run the Diebold-Mariano test comparing SARIMA(1,1,2) against each of Chapter 8's baselines -- seasonal-naive and naive -- on the same holdout.
+
 **What Comes Back** (real result, SARIMA(1,1,2) vs. each Chapter 8 baseline, same holdout):
 
 ```json
