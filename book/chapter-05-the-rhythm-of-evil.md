@@ -128,7 +128,7 @@ Here's the gotcha this chapter promised, demonstrated rather than just asserted.
 
 Same 155 weeks, same underlying autumn pattern — but the mean roughly quadrupled (about $3,250/week to about $13,600/week) and the range widened dramatically (up to $24,500 now, versus $5,700 before). What that actually looks like:
 
-![The same dry-cleaning series with a 10x steeper trend -- the annual swell is now visually dwarfed by the climb](examples/images/drycleaning_bills_steep_trend_series.png)
+![The same dry-cleaning series with a 10x steeper trend — the annual swell is now visually dwarfed by the climb](examples/images/drycleaning_bills_steep_trend_series.png)
 
 Compare this directly against the plot two sections back: the same repeating autumn pattern is technically still in there, but it's now a minor ripple riding on top of a trend steep enough to dominate the picture by eye. That's the visual preview of exactly the failure mode this section is about to demonstrate numerically — a periodogram search that can't tell "a real repeating cycle" apart from "a trend so strong it looks like one very long cycle."
 

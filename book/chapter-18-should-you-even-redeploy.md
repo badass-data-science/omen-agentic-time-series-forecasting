@@ -11,7 +11,7 @@ Every deterministic gate in this book so far — `recommend_retraining`'s four v
 Before retraining a candidate at all, ask a more basic question first: what does the manifest actually say is deployed right now, rather than trusting memory of an earlier chapter's result.
 
 **Prompt:**
-> Before retraining anything, show me what's currently recorded as deployed for the death-ray revenue series.
+> Before retraining anything, show me what's currently recorded as deployed for the Death-Ray Revenue series.
 
 **What Comes Back** (a real result, read back from the manifest `ts-retrain__record_deployment` wrote after Chapter 9's ETS(add, mul, 7) fit):
 
@@ -31,7 +31,7 @@ Before retraining a candidate at all, ask a more basic question first: what does
 ## The Real Retrain, and a Genuinely Honest Answer
 
 **Prompt:**
-> Load the death-ray revenue series extended through the rival's price war, at `book/examples/book_datasets/deathray_revenue_rival.csv`, and give me the basics before retraining anything.
+> Load the Death-Ray Revenue series extended through the rival's price war, at `book/examples/book_datasets/deathray_revenue_rival.csv`, and give me the basics before retraining anything.
 
 **What Comes Back** (a real result, 91 weeks — Chapter 4's original 70 weeks plus 21 more covering the price war):
 
@@ -54,7 +54,7 @@ Before retraining a candidate at all, ask a more basic question first: what does
 
 Same starting point as Chapter 4's series, 21 more weeks tacked on the end. The mean and max both crept up from Chapter 4's numbers, which alone doesn't say whether growth is continuing normally or actually slowing:
 
-![Death-Ray Revenue extended through the rival's price war -- the same climb as Chapter 4, visibly flattening in the final weeks](examples/images/deathray_revenue_rival_series.png)
+![Death-Ray Revenue extended through the rival's price war — the same climb as Chapter 4, visibly flattening in the final weeks](examples/images/deathray_revenue_rival_series.png)
 
 Compare this directly against Chapter 4's own plot: the same steep climb for the first 70 weeks, then a visibly flatter slope over the final stretch — the rival's price war, seen directly rather than inferred from a monitoring alert. That flattening is exactly what the rest of this chapter is about deciding what to do with.
 

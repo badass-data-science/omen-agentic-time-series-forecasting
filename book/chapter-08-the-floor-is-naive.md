@@ -19,7 +19,7 @@ One thing makes a time series' split different from a typical machine-learning t
 Confirm what this specific holdout size actually carves the series into, rather than trusting the number silently — by asking the tool that does no fitting at all, just reports the dates.
 
 **Prompt:**
-> Before fitting anything, show me the train/test split for the death-ray revenue series with a 30-week holdout.
+> Before fitting anything, show me the train/test split for the Death-Ray Revenue series with a 30-week holdout.
 
 **What Comes Back** (a real result, same 70-week Death-Ray Revenue series, `holdout_size=30`):
 
@@ -44,7 +44,7 @@ The same climb from about $15,000 to about $35,000 over roughly a year and a hal
 ## Backtesting Death-Ray Revenue's Floor
 
 **Prompt:**
-> Fit naive and seasonal-naive baselines on the death-ray revenue series. Which one wins, and by how much?
+> Fit naive and seasonal-naive baselines on the Death-Ray Revenue series. Which one wins, and by how much?
 
 **What Comes Back** (a real result, on the same 70-week Death-Ray Revenue series from Chapter 4, holding out the most recent 30 weeks):
 
@@ -87,7 +87,7 @@ This observation proves less than it might look like it does. Eyeballing whether
 One more real scenario before this chapter moves on: a failure mode a quick glance at MAPE alone will not catch. Imagine a stretch where death-ray bookings didn't just slow down — they stopped entirely for a month, after a rival's legal team sent a strongly-worded cease-and-desist over a licensing dispute.
 
 **Prompt:**
-> Load this shorter supplementary revenue series at `book/examples/book_datasets/deathray_revenue_slow_month.csv` -- the one with the licensing freeze -- and give me the basics.
+> Load this shorter supplementary revenue series at `book/examples/book_datasets/deathray_revenue_slow_month.csv` — the one with the licensing freeze — and give me the basics.
 
 **What Comes Back** (a real result, 48 weeks):
 

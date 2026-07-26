@@ -66,7 +66,7 @@ An ordinary, unbroken climb — no visible jump, no single day that looks like a
 If ordinary trend alone produces a large effect size, what does an actual incident look like by comparison? A believable one: a botched heist becomes public, and Interpol's attention spikes hard over the following two months, on top of the trend that was already there.
 
 **Prompt:**
-> Load the escalation version of the series at `book/examples/book_datasets/interpol_attention_shifted.csv` -- the one with the real incident added -- and give me the basics.
+> Load the escalation version of the series at `book/examples/book_datasets/interpol_attention_shifted.csv` — the one with the real incident added — and give me the basics.
 
 **What Comes Back** (a real result, same 91 weeks, only the final 8 changed):
 
@@ -89,7 +89,7 @@ If ordinary trend alone produces a large effect size, what does an actual incide
 
 Same start, same minimum — but the maximum jumped from 694 to 994, and the overall spread (`std`) grew by a third. Seen directly:
 
-![The same Interpol Attention series with a real +300 escalation added to its final 8 weeks -- a visible step up right at the end, on top of the same ongoing trend](examples/images/interpol_attention_shifted_series.png)
+![The same Interpol Attention series with a real +300 escalation added to its final 8 weeks — a visible step up right at the end, on top of the same ongoing trend](examples/images/interpol_attention_shifted_series.png)
 
 Compare this against the plain series' plot a moment ago: the same steady climb for most of the series, then a real, visible step up right at the end — exactly the shape a genuine incident riding on top of an ongoing trend should look like, and visually distinct from the plain trend's smooth, uninterrupted climb.
 
@@ -171,7 +171,7 @@ A real deployed model exists for this series: ETS, backtested on the first 83 we
 }
 ```
 
-![The pre-escalation training history alone -- the same ordinary climb, stopping 8 weeks before the real incident](examples/images/interpol_attention_train_series.png)
+![The pre-escalation training history alone — the same ordinary climb, stopping 8 weeks before the real incident](examples/images/interpol_attention_train_series.png)
 
 The last 8 weeks — the ones containing the real escalation — are deliberately absent from both this JSON and this plot: this is exactly what a model deployed *before* the incident happened would actually have been backtested and trained against, nothing more.
 

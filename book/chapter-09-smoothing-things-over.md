@@ -9,7 +9,7 @@ Exponential smoothing builds a forecast from a small number of components, each 
 ## The First Real Model, and a Real Surprise
 
 **Prompt:**
-> Fit ETS on the death-ray revenue series. Do the residuals look like white noise, and does its prediction interval actually cover close to 95% of the holdout?
+> Fit ETS on the Death-Ray Revenue series. Do the residuals look like white noise, and does its prediction interval actually cover close to 95% of the holdout?
 
 **What Comes Back** (a real result, additive trend and seasonal components, `seasonal_period=7` — the same untested default Chapter 8 already found unhelpful for this series):
 

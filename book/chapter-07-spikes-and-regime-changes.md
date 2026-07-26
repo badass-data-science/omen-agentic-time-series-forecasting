@@ -30,7 +30,7 @@ Not everything worth flagging in a series is a pattern. Sometimes something just
 
 Two hundred fifty daily readings, no gaps, a mean around 243 kWh — but a max of `725.731`, more than triple the mean. Look at that gap between "typical" and "maximum observed" before either detector below tries to explain it:
 
-![Secret Lab power consumption, 250 days -- one dramatic spike, and a subtler permanent step up in the baseline later on](examples/images/power_consumption_series.png)
+![Secret Lab power consumption, 250 days — one dramatic spike, and a subtler permanent step up in the baseline later on](examples/images/power_consumption_series.png)
 
 Both incidents are visible here, side by side, once you know to look: one unmistakable single-day tower well above everything else, and — easy to miss on a first look, precisely because it's not a tower — a point partway through where the whole baseline appears to step up and stay there. That's not a coincidence of the plotting; it's the whole reason this chapter needs two different kinds of detector, not one.
 
@@ -73,7 +73,7 @@ Here's why the two scores are so different — the mechanism matters, not just t
 
 The robust version swaps in a **rolling median and median absolute deviation (MAD)** instead — the "modified z-score" approach from Iglewicz & Hoya (1993). Medians and MADs barely move when a single extreme point sits inside their window; the median of fourteen mostly ordinary values doesn't budge just because one of them is wild. The yardstick stays honest, and the same spike that scored a lukewarm `3.46` under the classic method scores an unambiguous `27.89` under the robust one.
 
-This isn't a story about the robust detector being free of tradeoffs, though — the rest of that output deserves an honest look. It also flagged two *additional* days (April 27th and May 11th) that the classic detector never mentioned, both well short of the spike's own magnitude. Being less bluntable by outliers cuts both ways: a MAD-based local baseline can also be tight enough, during an ordinarily quiet stretch, to flag an ordinary bit of noise as unusual by comparison. This isn't a flaw to paper over — it's the actual, honest cost of the fix, and deciding whether that cost is acceptable for a given series is a real judgment call, not something either detector makes for you.
+This isn't a story about the robust detector being free of tradeoffs, though — the rest of that output deserves an honest look. It also flagged two *additional* days (April 27th and May 11th) that the classic detector never mentioned, both well short of the spike's own magnitude. Being less easily blunted by outliers cuts both ways: a MAD-based local baseline can also be tight enough, during an ordinarily quiet stretch, to flag an ordinary bit of noise as unusual by comparison. This isn't a flaw to paper over — it's the actual, honest cost of the fix, and deciding whether that cost is acceptable for a given series is a real judgment call, not something either detector makes for you.
 
 `ts-analyst__plot_anomalies` marks the robust detector's three flagged points directly on the series:
 

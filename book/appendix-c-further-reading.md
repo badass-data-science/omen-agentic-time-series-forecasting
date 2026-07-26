@@ -16,7 +16,7 @@ The academic sources Omen's own methods are actually drawn from — not a genera
 
 **Hurvich, C. M., & Tsai, C.-L. (1989).** "Regression and Time Series Model Selection in Small Samples." *Biometrika*. The small-sample correction behind every `aicc` value this book reported, from Ch. 9 onward.
 
-**Hyndman, R. J., & Athanasopoulos, G.** *Forecasting: Principles and Practice* (any edition; freely available at otexts.com/fpp3). The standard reference for the naive-forecast interval formulas behind `fit_naive_baselines` and `forecast_naive`, and for the trend/seasonal strength heuristic behind `seasonal_decomposition_summary` -- also a good general forecasting textbook beyond what this book's own scope covers. Ch. 5, Ch. 8, Ch. 14.
+**Hyndman, R. J., & Athanasopoulos, G.** *Forecasting: Principles and Practice* (any edition; freely available at otexts.com/fpp3). The standard reference for the naive-forecast interval formulas behind `fit_naive_baselines` and `forecast_naive`, and for the trend/seasonal strength heuristic behind `seasonal_decomposition_summary` — also a good general forecasting textbook beyond what this book's own scope covers. Ch. 5, Ch. 8, Ch. 14.
 
 **Diebold, F. X., & Mariano, R. S. (1995).** "Comparing Predictive Accuracy." *Journal of Business & Economic Statistics*. The paired significance test behind `diebold_mariano_test`, and the mechanism behind two of this book's most consequential real findings (Ch. 8 and Ch. 10's open questions, both resolved in Ch. 12).
 
