@@ -136,7 +136,9 @@ One thing worth knowing before the first prompt: every named dataset this book u
 Tools exposed: generate_synthetic_data, basic_stats, check_stationarity,
 seasonal_decomposition_summary, detect_seasonality_period,
 acf_pacf_summary, detect_anomalies_zscore, detect_anomalies_robust_zscore,
-detect_changepoints
+detect_changepoints, plot_series, plot_acf_pacf,
+plot_seasonal_decomposition, plot_periodogram, plot_anomalies,
+plot_changepoints
 
 basic_stats result:
 {
@@ -151,7 +153,7 @@ basic_stats result:
 }
 ```
 
-**What It Means:** The connection works — nine real tools came back from a real subprocess, and a real number came back for the mean. But look at that confidence interval: `[2.98, 5.82]`, on a mean of `4.4`. That's not a narrow, reassuring band. It's most of the entire observed range, because five data points is nowhere near enough to pin down a population mean with any real precision, and `basic_stats` is not going to pretend otherwise just because you asked it nicely. This is the same "never report a number without also reporting how sure you are" rule from Chapter 1, showing up for the first time with a real result attached — and it's the *last* time in this book you'll see a series this small treated as anything other than a wiring test.
+**What It Means:** The connection works — fifteen real tools came back from a real subprocess, and a real number came back for the mean. But look at that confidence interval: `[2.98, 5.82]`, on a mean of `4.4`. That's not a narrow, reassuring band. It's most of the entire observed range, because five data points is nowhere near enough to pin down a population mean with any real precision, and `basic_stats` is not going to pretend otherwise just because you asked it nicely. This is the same "never report a number without also reporting how sure you are" rule from Chapter 1, showing up for the first time with a real result attached — and it's the *last* time in this book you'll see a series this small treated as anything other than a wiring test.
 
 Look at those five points directly rather than just trusting the summary — `ts-analyst__plot_series` renders exactly what `basic_stats` just summarized:
 

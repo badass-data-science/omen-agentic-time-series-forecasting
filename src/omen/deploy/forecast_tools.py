@@ -246,6 +246,7 @@ def _fit_ets_values(
     damped_trend: bool,
     confidence_level: float,
     n_simulations: int,
+    seed: int = 42,
 ) -> dict:
     model = ExponentialSmoothing(
         df["value"], trend=trend, seasonal=seasonal, seasonal_periods=seasonal_period, damped_trend=damped_trend
@@ -258,7 +259,7 @@ def _fit_ets_values(
     lower = upper = None
     alpha = 1 - confidence_level
     try:
-        sims = fit.simulate(nsimulations=horizon, repetitions=n_simulations, error="add")
+        sims = fit.simulate(nsimulations=horizon, repetitions=n_simulations, error="add", random_state=seed)
         lower = sims.quantile(alpha / 2, axis=1).values
         upper = sims.quantile(1 - alpha / 2, axis=1).values
         interval_note = f"{int(confidence_level * 100)}% interval from {n_simulations} simulated future paths."
@@ -285,6 +286,7 @@ def forecast_ets(
     damped_trend: bool = False,
     confidence_level: float = 0.95,
     n_simulations: int = 500,
+    seed: int = 42,
 ) -> dict:
     """Retrain Holt-Winters (ETS) on the FULL series and forecast `horizon`
     steps beyond the last observation. Prediction intervals are derived by
@@ -296,7 +298,7 @@ def forecast_ets(
     fit_ets, since this refit uses the FULL series (different n) so the
     two aicc values won't match exactly.
     """
-    raw = _fit_ets_values(df, horizon, seasonal_period, trend, seasonal, damped_trend, confidence_level, n_simulations)
+    raw = _fit_ets_values(df, horizon, seasonal_period, trend, seasonal, damped_trend, confidence_level, n_simulations, seed)
     rows, truncated = _format_forecast(raw["dates"], raw["point"], raw["lower"], raw["upper"])
     return {
         "model": "ETS (Holt-Winters)",
@@ -601,6 +603,7 @@ def forecast_ensemble(
     weights: list[float] | None = None,
     model_params: dict | None = None,
     confidence_level: float = 0.95,
+    seed: int = 42,
 ) -> dict:
     """Combine two or more of this layer's own forecasts into a single
     weighted forecast. This is the tool for the question "what should I
@@ -677,6 +680,7 @@ def forecast_ensemble(
                     params.get("damped_trend", False),
                     confidence_level,
                     params.get("n_simulations", 500),
+                    seed,
                 )
                 point, lower, upper = raw["point"], raw["lower"], raw["upper"]
                 label = "ETS (Holt-Winters)"

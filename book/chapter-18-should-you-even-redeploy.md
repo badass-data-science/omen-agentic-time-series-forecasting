@@ -76,7 +76,7 @@ The currently-deployed model is real: the same ETS(add, mul, 7) configuration Ch
 }
 ```
 
-**What It Means:** Simply refitting the *same* model configuration on newer data — the reflexive first move — didn't help. MAPE actually got very slightly worse. The candidate's own interval coverage (not shown above, but real: `50.0%` against a `95%` nominal target) came back badly miscalibrated too, a sign this ETS configuration is struggling with the new, flatter-trend regime, not just unlucky on one backtest. The tool's own generated reasoning names the likely reason directly: retraining the same architecture on data containing a real structural break doesn't automatically produce a model that's learned the break — sometimes the fix is a different model family, not fresher parameters of the old one.
+**What It Means:** Simply refitting the *same* model configuration on newer data — the reflexive first move — didn't help. MAPE actually got very slightly worse. The candidate's own interval coverage (not shown above, but real: `46.67%` against a `95%` nominal target) came back badly miscalibrated too, a sign this ETS configuration is struggling with the new, flatter-trend regime, not just unlucky on one backtest. The tool's own generated reasoning names the likely reason directly: retraining the same architecture on data containing a real structural break doesn't automatically produce a model that's learned the break — sometimes the fix is a different model family, not fresher parameters of the old one.
 
 **Trying a different family, honestly:**
 

@@ -90,6 +90,7 @@ def forecast_ets(
     seasonal: str = "add",
     damped_trend: bool = False,
     confidence_level: float = 0.95,
+    seed: int = 42,
     date_col: str = "date",
     value_col: str = "value",
 ) -> dict:
@@ -118,6 +119,7 @@ def forecast_ets(
         seasonal: "add", "mul", or None.
         damped_trend: Whether to damp the trend component.
         confidence_level: Width of the prediction interval, e.g. 0.95 for 95%.
+        seed: Random seed for the interval simulation, for reproducibility.
         date_col: Name of the date column in the CSV.
         value_col: Name of the value column in the CSV.
     """
@@ -130,6 +132,7 @@ def forecast_ets(
         seasonal=seasonal,
         damped_trend=damped_trend,
         confidence_level=confidence_level,
+        seed=seed,
     )
 
 
@@ -248,6 +251,7 @@ def forecast_ensemble(
     weights: list[float] | None = None,
     model_params: dict | None = None,
     confidence_level: float = 0.95,
+    seed: int = 42,
     date_col: str = "date",
     value_col: str = "value",
 ) -> dict:
@@ -286,6 +290,7 @@ def forecast_ensemble(
         model_params: Optional per-model_type kwargs override, e.g.
             {"sarima": {"order": [1,1,1], "seasonal_order": [1,1,1,7]}}.
         confidence_level: Width of each component's own prediction interval, e.g. 0.95 for 95%.
+        seed: Random seed for any component's interval simulation (currently only ETS), for reproducibility.
         date_col: Name of the date column in the CSV.
         value_col: Name of the value column in the CSV.
     """
@@ -297,6 +302,7 @@ def forecast_ensemble(
         weights=weights,
         model_params=model_params,
         confidence_level=confidence_level,
+        seed=seed,
     )
 
 

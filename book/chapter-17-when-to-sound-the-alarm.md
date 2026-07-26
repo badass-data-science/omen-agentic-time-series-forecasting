@@ -147,7 +147,7 @@ Compare this against the plain series' plot a moment ago: the same steady climb 
 
 ## Turning This Into a Decision
 
-A real deployed model exists for this series: ETS, backtested on the first 83 weeks at `2.40%` MAPE. Load that exact training history before trusting the number.
+A real deployed model exists for this series: ETS (`trend="mul"`, no seasonal component, damped, `holdout_size=25`), backtested on the first 83 weeks at `2.40%` MAPE. Load that exact training history before trusting the number.
 
 **Prompt:**
 > Load the pre-escalation training history for this series at `book/examples/book_datasets/interpol_attention_train.csv` and confirm the numbers before trusting them.
@@ -182,15 +182,15 @@ The last 8 weeks — the ones containing the real escalation — are deliberatel
 
 ```json
 {
-  "mape_now": 31.6667, "mape_backtest": 2.4016, "pct_degradation": 1218.57,
+  "mape_now": 31.7435, "mape_backtest": 2.4018, "pct_degradation": 1221.65,
   "drift_detected": true,
   "interval_coverage": {"empirical_coverage_pct": 0.0},
   "recommendation": "retrain_now",
-  "reasoning": "Forecast error has degraded beyond threshold AND the data shows a distributional shift -- both signals point the same direction."
+  "reasoning": "Forecast error has degraded beyond threshold AND the data shows a distributional shift -- both signals point the same direction. Re-run ts-analyst and ts-forecaster on the updated series before redeploying."
 }
 ```
 
-**What It Means:** Every signal agrees, decisively — a `1,218%` relative degradation, `0%` interval coverage, confirmed drift. `retrain_now` is the obviously correct call here, and it helps to see what an unambiguous case looks like before looking at one that isn't.
+**What It Means:** Every signal agrees, decisively — a `1,222%` relative degradation, `0%` interval coverage, confirmed drift. `retrain_now` is the obviously correct call here, and it helps to see what an unambiguous case looks like before looking at one that isn't.
 
 **A Deliberately Constructed Close Call.** This series' real numbers never produced the borderline case `recommend_retraining`'s own docstring warns about, so here's one built specifically to show it, clearly labeled as constructed rather than pulled from Interpol's real data: a backtest MAPE of `10.0%`, a current MAPE of `11.5%` (`15%` relative degradation — under the default `20%` threshold), with a real bootstrap CI of `[5%, 25%]` around that current estimate.
 
@@ -198,7 +198,7 @@ The last 8 weeks — the ones containing the real escalation — are deliberatel
 {
   "pct_degradation": 15.0, "degradation_threshold_within_ci": true,
   "recommendation": "no_action_needed",
-  "reasoning": "Forecast error is within tolerance... Note: mape_now's bootstrap CI ([5.0%, 25.0%] implied degradation) straddles the 20.0% threshold -- this degraded/not-degraded verdict is sensitive to sampling noise in mape_now, not a clear-cut case."
+  "reasoning": "Forecast error is within tolerance... Note: mape_now's bootstrap CI ([-50.0%, 150.0%] implied degradation) straddles the 20.0% threshold -- this degraded/not-degraded verdict is sensitive to sampling noise in mape_now, not a clear-cut case."
 }
 ```
 

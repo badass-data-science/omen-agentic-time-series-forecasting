@@ -325,7 +325,7 @@ def fit_ets(
     forecast = fit.forecast(holdout_size).values
 
     try:
-        sims = fit.simulate(nsimulations=holdout_size, repetitions=n_simulations, error="add")
+        sims = fit.simulate(nsimulations=holdout_size, repetitions=n_simulations, error="add", random_state=seed)
         alpha = 1 - confidence_level
         lower = sims.quantile(alpha / 2, axis=1).values
         upper = sims.quantile(1 - alpha / 2, axis=1).values
