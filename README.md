@@ -1,5 +1,7 @@
 # Omen — An Agentic Time Series Forecasting Platform
 
+The Omen e-book is out! Check out [Agentic Time Series Forecasting for Supervillains](https://www.amazon.com/dp/B0HBX8HGRC), where I teach sound forecasting practice in an elegant, step-by-step manner.
+
 [![CI](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/actions/workflows/ci.yml/badge.svg)](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/actions/workflows/ci.yml)
 [![Python 3.10 | 3.11 | 3.12](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
