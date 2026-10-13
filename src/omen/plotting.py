@@ -22,7 +22,7 @@ import matplotlib
 
 matplotlib.use("Agg")  # headless rendering -- no display backend available or needed
 import matplotlib.pyplot as plt
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 from fastmcp.utilities.types import Image
 
 

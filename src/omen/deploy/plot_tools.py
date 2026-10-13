@@ -10,7 +10,7 @@ re-run a forecast, it draws the one you already have).
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 
 from omen.plotting import render_plot
 

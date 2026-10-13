@@ -9,6 +9,19 @@ This tracks the installable **package** (`src/omen/`). The companion book,
 blog posts, and other repo content change frequently and aren't versioned
 here — see `git log` for that history.
 
+## [Unreleased]
+
+### Fixed
+- Omen failed to import its plot tools with current fastmcp
+  (`ModuleNotFoundError: No module named 'fastmcp.tools.tool'`), because
+  `ToolResult` was imported from that private module path, which fastmcp 3.2
+  moved and fastmcp 4 removed. `pyproject.toml` only required `fastmcp>=2.0`,
+  so any fresh install resolved to fastmcp 4.x and hit this. `ToolResult` is
+  now imported from the public `fastmcp.tools` package, and the dependency
+  floor is raised to `fastmcp>=3.0` (2.x doesn't export it there). Verified
+  with fastmcp 3.0.0 and 4.1.0, including plot tools returning inline PNGs
+  through an MCP client. (#28)
+
 ## [0.0.3] - 2026-07-26
 
 ### Fixed
