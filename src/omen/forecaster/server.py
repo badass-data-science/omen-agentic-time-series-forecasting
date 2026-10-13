@@ -13,7 +13,7 @@ Run over stdio (how OpenClaw will launch it), after `pip install -e .`:
 
 
 from fastmcp import FastMCP
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 
 from omen.data_prep import load_series
 

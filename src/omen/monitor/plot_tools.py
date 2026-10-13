@@ -10,7 +10,7 @@ so the picture can never silently disagree with the JSON.
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 
 from omen.plotting import render_plot
 

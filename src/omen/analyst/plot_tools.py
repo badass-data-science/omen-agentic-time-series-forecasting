@@ -19,7 +19,7 @@ out_path is given).
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 from scipy.signal import periodogram
 from statsmodels.tsa.seasonal import seasonal_decompose
 

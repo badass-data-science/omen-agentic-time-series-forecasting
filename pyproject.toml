@@ -29,7 +29,9 @@ classifiers = [
 ]
 
 dependencies = [
-    "fastmcp>=2.0",
+    # >=3.0: ToolResult is imported from the public `fastmcp.tools` package,
+    # which 2.x doesn't export it from.
+    "fastmcp>=3.0",
     "pandas>=2.0",
     "numpy>=1.24",
     "matplotlib>=3.7",
@@ -91,10 +93,10 @@ warn_unused_configs = true
 warn_redundant_casts = true
 
 # statsmodels/sklearn ship no py.typed marker and have no usable third-party
-# stub package; fastmcp.tools.tool resolves fine at runtime (fastmcp exposes
-# ToolResult through it dynamically) but isn't a real file mypy can walk
-# statically. All three are genuine third-party stub-coverage gaps, verified
-# by hand -- not a signal to chase further or silence more broadly.
+# stub package. Both are genuine third-party stub-coverage gaps, verified by
+# hand -- not a signal to chase further or silence more broadly. (fastmcp used
+# to be listed here too, back when ToolResult was imported from the private
+# `fastmcp.tools.tool` path; the public `fastmcp.tools` import type-checks.)
 [[tool.mypy.overrides]]
-module = ["statsmodels.*", "sklearn.*", "fastmcp.*"]
+module = ["statsmodels.*", "sklearn.*"]
 ignore_missing_imports = true

@@ -15,7 +15,7 @@ Run over stdio (how OpenClaw / most MCP clients will actually launch it):
 
 
 from fastmcp import FastMCP
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 
 from omen.data_prep import generate_synthetic_series, load_series
 

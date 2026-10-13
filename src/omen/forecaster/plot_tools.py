@@ -13,7 +13,7 @@ itself already uses, so plotting never silently re-runs an expensive fit.
 
 import matplotlib.pyplot as plt
 import numpy as np
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 
 from omen.plotting import render_plot
 

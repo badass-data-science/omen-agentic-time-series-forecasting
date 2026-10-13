@@ -3,7 +3,7 @@ import pytest
 pytest.importorskip("statsmodels")
 pytest.importorskip("sklearn")
 
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 
 from omen.data_prep import generate_synthetic_series
 from omen.forecaster.model_tools import (
