@@ -20,6 +20,12 @@ here — see `git log` for that history.
   changed every ETS interval for the same seed. These calls now pass
   `rng=np.random.RandomState(seed)`, verified to give byte-identical output
   to 0.0.4. (#30)
+- `check_stationarity` read `adfuller()`'s and `kpss()`'s results as plain
+  tuples (by position for ADF, by 4-way unpacking for KPSS). statsmodels
+  0.15 warns that both will return result objects by default from 0.16 or
+  July 2027, which would have broken or silently corrupted the ADF/KPSS
+  fields. Both calls now pass `result_object=True` and read named fields,
+  verified to give identical output. (#36, #37)
 
 ### Changed
 - Minimum statsmodels raised from 0.14 to 0.15 (in the `analyst`,
