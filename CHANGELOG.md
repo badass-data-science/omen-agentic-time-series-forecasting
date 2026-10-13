@@ -9,6 +9,23 @@ This tracks the installable **package** (`src/omen/`). The companion book,
 blog posts, and other repo content change frequently and aren't versioned
 here — see `git log` for that history.
 
+## [Unreleased]
+
+### Fixed
+- ETS simulated prediction intervals (`fit_ets`, `forecast_ets`, and
+  `forecast_ensemble` with ETS) passed `random_state=seed` to statsmodels'
+  `simulate()`, which statsmodels 0.15 deprecates in favor of `rng`. It also
+  plans to start treating an int seed as `np.random.default_rng(seed)`
+  instead of `np.random.RandomState(seed)`, which would have silently
+  changed every ETS interval for the same seed. These calls now pass
+  `rng=np.random.RandomState(seed)`, verified to give byte-identical output
+  to 0.0.4. (#30)
+
+### Changed
+- Minimum statsmodels raised from 0.14 to 0.15 (in the `analyst`,
+  `forecaster`, `deploy`, and `all` extras), since 0.14 has no `rng`
+  keyword.
+
 ## [0.0.4] - 2026-10-13
 
 ### Fixed

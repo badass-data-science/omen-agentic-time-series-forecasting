@@ -38,12 +38,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-analyst = ["statsmodels>=0.14", "scipy>=1.11"]
-forecaster = ["statsmodels>=0.14", "scikit-learn>=1.4"]
-deploy = ["statsmodels>=0.14", "scikit-learn>=1.4"]
+analyst = ["statsmodels>=0.15", "scipy>=1.11"]
+forecaster = ["statsmodels>=0.15", "scikit-learn>=1.4"]
+deploy = ["statsmodels>=0.15", "scikit-learn>=1.4"]
 monitor = ["scipy>=1.11"]
 retrain = []
-all = ["statsmodels>=0.14", "scikit-learn>=1.4", "scipy>=1.11"]
+all = ["statsmodels>=0.15", "scikit-learn>=1.4", "scipy>=1.11"]
 # ruff pinned to an EXACT version, not a floor -- an unpinned ruff>=X let a
 # routine ruff release silently expand its own default rule set (new rules
 # like UP045/BLE001/PERF102 started firing) and broke CI with no code change
