@@ -32,6 +32,11 @@ here — see `git log` for that history.
   `result_object=True` and reads `.acf`/`.confint`, verified to give
   identical output and identical plot images. `pacf()` is unchanged: called
   without `alpha`, it keeps returning a plain array. (#35)
+- `seasonal_decomposition_summary` and `plot_seasonal_decomposition` passed
+  `extrapolate_trend="freq"` to `seasonal_decompose`, which statsmodels 0.15
+  deprecates and 0.16 removes. Both now pass the renamed
+  `extrapolate_trend="period"`, verified to give identical output and
+  identical plot images. (#31)
 
 ### Changed
 - Minimum statsmodels raised from 0.14 to 0.15 (in the `analyst`,

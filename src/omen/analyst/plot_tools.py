@@ -87,7 +87,7 @@ def plot_seasonal_decomposition(df: pd.DataFrame, period: int = 7, out_path: str
     if len(series) < period * 2:
         raise ValueError(f"Series too short to decompose with period={period}.")
 
-    decomposition = seasonal_decompose(series, model="additive", period=period, extrapolate_trend="freq")
+    decomposition = seasonal_decompose(series, model="additive", period=period, extrapolate_trend="period")
 
     fig, axes = plt.subplots(4, 1, figsize=(10, 9), sharex=True)
     axes[0].plot(series.index, series.values, color="tab:blue")
