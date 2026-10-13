@@ -17,7 +17,7 @@ for the bundled SKILL.md playbooks.
 from importlib.resources import files as _files
 from typing import Any
 
-__version__ = "0.1.0"
+__version__ = "0.0.4"
 
 
 def skills_dir() -> Any:

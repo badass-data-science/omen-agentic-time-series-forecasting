@@ -50,7 +50,8 @@ python -m build                 # build sdist/wheel for publishing
 
 Per-layer installs: `.[analyst]`, `.[forecaster]`, `.[deploy]`, `.[monitor]`, `.[retrain]` if you don't want every dependency.
 
-**Releasing a new version**: bump `version` in `pyproject.toml`, add an entry
+**Releasing a new version**: bump `version` in `pyproject.toml` (and
+`__version__` in `src/omen/__init__.py` to match), add an entry
 to `CHANGELOG.md` (Keep a Changelog format -- see the existing entries),
 merge that as a normal PR, then on `main`:
 ```bash
