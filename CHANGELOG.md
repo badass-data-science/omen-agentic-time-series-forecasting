@@ -26,6 +26,12 @@ here — see `git log` for that history.
   July 2027, which would have broken or silently corrupted the ADF/KPSS
   fields. Both calls now pass `result_object=True` and read named fields,
   verified to give identical output. (#36, #37)
+- `acf_pacf_summary` and `plot_acf_pacf` (via their shared helper) unpacked
+  `acf()`'s result as a 2-tuple, which statsmodels 0.15 warns will become an
+  `AcfResult` by default from 0.16 or July 2027. The call now passes
+  `result_object=True` and reads `.acf`/`.confint`, verified to give
+  identical output and identical plot images. `pacf()` is unchanged: called
+  without `alpha`, it keeps returning a plain array. (#35)
 
 ### Changed
 - Minimum statsmodels raised from 0.14 to 0.15 (in the `analyst`,
