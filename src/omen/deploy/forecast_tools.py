@@ -259,7 +259,9 @@ def _fit_ets_values(
     lower = upper = None
     alpha = 1 - confidence_level
     try:
-        sims = fit.simulate(nsimulations=horizon, repetitions=n_simulations, error="add", random_state=seed)
+        # An explicit RandomState, not an int seed: statsmodels is switching int
+        # seeds to default_rng, which would change every interval for the same seed.
+        sims = fit.simulate(nsimulations=horizon, repetitions=n_simulations, error="add", rng=np.random.RandomState(seed))
         lower = sims.quantile(alpha / 2, axis=1).values
         upper = sims.quantile(1 - alpha / 2, axis=1).values
         interval_note = f"{int(confidence_level * 100)}% interval from {n_simulations} simulated future paths."

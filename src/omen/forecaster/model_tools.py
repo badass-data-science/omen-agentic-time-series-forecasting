@@ -325,7 +325,9 @@ def fit_ets(
     forecast = fit.forecast(holdout_size).values
 
     try:
-        sims = fit.simulate(nsimulations=holdout_size, repetitions=n_simulations, error="add", random_state=seed)
+        # An explicit RandomState, not an int seed: statsmodels is switching int
+        # seeds to default_rng, which would change every interval for the same seed.
+        sims = fit.simulate(nsimulations=holdout_size, repetitions=n_simulations, error="add", rng=np.random.RandomState(seed))
         alpha = 1 - confidence_level
         lower = sims.quantile(alpha / 2, axis=1).values
         upper = sims.quantile(1 - alpha / 2, axis=1).values
