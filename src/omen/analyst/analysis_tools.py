@@ -421,7 +421,8 @@ def _acf_pacf_raw(df: pd.DataFrame, n_lags: int, alpha: float) -> tuple:
     """
     series = df["value"].dropna()
     n_lags = min(n_lags, len(series) // 2 - 1)
-    acf_vals, acf_confint = acf(series, nlags=n_lags, fft=True, alpha=alpha)
+    acf_result = acf(series, nlags=n_lags, fft=True, alpha=alpha, result_object=True)
+    acf_vals, acf_confint = acf_result.acf, acf_result.confint
     pacf_vals = pacf(series, nlags=n_lags)
     return acf_vals, acf_confint, pacf_vals, n_lags
 
