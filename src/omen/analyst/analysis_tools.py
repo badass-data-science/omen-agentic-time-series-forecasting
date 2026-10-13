@@ -145,15 +145,15 @@ def _kpss_effect_size(series: pd.Series, regression: str = "c") -> dict:
     """
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=InterpolationWarning)
-        kpss_stat, p_value, lags, crit = kpss(series, regression=regression, nlags="auto")
+        result = kpss(series, regression=regression, nlags="auto", result_object=True)
 
-    crit_5pct = float(crit["5%"])
+    crit_5pct = float(result.critical_values["5%"])
     return {
-        "statistic": round(float(kpss_stat), 4),
-        "p_value": round(float(p_value), 4),
-        "lags": int(lags),
+        "statistic": round(float(result.statistic), 4),
+        "p_value": round(float(result.pvalue), 4),
+        "lags": int(result.lags),
         "critical_value_5pct": crit_5pct,
-        "effect_size": round(float(kpss_stat) / crit_5pct, 4),
+        "effect_size": round(float(result.statistic) / crit_5pct, 4),
     }
 
 
@@ -216,8 +216,8 @@ def check_stationarity(df: pd.DataFrame, kpss_regression: str = "c", confidence_
     """
     series = df["value"].dropna()
 
-    adf_result = adfuller(series, autolag="AIC")
-    adf_stat, adf_p_value = adf_result[0], adf_result[1]
+    adf_result = adfuller(series, autolag="AIC", result_object=True)
+    adf_stat, adf_p_value = adf_result.statistic, adf_result.pvalue
     adf_stationary = bool(adf_p_value < 0.05)
     reversion = _mean_reversion_effect_size(series.to_numpy(dtype=float), confidence_level=confidence_level)
 
