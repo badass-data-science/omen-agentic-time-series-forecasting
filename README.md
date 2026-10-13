@@ -299,3 +299,11 @@ only the PyPI *listing* name is `omen-agentic-forecasting` (plain `omen`
 was already taken; see the comment above `[project.scripts]` in
 `pyproject.toml`). See `AGENTS.md` for build/release commands and the
 full set of non-obvious project conventions.
+
+## Contributing and Support
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how
+to report bugs and submit changes, and [SUPPORT.md](SUPPORT.md) for how
+to get help, what response times to expect, and how the project is
+governed. Everyone taking part is expected to follow the
+[Code of Conduct](CODE_OF_CONDUCT.md).
