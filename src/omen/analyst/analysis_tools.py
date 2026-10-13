@@ -282,7 +282,7 @@ def seasonal_decomposition_summary(df: pd.DataFrame, period: int = 7) -> dict:
     if len(series) < period * 2:
         return {"error": f"Series too short to decompose with period={period}."}
 
-    decomposition = seasonal_decompose(series, model="additive", period=period, extrapolate_trend="freq")
+    decomposition = seasonal_decompose(series, model="additive", period=period, extrapolate_trend="period")
 
     resid_var = float(np.nanvar(decomposition.resid))
     seasonal_var = float(np.nanvar(decomposition.seasonal))
