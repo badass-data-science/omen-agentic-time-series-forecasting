@@ -9,7 +9,7 @@ This tracks the installable **package** (`src/omen/`). The companion book,
 blog posts, and other repo content change frequently and aren't versioned
 here — see `git log` for that history.
 
-## [Unreleased]
+## [0.0.4] - 2026-10-13
 
 ### Fixed
 - Omen failed to import its plot tools with current fastmcp
@@ -21,6 +21,8 @@ here — see `git log` for that history.
   floor is raised to `fastmcp>=3.0` (2.x doesn't export it there). Verified
   with fastmcp 3.0.0 and 4.1.0, including plot tools returning inline PNGs
   through an MCP client. (#28)
+- `omen.__version__` was hardcoded to `"0.1.0"` and never matched any
+  published release; it now matches the package version.
 
 ## [0.0.3] - 2026-07-26
 
