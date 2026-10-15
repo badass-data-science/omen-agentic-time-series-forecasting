@@ -25,7 +25,9 @@ def _assert_valid_png_result(result, expect_written_file=None):
     assert len(result.content) == 1
     image_content = result.content[0]
     assert image_content.type == "image"
-    assert image_content.mimeType == "image/png"
+    # MCP SDK v2 renamed mimeType -> mime_type (v1, pulled in by fastmcp 3.x, only has
+    # mimeType); read the new name when it exists so v2 doesn't warn on the old one.
+    assert (getattr(image_content, "mime_type", None) or image_content.mimeType) == "image/png"
     import base64
     raw = base64.b64decode(image_content.data)
     assert raw[:8] == PNG_MAGIC
