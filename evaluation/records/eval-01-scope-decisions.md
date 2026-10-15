@@ -2,6 +2,10 @@
 
 - Date(s): 2026-10-15
 - Versions: Omen 0.0.5 (`main` at the time of decision); no code run for this step
+- AI assistance for this step: Claude Code 2.1.301 with Claude Opus 5.5
+  (`claude-opus-5-5`) drafted the option analysis and this record; all
+  decisions were made by the maintainer. Logged in
+  `scoping-out-a-journal-submission/ai-model-ledger.md`.
 - Issue: #43 (tracking issue #59)
 - Plan: `scoping-out-a-journal-submission/evaluation-plan.md`, Section 9
 
