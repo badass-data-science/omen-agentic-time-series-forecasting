@@ -39,3 +39,8 @@ graphify-out/.graphify_python
 graphify-out/.graphify_root
 graphify-out/cost.json
 graphify-out/cache/
+
+# Evaluation study: downloaded and generated data (manifests and fresh-data
+# snapshots under evaluation/data/ ARE committed; see evaluation/README.md)
+evaluation/data/raw/
+evaluation/data/prepared/

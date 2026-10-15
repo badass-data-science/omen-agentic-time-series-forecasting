@@ -75,6 +75,11 @@ ts-retrain-server = "omen.retrain.server:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/omen"]
 
+# The evaluation study (evaluation/) is research tooling with its own
+# dependencies, not part of the package; keep it out of the sdist too.
+[tool.hatch.build.targets.sdist]
+exclude = ["/evaluation"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

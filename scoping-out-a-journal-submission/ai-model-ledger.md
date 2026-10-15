@@ -37,7 +37,7 @@ Selected at Eval 01 (#43); see `evaluation/records/eval-01-scope-decisions.md`.
 
 | Model | Exact ID | Provider / access route | Training cutoff | Role | Status |
 |---|---|---|---|---|---|
-| GLM-5.2 | *to confirm at Eval 02/03* | Ollama Cloud | *to confirm (Eval 02, #44)* | Pilot model (Eval 07) and main study | Selected |
+| GLM-5.2 | `glm-5.2:cloud` per third-party guides; *confirm from the API response at Eval 03 (#45)* | Ollama Cloud | Not published by Z.ai; released ~2026-06-13–16, used as a conservative upper bound (Eval 02 record). One secondary source claims March 2026 | Pilot model (Eval 07) and main study | Selected |
 | One Claude model | *chosen at Eval 08 (#50)*, e.g. `claude-sonnet-5-5` or `claude-haiku-5-5` | Anthropic API | June 2026 (Claude 5 generation) | Main study | Pending |
 
 Sampling settings, endpoints, and run dates are recorded per run in the
@@ -50,12 +50,13 @@ harness logs and summarized in the Eval 07/09/13/15 records.
 | 2026-07-20 – 2026-07-28 | Claude Code (*version to confirm*) | Claude Sonnet 5 (*exact API ID to confirm*) | Omen code, tests, and docs during the initial development and repo extraction | Design decisions, review, merging | 89 commits with `Co-Authored-By: Claude Sonnet 5` |
 | Development period (dates to confirm) | OpenClaw + Ollama Cloud | GLM-5.2 (*exact ID to confirm*) | The agent driving Omen's tools while the skills were developed and tested (per `AGENTS.md`); not a code author | Prompting, evaluation of agent behavior | `AGENTS.md`, `SKILL.md` playbooks |
 | *to confirm* | *to confirm* | *to confirm* | Companion book drafting and its cover image (per `book/ai_use_statement.md`) | Authorship, editing | `book/ai_use_statement.md` |
-| 2026-10-13 – 2026-10-15 | Claude Code 2.1.301 | Claude Opus 5.5 (`claude-opus-5-5`) | fastmcp ≥3.2 compatibility fix (#29) and 0.0.4/0.0.5 release prep; statsmodels 0.15 deprecation fixes (#34, #38, #39, #40) and the test fix (#41); CONTRIBUTING/SUPPORT/Code of Conduct (#27); JOSS publication assessment and evaluation plan; evaluation-plan issues #43–#59; Eval 01 record (#60); this ledger | Scope and design decisions, review, merges, PyPI publishing | 11+ commits with `Co-Authored-By: Claude Opus 5.5`; PRs #27–#60 |
+| 2026-10-13 – 2026-10-15 | Claude Code 2.1.301 | Claude Opus 5.5 (`claude-opus-5-5`) | fastmcp ≥3.2 compatibility fix (#29) and 0.0.4/0.0.5 release prep; statsmodels 0.15 deprecation fixes (#34, #38, #39, #40) and the test fix (#41); CONTRIBUTING/SUPPORT/Code of Conduct (#27); JOSS publication assessment and evaluation plan; evaluation-plan issues #43–#59; Eval 01 record (#60); this ledger (#61); Eval 02 dataset pipeline, pilot dataset, and record | Scope and design decisions, review, merges, PyPI publishing | 11+ commits with `Co-Authored-By: Claude Opus 5.5`; PRs #27–#60 |
 
 ## Gaps to close before writing a disclosure
 
-- Exact API IDs for Claude Sonnet 5 (July 2026) and GLM-5.2, and the Claude
-  Code version used in July.
+- Exact API IDs for Claude Sonnet 5 (July 2026) and GLM-5.2 (the latter
+  confirmed at Eval 03 from API responses), and the Claude Code version used
+  in July.
 - Whether the book text and cover image involved models not listed above.
 - `book/ai_use_statement.md` is informal and does not name tools,
   versions, or scope. It would not satisfy JOSS's requirement on its own;
