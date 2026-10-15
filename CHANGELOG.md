@@ -9,7 +9,7 @@ This tracks the installable **package** (`src/omen/`). The companion book,
 blog posts, and other repo content change frequently and aren't versioned
 here — see `git log` for that history.
 
-## [Unreleased]
+## [0.0.5] - 2026-10-15
 
 ### Fixed
 - ETS simulated prediction intervals (`fit_ets`, `forecast_ets`, and
