@@ -10,6 +10,9 @@ paper: JOSS papers can't report new research results. As a separate
 preprint, though, the study also counts as the "evidence of research use"
 that JOSS screens for.
 
+**Execution is tracked as GitHub issues:** see Section 10 and the
+[tracking issue (#59)](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/59).
+
 ## 1. The claim being tested
 
 Omen's central claim is that an agent should use **a tested toolkit
@@ -125,6 +128,8 @@ no LLM (C, D, E) are cheap by comparison.
 *Assumption, not measured:* 20–40 tool calls and 50–150k tokens per run,
 or roughly a few hundred million tokens in total. The pilot (Phase 2)
 should measure the real per-run figure before the full study is budgeted.
+The budget itself is decided at the decision gates in Section 10, from the
+pilots' measured costs, not from this estimate.
 
 ## 8. Phases
 
@@ -141,6 +146,10 @@ should measure the real per-run figure before the full study is budgeted.
 
 ## 9. Open decisions
 
+These are now tracked as decision gates: the token budget at Eval 08
+([#50](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/50)) and Eval 14 ([#56](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/56)), and everything else at Eval 01
+([#43](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/43)).
+
 - Which LLMs to evaluate, and the token budget.
 - Which datasets satisfy the contamination control in Section 2.
 - Whether condition E (pretrained forecasting models) is in scope for the
@@ -149,3 +158,65 @@ should measure the real per-run figure before the full study is budgeted.
 - Where the harness lives: inside this repo (e.g. an `evaluation/`
   directory, which would also add steady commit history for JOSS) or in a
   separate repo.
+
+## 10. Tracking: GitHub issues
+
+*Added 2026-10-15.* The plan is broken into 16 ordered issues, **Eval 01–16**,
+each attached as a sub-issue of the
+[tracking issue (#59)](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/59), which shows overall progress. Work
+proceeds in Eval-number order; each issue lists its dependencies, and
+Eval 03–05 can overlap.
+
+| Step | Issue | Plan section |
+|---|---|---|
+| Eval 01 🚦 Scope decisions (before any build work) | [#43](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/43) | 9 |
+| Eval 02 Dataset preparation | [#44](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/44) | 2 |
+| Eval 03 Headless agent harness (conditions A and B) | [#45](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/45) | 1, 4, 6 |
+| Eval 04 Baselines without an LLM (C, D, optional E) | [#46](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/46) | 1 |
+| Eval 05 Scoring pipeline | [#47](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/47) | 3 |
+| Eval 06 Trajectory analysis | [#48](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/48) | 4 |
+| Eval 07 💸 Pilot: measure real cost per run | [#49](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/49) | 8 (Phase 2) |
+| Eval 08 🚦 Approve main-study scale and budget | [#50](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/50) | 7 |
+| Eval 09 💸 Main study runs | [#51](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/51) | 3, 4 |
+| Eval 10 Analysis | [#52](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/52) | 1, 3, 4 |
+| Eval 11 Monitoring/retraining replay harness | [#53](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/53) | 5 |
+| Eval 12 Drift and retraining experiments (no LLM) | [#54](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/54) | 5 |
+| Eval 13 💸 Red-team pilot | [#55](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/55) | 5 |
+| Eval 14 🚦 Approve red-team scale and Section 5 scope | [#56](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/56) | 5 |
+| Eval 15 💸 Full red-team runs | [#57](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/57) | 5 |
+| Eval 16 Write-up, reproducibility package, preprint | [#58](https://github.com/badass-data-science/omen-agentic-time-series-forecasting/issues/58) | 8 (Phase 5) |
+
+Eval 11–15 can be skipped or deferred to a follow-up paper, depending on
+the decisions at Eval 01 and Eval 14.
+
+### Labels
+- `evaluation-plan`: every issue in the series.
+- `decision-gate` (🚦): a maintainer decision is required before later
+  steps start.
+- `token-cost` (💸): spends LLM tokens; run only within an approved budget.
+
+### Cost control
+- Every token-heavy phase is preceded by a small **pilot** that measures
+  real cost per run: Eval 07 for the main study, Eval 13 for the red-team.
+- Each pilot feeds a **decision gate** (Eval 08, Eval 14). The gate prices
+  concrete options from the pilot's *measured* numbers, and the maintainer
+  picks a scale, a budget ceiling, and an overrun rule.
+- Full runs (Eval 09, Eval 15) execute in **batches**, with a cost
+  checkpoint after the first batch (default: pause and return to the gate if
+  more than 20% over projection) and a hard stop at the approved ceiling.
+- Eval 01 is also a gate: no build work starts until scope is decided.
+
+### Paper records
+Every Eval issue produces a written record of procedure and results, so
+the paper can be written from records rather than memory:
+
+- Each issue names its record file, `evaluation/records/eval-NN-<slug>.md`,
+  which lives alongside the evaluation code (location decided at Eval 01).
+- Records follow a shared template, defined in the tracking issue:
+  procedure, parameters, **deviations from plan**, results, cost,
+  artifacts (with checksums), and notes for the paper.
+- Each issue says which paper section its record feeds (Methods, Results,
+  Limitations, Appendix) and lists what specifically to capture.
+- Decision gates record the decision **and its rationale**, including
+  declined options, since these become Methods and Limitations text.
+- An issue isn't closed until its record is committed.
